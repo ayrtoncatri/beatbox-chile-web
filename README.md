@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🇨🇱 Beatbox Chile - Plataforma Comunitaria
 
-## Getting Started
+Plataforma web moderna desarrollada con **Next.js (App Router)** para la comunidad Beatbox Chile. Permite la gestión de ligas, eventos, audiciones, estadísticas, contacto y difusión de la cultura beatbox en Chile.
 
-First, run the development server:
+## 🚀 Tecnologías principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- [Next.js](https://nextjs.org/) (App Router, SSR/ISR)
+- [TypeScript](https://www.typescriptlang.org/)
+- [TailwindCSS](https://tailwindcss.com/) (UI moderna y responsiva)
+- [Prisma ORM](https://www.prisma.io/) (manejo de base de datos)
+- [SQLite](https://www.sqlite.org/) (para desarrollo local, fácil de migrar a PostgreSQL en producción)
+- [React Hook Form](https://react-hook-form.com/) (manejo de formularios)
+- [Zustand](https://zustand-demo.pmnd.rs/) (estado global)
+- [NextAuth (Auth.js)](https://authjs.dev/) (próximamente: autenticación de usuarios)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Estilo & UI
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Inspirado visualmente en [Swissbeatbox](https://swissbeatbox.com/) y [GBB Official](https://gbbofficial.com/), usando fondo oscuro, cards visuales, fuentes grandes y navegación clara.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📚 Estructura de carpetas
 
-To learn more about Next.js, take a look at the following resources:
+/app # Rutas principales y subpáginas (Next.js App Router)
+/components # Componentes reutilizables por sección
+/lib # Utilidades, conexión Prisma, helpers
+/hooks # Custom hooks de React
+/store # Estado global (Zustand)
+/public # Imágenes, logos, etc.
+/styles # Tailwind y estilos globales
+/prisma # Esquema de la base de datos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ Funcionalidades del MVP
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Landing page (Home):** Banner, últimas noticias, anuncios, login/register.
+- **Historial competitivo:** Cards de eventos pasados y detalle por competidor.
+- **Estadísticas:** Resumen por evento y por participante (dummy).
+- **Recepción de wildcard:** Formulario para enviar link de YouTube.
+- **Ligas:**  
+  - **Liga Competitiva:** Info de circuito, clasificados, reglas, sponsors.
+  - **Liga Terapéutica:** Propósito, registro, contacto.
+- **Quiénes somos:** Directiva, equipo de trabajo, contacto, buzón de ideas.
+- **Layout global:** Header con navegación, footer fijo.
+- **Estilo responsive, moderno y atractivo.**
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ⚙️ Instalación y ejecución local
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clona el repositorio**
+   ```bash
+   git clone https://github.com/tuusuario/beatbox-chile.git
+   cd beatbox-chile
+
+2. **Instala dependencias**
+    npm install
+
+3. **Configura el entorno**
+    - Crea un archivo .env o .env.local:
+    DATABASE_URL="file:./dev.db"
+
+4. **Configura la base de datos**
+    npx prisma migrate dev --name init
+
+5. **Levanta el servidor**
+    npm run dev
+    Accede a http://localhost:3000
+
+📦 Scripts útiles
+npm run dev — Servidor de desarrollo
+
+npm run build — Build de producción
+
+npm run start — Servidor en producción
+
+npx prisma studio — Administra tu base de datos con UI visual
