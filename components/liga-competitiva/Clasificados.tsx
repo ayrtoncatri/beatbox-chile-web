@@ -1,3 +1,6 @@
+import { FaMedal } from "react-icons/fa";
+
+// Simula clasificados
 const clasificados = [
   { nombre: "Beatmaster", ciudad: "Santiago" },
   { nombre: "Bass Queen", ciudad: "Valparaíso" },
@@ -5,16 +8,26 @@ const clasificados = [
 
 export default function Clasificados() {
   return (
-    <section className="mb-10">
-      <h2 className="text-2xl font-bold text-blue-100 mb-3">Clasificados</h2>
-      <div className="bg-neutral-900 rounded-xl p-6 shadow text-white">
-        <ul className="grid md:grid-cols-2 gap-4">
+    <section className="mt-12 relative z-10 max-w-3xl mx-auto">
+      <h2 className="text-3xl font-bold mb-8 text-cyan-300 drop-shadow-lg">
+        Clasificados
+      </h2>
+      <div className="
+        bg-gradient-to-br from-blue-900/80 via-blue-900/70 to-cyan-400/10
+        backdrop-blur-lg border border-blue-400/30 shadow-lg
+        hover:shadow-cyan-400/40 p-8 rounded-2xl transition-all duration-300
+      ">
+        <div className="flex flex-wrap gap-8">
           {clasificados.map((c, i) => (
-            <li key={i} className="border-b border-blue-800 pb-2 mb-2">
-              <span className="font-semibold">{c.nombre}</span> — {c.ciudad}
-            </li>
+            <div key={i} className="flex flex-col items-start gap-2 min-w-[150px]">
+              <div className="flex items-center gap-2">
+                <FaMedal className="text-yellow-400 text-lg" />
+                <span className="text-white font-extrabold text-lg">{c.nombre}</span>
+              </div>
+              <span className="text-blue-200 font-medium text-sm ml-7">— {c.ciudad}</span>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
