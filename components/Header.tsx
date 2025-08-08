@@ -17,10 +17,10 @@ export default function Header() {
       <nav className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <Image
-            src="/78d6cbbd-7276-4d14-8a41-a82b7ab0b558.png"
+            src="/ISOTIPO-DEGRADADO.png"
             alt="Logo Beatbox Chile"
-            width={46}
-            height={46}
+            width={50}
+            height={50}
             className="rounded-full border-2 border-blue-700 shadow"
             priority
           />
