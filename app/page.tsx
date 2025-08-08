@@ -3,6 +3,7 @@ import Banner from "@/components/home/Banner";
 import Anuncios from "@/components/home/Anuncios";
 import NoticiasList from "@/components/home/NoticiasList";
 import AuthButtons from "@/components/home/AuthButtons";
+import Historia from "@/components/home/Historia";
 
 export default function HomePage() {
   return (
@@ -10,6 +11,7 @@ export default function HomePage() {
       <Banner />
       <Anuncios />
       <NoticiasList />
+      <Historia />
       <AuthButtons />
     </main>
   );
