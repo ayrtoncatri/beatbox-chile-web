@@ -35,6 +35,25 @@ export default function RegisterPage() {
         <button type="submit" className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold">Registrarme</button>
         {error && <p className="text-red-400 mt-3">{error}</p>}
       </form>
+      
+      <style jsx>{`
+        input::placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input::-webkit-input-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input::-moz-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input:-ms-input-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+      `}</style>
     </main>
   );
 }
