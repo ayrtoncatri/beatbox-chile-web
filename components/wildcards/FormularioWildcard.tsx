@@ -2,12 +2,27 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { FaUserAlt, FaYoutube } from "react-icons/fa";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function FormularioWildcard() {
   const { register, handleSubmit, reset } = useForm();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const onSubmit = async (data: any) => {
+  
+    if (!session) {
+      setMensaje("⚠️ Debes registrarte o iniciar sesión antes de enviar tu wildcard.");
+      setTimeout(() => {
+        router.push("/auth/register");
+      }, 2000);
+      return;
+    }
+
     setMensaje("✅ Formulario enviado (demo, pendiente backend)");
     reset();
   };
