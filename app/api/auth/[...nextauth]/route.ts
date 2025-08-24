@@ -1,13 +1,14 @@
+// app/api/auth/[...nextauth]/route.ts  (o src/app/... si usas src/)
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt"
-import type { Session } from "next-auth";
+import bcrypt from "bcrypt";
+import type { Session, NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -19,7 +20,7 @@ export const authOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Contraseña", type: "password" },
-        name: { label: "Nombre", type: "text" }, // solo usado en registro
+        name: { label: "Nombre", type: "text" }, // usado solo en registro
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -28,21 +29,17 @@ export const authOptions = {
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
-        if (!user || !user.password) {
-          throw new Error("Usuario no encontrado");
-        }
+        if (!user || !user.password) throw new Error("Usuario no encontrado");
+
         const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) {
-          throw new Error("Contraseña incorrecta");
-        }
+        if (!valid) throw new Error("Contraseña incorrecta");
+
         return user;
       },
     }),
   ],
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/login",
-  },
+  pages: { signIn: "/auth/login" },
   callbacks: {
     async session({
       session,
