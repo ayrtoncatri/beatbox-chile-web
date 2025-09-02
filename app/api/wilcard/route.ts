@@ -1,24 +1,60 @@
+// app/api/wilcard/route.ts
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
 
-// (Valida el POST y guarda el link en la BD)
-export async function POST(request: NextRequest) {
-  const { youtubeUrl, userId, eventoId } = await request.json();
+export const runtime = "nodejs";
 
-  // (Opcional: Valida que sea un enlace de YouTube real)
-  if (!youtubeUrl || !/^https:\/\/(www\.)?youtube\.com|youtu\.be/.test(youtubeUrl)) {
-    return NextResponse.json({ error: "Enlace no válido" }, { status: 400 });
+// youtu.be/XXXXX o youtube.com/watch?v=XXXXX
+const YT_REGEX =
+  /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w\-]{11}(\S+)?$/i;
+
+const DEFAULT_EVENT = {
+  nombre: "Wildcard General",
+  tipo: "general",
+  reglas: "Auto-generado para wildcards sin evento asignado",
+};
+
+export async function GET() {
+  return NextResponse.json({ ok: true, route: "/api/wilcard" });
+}
+
+export async function POST(req: Request) {
+  const { youtubeUrl, userId } = await req.json();
+
+  // Validaciones mínimas
+  if (!userId) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+  if (!youtubeUrl || !YT_REGEX.test(youtubeUrl)) {
+    return NextResponse.json({ error: "URL de YouTube inválida" }, { status: 400 });
   }
 
-  // TODO: userId y eventoId deberían recibirse según sesión/contexto real
-  // Aquí está hardcodeado solo de ejemplo:
-  const wildcard = await prisma.wildcard.create({
-    data: {
-      youtubeUrl,
-      userId: userId ?? "test-user-id",
-      eventoId: eventoId ?? "test-evento-id"
-    }
+  // (Opcional pero sano) verifica que el usuario exista
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    return NextResponse.json({ error: "Usuario inválido" }, { status: 401 });
+  }
+
+  // Usa/crea evento por defecto porque el schema exige eventoId
+  let evento = await prisma.evento.findFirst({
+    where: { nombre: DEFAULT_EVENT.nombre, tipo: DEFAULT_EVENT.tipo },
   });
 
-  return NextResponse.json(wildcard, { status: 201 });
+  if (!evento) {
+    evento = await prisma.evento.create({
+      data: {
+        nombre: DEFAULT_EVENT.nombre,
+        tipo: DEFAULT_EVENT.tipo,
+        reglas: DEFAULT_EVENT.reglas,
+        fecha: new Date(),
+      },
+    });
+  }
+
+  const wildcard = await prisma.wildcard.create({
+    data: { youtubeUrl, userId, eventoId: evento.id },
+    select: { id: true, youtubeUrl: true, userId: true, eventoId: true, createdAt: true },
+  });
+
+  return NextResponse.json({ ok: true, wildcard }, { status: 201 });
 }
