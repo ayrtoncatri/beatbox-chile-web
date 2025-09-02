@@ -53,6 +53,25 @@ export default function LoginPage() {
           ¿No tienes cuenta? Regístrate
         </button>
       </div>
+      
+      <style jsx>{`
+        input::placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input::-webkit-input-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input::-moz-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+        input:-ms-input-placeholder {
+          color: white !important;
+          opacity: 1 !important;
+        }
+      `}</style>
     </main>
   );
 }
