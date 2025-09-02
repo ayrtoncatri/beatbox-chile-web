@@ -2,19 +2,55 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { FaUserAlt, FaYoutube } from "react-icons/fa";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function FormularioWildcard() {
   const { register, handleSubmit, reset } = useForm();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const onSubmit = async (data: any) => {
-    setMensaje("✅ Formulario enviado (demo, pendiente backend)");
-    reset();
+    setMensaje(null);
+
+    // Validación SOLO al presionar Enviar
+    if (!session) {
+      setMensaje("⚠️ Debes registrarte o iniciar sesión antes de enviar tu wildcard.");
+      setTimeout(() => router.push("/auth/register"), 1800);
+      return;
+    }
+
+    const userId = (session.user as { id?: string })?.id;
+
+    try {
+      const res = await fetch("/api/wilcard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          youtubeUrl: data.youtubeUrl?.trim(),
+          userId, // 👈 enviamos el id del usuario autenticado
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setMensaje(json?.error || "❌ No se pudo guardar la wildcard.");
+        return;
+      }
+
+      setMensaje("✅ Wildcard guardada con éxito.");
+      reset();
+    } catch {
+      setMensaje("❌ Error de red/servidor al guardar la wildcard.");
+    }
   };
 
   return (
-    <section className="mt-12 relative z-10">
-      <h2 className="text-3xl font-bold mb-8 text-lime-300 drop-shadow-lg">
+    <section className="mt-12 relative z-10 max-w-2xl mx-auto px-4">
+      <h2 className="text-3xl font-bold mb-8 text-lime-300 drop-shadow-lg text-center">
         Formulario de Inscripción Wildcard
       </h2>
       <form
