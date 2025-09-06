@@ -10,7 +10,7 @@ const YT_REGEX =
 
 const DEFAULT_EVENT = {
   nombre: "Wildcard General",
-  tipo: "general",
+  tipo: "Online",
   reglas: "Auto-generado para wildcards sin evento asignado",
 };
 
