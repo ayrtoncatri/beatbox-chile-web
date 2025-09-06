@@ -29,9 +29,9 @@ export default function RegisterPage() {
     <main className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
       <form onSubmit={handleRegister} className="bg-neutral-900 rounded-xl p-8 shadow-lg w-full max-w-sm text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Registrarse</h2>
-        <input className="mb-3 w-full p-2 rounded" name="name" type="text" placeholder="Nombre" required />
-        <input className="mb-3 w-full p-2 rounded" name="email" type="email" placeholder="Correo" required />
-        <input className="mb-3 w-full p-2 rounded" name="password" type="password" placeholder="Contraseña" required />
+        <input className="mb-3 w-full p-2 rounded text-white" name="name" type="text" placeholder="Nombre" required />
+        <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
+        <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
         <button type="submit" className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold">Registrarme</button>
         {error && <p className="text-red-400 mt-3">{error}</p>}
       </form>
