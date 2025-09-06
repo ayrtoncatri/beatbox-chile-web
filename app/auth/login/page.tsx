@@ -39,8 +39,8 @@ export default function LoginPage() {
           Continuar con Google
         </button>
         <form onSubmit={handleLogin} className="mt-2">
-          <input className="mb-3 w-full p-2 rounded" name="email" type="email" placeholder="Correo" required />
-          <input className="mb-3 w-full p-2 rounded" name="password" type="password" placeholder="Contraseña" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
           <button type="submit" className="w-full bg-blue-800 text-white py-2 rounded-lg font-semibold">
             Iniciar sesión
           </button>
