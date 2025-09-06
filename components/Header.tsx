@@ -12,7 +12,8 @@ const navItems = [
   { label: "Wildcard", href: "/wildcard" },
   { label: "Quiénes Somos", href: "/quienes-somos" },
   { label: "Liga competitiva", href: "/liga-competitiva" },
-  { label: "Liga Terapéutica", href: "/liga-terapeutica" }
+  { label: "Liga Terapéutica", href: "/liga-terapeutica" },
+  { label: "Entradas", href: "/compra-entradas" },
 ];
 
 export default function Header() {
@@ -20,7 +21,7 @@ export default function Header() {
 
   return (
     <header className="w-full bg-neutral-950 bg-opacity-90 py-3 shadow-md sticky top-0 z-50">
-      <nav className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-2">
+      <nav className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-2">
         {/* Logo y nombre */}
         <div className="flex items-center gap-3">
           <Image
@@ -80,7 +81,7 @@ export default function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.28 }}
-              className="fixed top-0 right-0 h-full w-4/5 max-w-xs bg-neutral-900 border-l border-blue-800 z-50 shadow-2xl flex flex-col p-8"
+              className="fixed top-0 right-0 h-full w-4/5 max-w-xs bg-neutral-900 border-l border-blue-800 z-50 shadow-2xl flex flex-col p-8 overflow-y-auto pb-10"
             >
               <button
                 className="self-end mb-10 text-blue-100 hover:text-blue-400 focus:outline-none"

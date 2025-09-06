@@ -25,6 +25,27 @@ model User {
   stats     Estadistica[]
   sugerencias Sugerencia[]
   createdAt DateTime @default(now())
+  compras   CompraEntrada[]
+}
+
+model CompraEntrada {
+  id             String   @id @default(cuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  userNombre     String
+  userEmail      String
+
+  evento         Evento   @relation(fields: [eventoId], references: [id])
+  eventoId       String
+  eventoNombre   String
+  eventoFecha    DateTime
+
+  tipoEntrada    String   
+  cantidad       Int
+  precioUnitario Int
+  total          Int
+
+  createdAt      DateTime  @default(now())
 }
 
 model Evento {
@@ -36,6 +57,7 @@ model Evento {
   wildcards Wildcard[]
   stats     Estadistica[]
   createdAt DateTime @default(now())
+  compras   CompraEntrada[]
 }
 
 model Wildcard {
