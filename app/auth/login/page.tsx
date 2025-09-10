@@ -1,77 +1,25 @@
-"use client";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import LoginClient from "../../../components/login/LoginClient";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
-  const [error, setError] = useState("");
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Iniciar sesión — Beatbox Chile" };
 
-  const handleLogin = async (e: any) => {
-    e.preventDefault();
-    const email = e.target.email.value;
-    const password = e.target.password.value;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
+  const sp = (await searchParams) ?? {};
 
-    if (res?.error) {
-      setError("Credenciales inválidas");
-    } else {
-      router.push("/");
-    }
-  };
+  const registered = !!sp.registered;
+  const callbackUrl =
+    typeof sp.callbackUrl === "string" ? sp.callbackUrl : "/";
 
   return (
-    <main className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
-      <div className="bg-neutral-900 rounded-xl p-8 shadow-lg w-full max-w-sm text-center">
-        <h2 className="text-2xl font-bold text-white mb-4">Iniciar sesión</h2>
-        {registered && <p className="text-green-400 mb-2">¡Registro exitoso! Inicia sesión.</p>}
-        <button
-          onClick={() => signIn("google")}
-          className="w-full bg-blue-700 text-white py-2 rounded-lg mb-4 font-semibold"
-        >
-          Continuar con Google
-        </button>
-        <form onSubmit={handleLogin} className="mt-2">
-          <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
-          <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
-          <button type="submit" className="w-full bg-blue-800 text-white py-2 rounded-lg font-semibold">
-            Iniciar sesión
-          </button>
-        </form>
-        {error && <p className="text-red-400 mt-3">{error}</p>}
-        <button
-          className="mt-4 underline text-blue-200"
-          onClick={() => router.push("/auth/register")}
-        >
-          ¿No tienes cuenta? Regístrate
-        </button>
-      </div>
-      
-      <style jsx>{`
-        input::placeholder {
-          color: white !important;
-          opacity: 1 !important;
-        }
-        input::-webkit-input-placeholder {
-          color: white !important;
-          opacity: 1 !important;
-        }
-        input::-moz-placeholder {
-          color: white !important;
-          opacity: 1 !important;
-        }
-        input:-ms-input-placeholder {
-          color: white !important;
-          opacity: 1 !important;
-        }
-      `}</style>
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
+      <LoginClient registered={registered} callbackUrl={callbackUrl} />
     </main>
   );
 }
