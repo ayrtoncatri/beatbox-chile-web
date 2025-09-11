@@ -13,8 +13,13 @@ export async function POST(req: Request) {
 
     if (!userId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     if (!eventoId) return NextResponse.json({ error: "eventoId requerido" }, { status: 400 });
-    if (!tipoEntrada || !["General", "VIP"].includes(tipoEntrada))
+
+    const tipo = tipoEntrada as TipoEntrada;
+
+    if (!tipo || !["General", "VIP"].includes(tipoEntrada))
       return NextResponse.json({ error: "tipoEntrada inválido" }, { status: 400 });
+
+
     const qty = Number(cantidad);
     if (!qty || qty < 1) return NextResponse.json({ error: "cantidad inválida" }, { status: 400 });
 
@@ -26,7 +31,7 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "Usuario inválido" }, { status: 401 });
     if (!evento) return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
 
-    const precioUnitario = PRECIOS[tipoEntrada as TipoEntrada] ?? 0;
+    const precioUnitario = PRECIOS[tipo] ?? 0;
     const total = precioUnitario * qty;
 
     const compra = await prisma.compraEntrada.create({
@@ -37,7 +42,7 @@ export async function POST(req: Request) {
         eventoId,
         eventoNombre: evento.nombre,
         eventoFecha: evento.fecha,
-        tipoEntrada,
+        tipoEntrada: tipo,
         cantidad: qty,
         precioUnitario,
         total,
@@ -59,3 +64,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;

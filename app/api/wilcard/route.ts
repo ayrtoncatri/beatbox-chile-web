@@ -1,8 +1,9 @@
-// app/api/wilcard/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // youtu.be/XXXXX o youtube.com/watch?v=XXXXX
 const YT_REGEX =

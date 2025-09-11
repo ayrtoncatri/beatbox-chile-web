@@ -57,7 +57,10 @@ Inspirado visualmente en [Swissbeatbox](https://swissbeatbox.com/) y [GBB Offici
 
 3. **Configura el entorno**
     - Crea un archivo .env o .env.local:
-    DATABASE_URL="file:./dev.db"
+    DATABASE_URL="postgresql://USER:PASS@HOST:5432/DB?schema=public"
+    NEXTAUTH_URL="http://localhost:3000"
+    NEXTAUTH_SECRET="CHANGEME"
+
 
 4. **Configura la base de datos**
     npx prisma migrate dev --name init
