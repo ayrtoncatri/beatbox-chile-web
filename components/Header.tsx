@@ -24,14 +24,17 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-2">
         {/* Logo y nombre */}
         <div className="flex items-center gap-3">
-          <Image
-            src="/ISOTIPO-DEGRADADO.png"
-            alt="Logo Beatbox Chile"
-            width={50}
-            height={50}
-            className="rounded-full border-2 border-blue-700 shadow"
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/ISOTIPO-DEGRADADO.png"
+              alt="Logo Beatbox Chile"
+              width={50}
+              height={50}
+              className="rounded-full border-2 border-blue-700 shadow"
+              priority
+              style={{ cursor: "pointer" }}
+            />
+          </Link>
           <span className="text-xl text-blue-100 font-extrabold tracking-tight">Beatbox Chile</span>
         </div>
 
