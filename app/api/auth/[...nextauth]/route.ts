@@ -1,62 +1,6 @@
-// app/api/auth/[...nextauth]/route.ts  (o src/app/... si usas src/)
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt";
-import type { Session, NextAuthOptions } from "next-auth";
-import type { JWT } from "next-auth/jwt";
-
-const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Contraseña", type: "password" },
-        name: { label: "Nombre", type: "text" }, // usado solo en registro
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email y contraseña requeridos");
-        }
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-        if (!user || !user.password) throw new Error("Usuario no encontrado");
-
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) throw new Error("Contraseña incorrecta");
-
-        return user;
-      },
-    }),
-  ],
-  session: { strategy: "jwt" },
-  pages: { signIn: "/auth/login" },
-  callbacks: {
-    async session({
-      session,
-      token,
-      user,
-    }: {
-      session: Session;
-      token: JWT;
-      user?: any;
-    }) {
-      if (session?.user) {
-        (session.user as { id?: string }).id = token.sub;
-      }
-      return session;
-    },
-  },
-};
+import { authOptions } from "@/lib/auth";
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+export const runtime = "nodejs";
