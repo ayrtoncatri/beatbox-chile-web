@@ -14,6 +14,7 @@ const navItems = [
   { label: "Liga competitiva", href: "/liga-competitiva" },
   { label: "Liga Terapéutica", href: "/liga-terapeutica" },
   { label: "Entradas", href: "/compra-entradas" },
+  { label: "Tienda", href: "/tienda" },
 ];
 
 export default function Header() {
