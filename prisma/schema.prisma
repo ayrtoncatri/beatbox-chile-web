@@ -60,13 +60,14 @@ model Evento {
 }
 
 model Wildcard {
-  id          String   @id @default(cuid())
-  youtubeUrl  String   
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  evento      Evento   @relation(fields: [eventoId], references: [id])
-  eventoId    String
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  youtubeUrl      String 
+  nombreArtistico String?  
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String
+  evento          Evento   @relation(fields: [eventoId], references: [id])
+  eventoId        String
+  createdAt       DateTime @default(now())
 }
 
 model Estadistica {
