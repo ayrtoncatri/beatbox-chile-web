@@ -16,11 +16,23 @@ const DEFAULT_EVENT = {
 };
 
 export async function GET() {
-  return NextResponse.json({ ok: true, route: "/api/wilcard" });
+  try {
+    const wildcards = await prisma.wildcard.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        youtubeUrl: true,
+        nombreArtistico: true, 
+      },
+    });
+    return NextResponse.json({ ok: true, wildcards }, { status: 200 });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const { youtubeUrl, userId } = await req.json();
+  const { youtubeUrl, userId, nombreArtistico } = await req.json();
 
   // Validaciones mínimas
   if (!userId) {
@@ -53,8 +65,8 @@ export async function POST(req: Request) {
   }
 
   const wildcard = await prisma.wildcard.create({
-    data: { youtubeUrl, userId, eventoId: evento.id },
-    select: { id: true, youtubeUrl: true, userId: true, eventoId: true, createdAt: true },
+    data: { youtubeUrl, userId, eventoId: evento.id, nombreArtistico }, // 👈 agrega aquí
+    select: { id: true, youtubeUrl: true, nombreArtistico: true, userId: true, eventoId: true, createdAt: true },
   });
 
   return NextResponse.json({ ok: true, wildcard }, { status: 201 });
