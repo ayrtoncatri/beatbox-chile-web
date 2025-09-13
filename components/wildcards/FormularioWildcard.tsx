@@ -25,12 +25,13 @@ export default function FormularioWildcard() {
     const userId = (session.user as { id?: string })?.id;
 
     try {
-      const res = await fetch("/api/wilcard", {
+      const res = await fetch("/api/wildcard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           youtubeUrl: data.youtubeUrl?.trim(),
-          userId, // 👈 enviamos el id del usuario autenticado
+          nombreArtistico: data.nombre?.trim(),
+          userId, 
         }),
       });
 
