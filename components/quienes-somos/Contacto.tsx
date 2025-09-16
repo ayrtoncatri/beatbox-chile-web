@@ -19,10 +19,10 @@ export default function Contacto() {
         <p className="text-gray-100">
           Puedes escribirnos a nuestro correo oficial:{" "}
           <a
-            href="mailto:contacto@beatboxchile.cl"
+            href="mailto:contacto.bbxcl@gmail.com"
             className="underline text-orange-200 hover:text-amber-400 transition-colors"
           >
-            contacto@beatboxchile.cl
+            contacto.bbxcl@gmail.com
           </a>
         </p>
       </div>

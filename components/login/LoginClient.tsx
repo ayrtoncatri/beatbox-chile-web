@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Image from 'next/image';
 
 export default function LoginClient({
   registered,
@@ -29,12 +30,24 @@ export default function LoginClient({
 
       {registered && <p className="mb-2 text-green-400">¡Registro exitoso! Inicia sesión.</p>}
 
-      <button
-        onClick={() => signIn("google", { callbackUrl })}
-        className="mb-4 w-full rounded-lg bg-blue-700 py-2 font-semibold text-white"
-      >
-        Continuar con Google
-      </button>
+      <div className="flex justify-between items-center">
+          <button
+          onClick={() => signIn("google", { callbackUrl })}
+          className="mb-4 w-full rounded-lg bg-blue-700 py-2 font-semibold text-white cursor-pointer"
+        >
+          Continuar con Google
+
+          <Image
+          src="/icons8-google.svg"
+          alt="Google Logo"
+          width={25}
+          height={25}
+          className="ml-2 inline-block"
+          />
+
+        </button>
+
+      </div>
 
       <form onSubmit={handleLogin} className="mt-2">
         <input
