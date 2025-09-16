@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const [error, setError] = useState("");
@@ -29,6 +31,21 @@ export default function RegisterPage() {
     <main className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
       <form onSubmit={handleRegister} className="bg-neutral-900 rounded-xl p-8 shadow-lg w-full max-w-sm text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Registrarse</h2>
+        <button
+          type="button"
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+          className="mb-4 w-full rounded-lg bg-blue-700 py-2 font-semibold text-white cursor-pointer"
+        >
+          Registrarse con Google
+
+          <Image
+            src="/icons8-google.svg"
+            alt="Google Logo"
+            width={25}
+            height={25}
+            className="ml-2 inline-block"
+          />
+        </button>
         <input className="mb-3 w-full p-2 rounded text-white" name="name" type="text" placeholder="Nombre" required />
         <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
         <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
