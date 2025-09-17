@@ -2,6 +2,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 type CustomUser = {
   name?: string | null;
@@ -21,17 +22,22 @@ export default function AuthButtons() {
   if (session) {
     return (
       <div className="w-full flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md">
-        {user?.image && (
-          <Image
-            src={user.image}
-            alt="Foto de perfil"
-            width={40}
-            height={40}
-            className="rounded-full border-2 border-blue-500 shadow-md object-cover"
-          />
-        )}
+        <Image
+          src={
+            user?.image
+              ? user.image
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  (user?.nombres || "") +
+                    (user?.apellidoPaterno ? " " + user.apellidoPaterno : "")
+                )}&background=3b82f6&color=fff&size=128`
+          }
+          alt="Foto de perfil"
+          width={40}
+          height={40}
+          className="rounded-full border-2 border-blue-500 shadow-md object-cover"
+        />
         <span className="text-blue-100 font-medium text-base md:text-lg whitespace-nowrap">
-          Hola, <span className="font-bold">{user?.nombres} {user?.apellidoPaterno} {user?.apellidoMaterno}</span>
+          Hola, <Link href='/perfil' className="font-bold">{user?.nombres} {user?.apellidoPaterno} {user?.apellidoMaterno}</Link>
         </span>
         <button
           className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-5 py-2 rounded-lg font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"

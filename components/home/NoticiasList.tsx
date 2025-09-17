@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const noticias = [
   {
     title: "Ganadores Wildcard Categoria Solo",
@@ -18,7 +20,13 @@ export default function NoticiasList() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {noticias.map((n, i) => (
           <div key={i} className="bg-neutral-900 rounded-xl shadow-md overflow-hidden">
-            <img src={n.img} alt={n.title} className="w-full object-cover" />
+            <Image
+              src={`/${n.img}`}
+              alt={n.title}
+              width={600}
+              height={340}
+              className="w-full object-cover"
+            />
             <div className="p-4">
               <h3 className="text-lg font-semibold text-white">{n.title}</h3>
               <p className="text-blue-200">{n.excerpt}</p>

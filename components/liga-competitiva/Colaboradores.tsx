@@ -1,8 +1,9 @@
 import { FaHandshake } from "react-icons/fa";
+import Image from "next/image";
 
 // Simula colaboradores/sponsors
 const colaboradores = [
-  { nombre: "Microfono Pro", logo: "/logos/microfono-pro.png" }, // Usa tus logos reales
+  { nombre: "Microfono Pro", logo: "/logos/microfono-pro.png" },
   { nombre: "Urban Beats", logo: "/logos/urban-beats.png" },
 ];
 
@@ -28,7 +29,7 @@ export default function Colaboradores() {
               shadow-md overflow-hidden mb-2
               ">
               {col.logo
-                ? <img src={col.logo} alt={col.nombre} className="object-contain w-16 h-16" />
+                ? <Image src={col.logo} alt={col.nombre} width={64} height={64} className="object-contain w-16 h-16" />
                 : <span className="text-white">{col.nombre[0]}</span>
               }
             </div>
