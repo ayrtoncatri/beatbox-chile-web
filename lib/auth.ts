@@ -68,6 +68,7 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google" || (!token.nombres && token.email)) {
         const dbUser = await prisma.user.findUnique({ where: { email: token.email as string } });
         if (dbUser) {
+          token.sub = dbUser.id;
           token.nombres = dbUser.nombres ?? null;
           token.apellidoPaterno = dbUser.apellidoPaterno ?? null;
           token.apellidoMaterno = dbUser.apellidoMaterno ?? null;
@@ -77,10 +78,12 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (user) {
+        token.sub = (user as any).id;
         token.role = (user as any).role ?? "user";
         token.nombres = (user as any).nombres ?? null;
         token.apellidoPaterno = (user as any).apellidoPaterno ?? null;
         token.apellidoMaterno = (user as any).apellidoMaterno ?? null;
+        token.image = (user as any).image ?? null;
       }
       return token;
     },
