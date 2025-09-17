@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import AuthButtons from "@/components/home/AuthButtons";
 
 const navItems = [
   { label: "Inicio", href: "/" },
@@ -40,12 +41,12 @@ export default function Header() {
         </div>
 
         {/* Navegación desktop */}
-        <ul className="hidden md:flex gap-6 justify-center items-center">
+        <ul className="hidden md:flex gap-3 md:gap-4 lg:gap-6 justify-center items-center flex-wrap max-w-full">
           {navItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="text-blue-100 font-semibold hover:text-blue-400 transition"
+                className="text-blue-100 font-semibold hover:text-blue-400 transition px-2 py-1 rounded-lg hover:bg-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 {item.label}
               </Link>
@@ -62,6 +63,11 @@ export default function Header() {
           {open ? <FaTimes size={28} /> : <FaBars size={28} />}
         </button>
       </nav>
+
+      {/* AuthButtons SOLO en desktop, debajo del nav */}
+      <div className="hidden md:flex max-w-7xl mx-auto px-4 mt-2">
+        <AuthButtons />
+      </div>
 
       {/* Mobile menu - animado */}
       <AnimatePresence>
@@ -104,7 +110,7 @@ export default function Header() {
                   >
                     <Link
                       href={item.href}
-                      className="text-2xl text-blue-100 font-semibold hover:text-blue-400 transition"
+                      className="text-2xl text-blue-100 font-semibold hover:text-blue-400 transition px-2 py-1 rounded-lg hover:bg-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       onClick={() => setOpen(false)}
                     >
                       {item.label}
@@ -112,6 +118,10 @@ export default function Header() {
                   </motion.li>
                 ))}
               </ul>
+              {/* AuthButtons SOLO en mobile menu */}
+              <div className="mt-10">
+                <AuthButtons />
+              </div>
             </motion.nav>
           </>
         )}
