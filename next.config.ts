@@ -3,9 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: [
-      "lh3.googleusercontent.com",
-      // agrega aquí otros dominios externos si los necesitas
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      // Agrega aquí otros patrones si usas más dominios externos
     ],
   },
 };
