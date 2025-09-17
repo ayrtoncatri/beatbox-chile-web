@@ -4,19 +4,46 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 
+// Utilidades OWASP
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function isStrongPassword(password: string) {
+  // Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(password);
+}
+function sanitize(input: string) {
+  // Remueve caracteres peligrosos básicos
+  return input.replace(/[<>"'`\\]/g, "");
+}
+
 export default function RegisterPage() {
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
   const handleRegister = async (e: any) => {
     e.preventDefault();
-    const nombres = e.target.nombres.value;
-    const apellidoPaterno = e.target.apellidoPaterno.value;
-    const apellidoMaterno = e.target.apellidoMaterno.value;
-    const email = e.target.email.value;
+    const nombres = sanitize(e.target.nombres.value.trim());
+    const apellidoPaterno = sanitize(e.target.apellidoPaterno.value.trim());
+    const apellidoMaterno = sanitize(e.target.apellidoMaterno.value.trim());
+    const email = e.target.email.value.trim();
     const password = e.target.password.value;
     const confirmPassword = e.target.confirmPassword.value;
 
+    if (!nombres || !apellidoPaterno || !apellidoMaterno || !email || !password || !confirmPassword) {
+      setError("Todos los campos son obligatorios.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Correo inválido.");
+      return;
+    }
+    if (!isStrongPassword(password)) {
+      setError("La contraseña debe tener mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
       return;
@@ -31,7 +58,7 @@ export default function RegisterPage() {
     if (res.ok) {
       router.push("/auth/login?registered=1");
     } else {
-      setError("Error al registrar. ¿El correo ya está en uso?");
+      setError("No se pudo registrar. Intenta con otro correo o más tarde.");
     }
   };
 
@@ -40,6 +67,7 @@ export default function RegisterPage() {
       <form
         onSubmit={handleRegister}
         className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-blue-900/80 via-neutral-900/90 to-blue-950/80 p-8 text-center shadow-2xl border border-blue-800/40 backdrop-blur-lg"
+        autoComplete="off"
       >
         <h2 className="text-3xl font-extrabold text-blue-100 mb-6 drop-shadow">Registrarse</h2>
         <button
@@ -63,6 +91,8 @@ export default function RegisterPage() {
             type="text"
             placeholder="Nombres"
             required
+            maxLength={50}
+            autoComplete="off"
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -70,6 +100,8 @@ export default function RegisterPage() {
             type="text"
             placeholder="Apellido paterno"
             required
+            maxLength={50}
+            autoComplete="off"
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -77,6 +109,8 @@ export default function RegisterPage() {
             type="text"
             placeholder="Apellido materno"
             required
+            maxLength={50}
+            autoComplete="off"
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -84,21 +118,59 @@ export default function RegisterPage() {
             type="email"
             placeholder="Correo"
             required
+            maxLength={100}
+            autoComplete="off"
           />
-          <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            name="password"
-            type="password"
-            placeholder="Contraseña"
-            required
-          />
-          <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirmar contraseña"
-            required
-          />
+          <div className="relative">
+            <input
+              className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 pr-10 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100"
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? (
+                // Ojo abierto
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+              ) : (
+                // Ojo cerrado
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><path stroke="currentColor" strokeWidth="2" d="m1 1 22 22"/></svg>
+              )}
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 pr-10 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              name="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              placeholder="Confirmar contraseña"
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100"
+              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showConfirm ? (
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+              ) : (
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><path stroke="currentColor" strokeWidth="2" d="m1 1 22 22"/></svg>
+              )}
+            </button>
+          </div>
         </div>
         <button
           type="submit"
