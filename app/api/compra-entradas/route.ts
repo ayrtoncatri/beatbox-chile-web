@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const compra = await prisma.compraEntrada.create({
       data: {
         userId,
-        userNombre: user.name ?? "",
+        userNombre: user.nombres ?? "",
         userEmail: user.email,
         eventoId,
         eventoNombre: evento.nombre,

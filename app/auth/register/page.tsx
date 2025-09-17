@@ -10,13 +10,21 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: any) => {
     e.preventDefault();
-    const name = e.target.name.value;
+    const nombres = e.target.nombres.value;
+    const apellidoPaterno = e.target.apellidoPaterno.value;
+    const apellidoMaterno = e.target.apellidoMaterno.value;
     const email = e.target.email.value;
     const password = e.target.password.value;
+    const confirmPassword = e.target.confirmPassword.value;
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ nombres, apellidoPaterno, apellidoMaterno, email, password }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -46,9 +54,12 @@ export default function RegisterPage() {
             className="ml-2 inline-block"
           />
         </button>
-        <input className="mb-3 w-full p-2 rounded text-white" name="name" type="text" placeholder="Nombre" required />
-        <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
-        <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="nombres" type="text" placeholder="Nombres" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="apellidoPaterno" type="text" placeholder="Apellido paterno" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="apellidoMaterno" type="text" placeholder="Apellido materno" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="email" type="email" placeholder="Correo" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="password" type="password" placeholder="Contraseña" required />
+          <input className="mb-3 w-full p-2 rounded text-white" name="confirmPassword" type="password" placeholder="Confirmar contraseña" required />
         <button type="submit" className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold">Registrarme</button>
         {error && <p className="text-red-400 mt-3">{error}</p>}
       </form>
