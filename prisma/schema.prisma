@@ -14,17 +14,22 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String?
-  image     String?
-  role      String   @default("user")
-  wildcards Wildcard[]
-  stats     Estadistica[]
-  sugerencias Sugerencia[]
-  createdAt DateTime @default(now())
-  compras   CompraEntrada[]
+  id               String   @id @default(cuid())
+  nombres          String?
+  apellidoPaterno  String?
+  apellidoMaterno  String?
+  comuna           String?
+  region           String?
+  edad             Int?
+  email            String   @unique
+  password         String?
+  image            String?
+  role             String   @default("user")
+  wildcards        Wildcard[]
+  stats            Estadistica[]
+  sugerencias      Sugerencia[]
+  createdAt        DateTime @default(now())
+  compras          CompraEntrada[]
 }
 
 model CompraEntrada {
