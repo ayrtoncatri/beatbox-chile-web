@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -70,4 +72,42 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ ok: true, wildcard }, { status: 201 });
+}
+
+export async function PUT(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  const { id, nombreArtistico, youtubeUrl } = await req.json();
+
+  if (!id) {
+    return NextResponse.json({ error: "ID de wildcard requerido" }, { status: 400 });
+  }
+  if (!youtubeUrl || !YT_REGEX.test(youtubeUrl)) {
+    return NextResponse.json({ error: "URL de YouTube inválida" }, { status: 400 });
+  }
+
+  // Busca el usuario y la wildcard
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  if (!user) {
+    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+
+  const wildcard = await prisma.wildcard.findFirst({
+    where: { id, userId: user.id },
+  });
+  if (!wildcard) {
+    return NextResponse.json({ error: "Wildcard no encontrada" }, { status: 404 });
+  }
+
+  const updated = await prisma.wildcard.update({
+    where: { id },
+    data: { nombreArtistico, youtubeUrl },
+  });
+
+  return NextResponse.json({ ok: true, wildcard: updated });
 }
