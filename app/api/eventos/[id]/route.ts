@@ -15,6 +15,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       ciudad: true,
       direccion: true,
       descripcion: true,
+      tipo: true,
     },
   });
 

@@ -4,6 +4,13 @@ import { ensureAdminApi } from "@/lib/permissions";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 
+const tipoEnum = z
+  .string()
+  .trim()
+  .transform((v) => v.toLowerCase())
+  .refine((v) => v === "presencial" || v === "online", "tipo inválido")
+  .transform((v) => (v === "online" ? "Online" : "Presencial"));
+
 export async function GET(req: Request) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
@@ -42,6 +49,7 @@ export async function GET(req: Request) {
         ciudad: true,
         isPublished: true,
         isTicketed: true,
+        tipo: true,
       },
     }),
   ]);
@@ -59,7 +67,7 @@ const createSchema = z.object({
   lugar: z.string().trim().max(200).optional().nullable(),
   ciudad: z.string().trim().max(200).optional().nullable(),
   direccion: z.string().trim().max(300).optional().nullable(),
-  tipo: z.string().trim().min(1).max(100),
+  tipo: tipoEnum, // "Presencial" | "Online"
   reglas: z.string().trim().min(1).max(10000),
   isPublished: z.boolean().optional().default(false),
   isTicketed: z.boolean().optional().default(true),
@@ -81,6 +89,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Fecha inválida" }, { status: 400 });
   }
 
+  const isTicketedFinal = d.tipo === "Online" ? false : (d.isTicketed ?? true);
+
   const created = await prisma.evento.create({
     data: {
       nombre: d.nombre,
@@ -92,7 +102,7 @@ export async function POST(req: Request) {
       tipo: d.tipo,
       reglas: d.reglas,
       isPublished: d.isPublished ?? false,
-      isTicketed: d.isTicketed ?? true,
+      isTicketed: isTicketedFinal,
     },
     select: { id: true },
   });

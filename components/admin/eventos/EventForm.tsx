@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+
+const TIPO_OPCIONES = ["Presencial", "Online"] as const;
+
 type EventoFormData = {
   id?: string;
   nombre: string;
@@ -41,6 +44,11 @@ export default function EventForm({
     isPublished: initialData?.isPublished ?? false,
     isTicketed: initialData?.isTicketed ?? true,
   });
+
+  function isWildcard(tipo: string) {
+    const t = (tipo || "").trim().toLowerCase();
+    return t === "wildcard" || t === "wild card" || t.includes("wildcard");
+  }
 
   function toDatetimeLocalString(d: Date) {
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -178,13 +186,22 @@ export default function EventForm({
 
         <div>
           <label className="block text-sm font-medium">Tipo</label>
-          <input
+          <select
             className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
-            value={form.tipo}
-            onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-            required
-            maxLength={100}
-          />
+            value={form.tipo ?? "Presencial"}
+            onChange={(e) => {
+              const nextTipo = e.target.value as (typeof TIPO_OPCIONES)[number];
+              setForm((prev) => ({
+                ...prev,
+                tipo: nextTipo,
+                isTicketed: nextTipo === "Online" ? false : prev.isTicketed,
+              }));
+            }}
+          >
+            {TIPO_OPCIONES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -211,7 +228,8 @@ export default function EventForm({
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
-              checked={form.isTicketed}
+              checked={form.tipo === "Online" ? false : !!form.isTicketed}
+              disabled={form.tipo === "Online"}
               onChange={(e) => setForm({ ...form, isTicketed: e.target.checked })}
             />
             <span>Presencial (con entradas)</span>

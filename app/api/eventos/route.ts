@@ -9,7 +9,7 @@ export async function GET() {
         isTicketed: true,
         fecha: { gte: new Date() },
       },
-      select: { id: true, nombre: true, fecha: true, lugar: true, ciudad: true },
+      select: { id: true, nombre: true, fecha: true, lugar: true, ciudad: true, tipo: true },
       orderBy: { fecha: "asc" },
     });
     return NextResponse.json({ data: eventos }, { status: 200 });

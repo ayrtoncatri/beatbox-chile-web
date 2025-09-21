@@ -1,15 +1,31 @@
+import { prisma } from "@/lib/prisma";
 import EventForm from "@/components/admin/eventos/EventForm";
 import { notFound } from "next/navigation";
 
-async function getEvento(id: string) {
-  const res = await fetch(`/api/admin/eventos/${id}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  const { data } = await res.json();
-  return data as any;
-}
+export default async function AdminEditEventoPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-export default async function AdminEditEventoPage({ params }: { params: { id: string } }) {
-  const evento = await getEvento(params.id);
+  const evento = await prisma.evento.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      nombre: true,
+      fecha: true,
+      lugar: true,
+      ciudad: true,
+      direccion: true,
+      descripcion: true,
+      tipo: true,
+      reglas: true,
+      isPublished: true,
+      isTicketed: true,
+    },
+  });
+
   if (!evento) notFound();
 
   return (
@@ -20,7 +36,7 @@ export default async function AdminEditEventoPage({ params }: { params: { id: st
         initialData={{
           id: evento.id,
           nombre: evento.nombre,
-          fecha: evento.fecha,
+          fecha: String(evento.fecha),
           lugar: evento.lugar,
           ciudad: evento.ciudad,
           direccion: evento.direccion,
