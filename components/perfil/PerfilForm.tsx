@@ -1,39 +1,185 @@
 "use client";
-import { useState } from "react";
-import Image from "next/image";
 
-export default function PerfilForm({ user }: { user: any }) {
-  const [form, setForm] = useState({
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import {
+  DPARegion,
+  DPAComuna,
+  fetchRegiones,
+  fetchComunasByRegionCode,
+  normalize,
+} from "@/lib/cl-geo";
+
+type UserLike = {
+  email: string;
+  image?: string | null;
+  nombres?: string | null;
+  apellidoPaterno?: string | null;
+  apellidoMaterno?: string | null;
+  region?: string | null;
+  comuna?: string | null;
+  edad?: number | string | null;
+  wildcards?: any[];
+};
+
+type PerfilFormState = {
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  region: string;
+  comuna: string;
+  edad: string; // mantener como string en el form
+};
+
+export default function PerfilForm({ user }: { user: UserLike }) {
+  const [form, setForm] = useState<PerfilFormState>({
     nombres: user.nombres || "",
     apellidoPaterno: user.apellidoPaterno || "",
     apellidoMaterno: user.apellidoMaterno || "",
     region: user.region || "",
     comuna: user.comuna || "",
-    edad: user.edad || "",
+    edad:
+      user.edad === null || user.edad === undefined || user.edad === ""
+        ? ""
+        : String(user.edad),
   });
   const [msg, setMsg] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+  const validateEdad = (edad: string) => {
+    if (!edad || edad.trim() === "") return "La edad es requerida";
+    const edadNum = parseInt(edad, 10);
+    if (isNaN(edadNum)) return "La edad debe ser un número válido";
+    if (edadNum < 10) return "La edad mínima es 10 años";
+    if (edadNum > 80) return "La edad máxima es 80 años";
+    return "";
   };
 
-  const handleSubmit = async (e: any) => {
+  const [regiones, setRegiones] = useState<DPARegion[]>([]);
+  const [comunas, setComunas] = useState<DPAComuna[]>([]);
+  const [loadingRegiones, setLoadingRegiones] = useState(true);
+  const [loadingComunas, setLoadingComunas] = useState(false);
+  const [errorGeo, setErrorGeo] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setErrorGeo(null);
+      try {
+        setLoadingRegiones(true);
+        const regs = await fetchRegiones();
+        if (!alive) return;
+        setRegiones(regs);
+
+        if (form.region) {
+          const r = regs.find(
+            (x) => normalize(x.nombre) === normalize(form.region)
+          );
+          if (r) {
+            setLoadingComunas(true);
+            const cms = await fetchComunasByRegionCode(r.codigo);
+            if (!alive) return;
+            setComunas(cms);
+            if (
+              form.comuna &&
+              !cms.some(
+                (c) => normalize(c.nombre) === normalize(form.comuna)
+              )
+            ) {
+              setForm((f) => ({ ...f, comuna: "" }));
+            }
+          } else {
+            setForm((f) => ({ ...f, region: "", comuna: "" }));
+          }
+        }
+      } catch {
+        if (!alive) return;
+        setErrorGeo("No se pudieron cargar las regiones. Intenta más tarde.");
+      } finally {
+        if (alive) {
+          setLoadingRegiones(false);
+          setLoadingComunas(false);
+        }
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []); // Carga inicial
+
+  const handleChange = async (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "region") {
+      setForm((f) => ({ ...f, region: value, comuna: "" }));
+
+      const selected = regiones.find((r) => r.nombre === value);
+      if (selected) {
+        setLoadingComunas(true);
+        setErrorGeo(null);
+        try {
+          const cms = await fetchComunasByRegionCode(selected.codigo);
+          setComunas(cms);
+        } catch {
+          setComunas([]);
+          setErrorGeo("No se pudieron cargar las comunas. Intenta más tarde.");
+        } finally {
+          setLoadingComunas(false);
+        }
+      } else {
+        setComunas([]);
+      }
+      return;
+    }
+
+    setForm((f) => ({ ...f, [name]: value }));
+
+    // Validación en tiempo real de edad
+    if (name === "edad") {
+      const error = validateEdad(value);
+      setErrors((prev) => ({ ...prev, edad: error }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
-    const res = await fetch("/api/user/update", {
-      method: "POST",
-      body: JSON.stringify(form),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (res.ok) setMsg("Perfil actualizado correctamente");
-    else setMsg("Error al actualizar perfil");
+    setErrors({});
+
+    // Validar edad antes de enviar
+    const edadError = validateEdad(form.edad);
+    if (edadError) {
+      setErrors({ edad: edadError });
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/user/update", {
+        method: "POST",
+        body: JSON.stringify({ ...form, edad: Number(form.edad) }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMsg("Perfil actualizado correctamente");
+      } else {
+        setMsg(data?.error || "Error al actualizar perfil");
+      }
+    } catch {
+      setMsg("Error de red al actualizar");
+    }
   };
 
-  // Genera las iniciales para el avatar
   const avatarName =
     (form.nombres ? form.nombres.split(" ")[0] : "") +
     (form.apellidoPaterno ? " " + form.apellidoPaterno : "");
+
+  const comunasDisponibles = useMemo(
+    () => comunas.map((c) => c.nombre),
+    [comunas]
+  );
 
   return (
     <div className="w-full">
@@ -45,7 +191,9 @@ export default function PerfilForm({ user }: { user: any }) {
           <Image
             src={
               user.image ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName || user.email || "U")}&background=3b82f6&color=fff&size=128`
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                avatarName || user.email || "U"
+              )}&background=3b82f6&color=fff&size=128`
             }
             alt="Imagen de perfil"
             width={112}
@@ -53,8 +201,11 @@ export default function PerfilForm({ user }: { user: any }) {
             className="rounded-full object-cover border-4 border-blue-700 shadow-lg transition-all"
             priority
           />
-          <span className="text-blue-100 font-semibold text-lg mt-2 break-all text-center">{user.email}</span>
+          <span className="text-blue-100 font-semibold text-lg mt-2 break-all text-center">
+            {user.email}
+          </span>
         </div>
+
         <div className="flex flex-col gap-3 w-full">
           <input
             name="nombres"
@@ -63,6 +214,7 @@ export default function PerfilForm({ user }: { user: any }) {
             placeholder="Nombres"
             className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
+
           <div className="flex flex-col md:flex-row gap-2 w-full">
             <input
               name="apellidoPaterno"
@@ -79,42 +231,86 @@ export default function PerfilForm({ user }: { user: any }) {
               className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
+
           <div className="flex flex-col md:flex-row gap-2 w-full">
-            <input
+            <select
               name="region"
               value={form.region}
               onChange={handleChange}
-              placeholder="Región"
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
-            <input
+              disabled={loadingRegiones}
+              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <option value="">
+                {loadingRegiones ? "Cargando regiones..." : "Selecciona región"}
+              </option>
+              {regiones.map((r) => (
+                <option key={r.codigo} value={r.nombre}>
+                  {r.nombre}
+                </option>
+              ))}
+            </select>
+
+            <select
               name="comuna"
               value={form.comuna}
               onChange={handleChange}
-              placeholder="Comuna"
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
+              disabled={
+                !form.region ||
+                loadingComunas ||
+                comunasDisponibles.length === 0
+              }
+              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <option value="">
+                {!form.region
+                  ? "Primero elige una región"
+                  : loadingComunas
+                  ? "Cargando comunas..."
+                  : comunasDisponibles.length
+                  ? "Selecciona comuna"
+                  : "Sin comunas disponibles"}
+              </option>
+              {comunasDisponibles.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
-          <input
-            name="edad"
-            value={form.edad}
-            onChange={handleChange}
-            placeholder="Edad"
-            type="number"
-            min={0}
-            className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
+
+          <div className="w-full">
+            <input
+              name="edad"
+              value={form.edad}
+              onChange={handleChange}
+              placeholder="Edad"
+              type="number"
+              min={10}
+              max={80}
+              required
+              className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition ${
+                errors.edad
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-blue-800/30 focus:ring-blue-500"
+              }`}
+            />
+            {errors.edad && (
+              <p className="text-red-400 text-sm mt-1">{errors.edad}</p>
+            )}
+          </div>
         </div>
+
         <button
           type="submit"
           className="w-full rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Guardar cambios
         </button>
+
         {msg && <p className="text-center text-blue-300">{msg}</p>}
+        {errorGeo && <p className="text-center text-red-300">{errorGeo}</p>}
       </form>
 
-      {/* Wildcard Edit Section */}
       {user.wildcards && user.wildcards.length > 0 && (
         <div className="w-full max-w-md mx-auto mt-8 bg-neutral-800/70 rounded-xl p-6 shadow-lg border border-blue-800/30">
           <h3 className="text-blue-200 font-bold mb-4 text-lg">Editar Wildcard</h3>
@@ -127,9 +323,10 @@ export default function PerfilForm({ user }: { user: any }) {
   );
 }
 
-// Componente para editar una wildcard
 function WildcardEditForm({ wildcard }: { wildcard: any }) {
-  const [nombreArtistico, setNombreArtistico] = useState(wildcard.nombreArtistico || "");
+  const [nombreArtistico, setNombreArtistico] = useState(
+    wildcard.nombreArtistico || ""
+  );
   const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
   const [msg, setMsg] = useState("");
 
