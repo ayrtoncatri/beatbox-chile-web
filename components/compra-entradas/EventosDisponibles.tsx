@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 export type EventoDTO = {
   id: string;
   nombre: string;
-  fecha: string; // vendrá como ISO string desde la API
-  tipo?: string;
+  fecha: string;
+  lugar?: string | null;
+  ciudad?: string | null;
+  tipo?: string | null;
 };
 
 type Props = {
@@ -17,13 +19,17 @@ type Props = {
 export default function EventosDisponibles({ onSelect, selectedId }: Props) {
   const [eventos, setEventos] = useState<EventoDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/eventos", { cache: "no-store" });
         const json = await res.json();
-        setEventos(json?.eventos ?? []);
+        if (!res.ok) throw new Error(json?.error || "Error al cargar eventos");
+        setEventos(json?.data ?? []);
+      } catch (e: any) {
+        setErr(e.message || "Error");
       } finally {
         setLoading(false);
       }
@@ -35,6 +41,14 @@ export default function EventosDisponibles({ onSelect, selectedId }: Props) {
     return (
       <section className="mt-6 max-w-4xl mx-auto px-4">
         <p className="text-lime-200">Cargando eventos...</p>
+      </section>
+    );
+  }
+
+  if (err) {
+    return (
+      <section className="mt-6 max-w-4xl mx-auto px-4">
+        <p className="text-red-300">Error: {err}</p>
       </section>
     );
   }
@@ -69,6 +83,9 @@ export default function EventosDisponibles({ onSelect, selectedId }: Props) {
                   dateStyle: "medium",
                   timeStyle: "short",
                 })}
+              </p>
+              <p className="text-neutral-300 mt-1">
+                {[ev.lugar, ev.ciudad].filter(Boolean).join(" — ")}
               </p>
               {active && <p className="text-lime-200/90 mt-2">Seleccionado ✓</p>}
             </button>

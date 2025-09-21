@@ -1,5 +1,6 @@
 import InfoPrecios from "@/components/compra-entradas/InfoPrecios";
 import CompraEntradasClient from "@/components/compra-entradas/CompraEntradasClient";
+import EventosDisponibles from "@/components/compra-entradas/EventosDisponibles";
 
 export default function CompraEntradasPage() {
   return (
