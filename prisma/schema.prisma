@@ -26,10 +26,13 @@ model User {
   image            String?
   role             String   @default("user")
   wildcards        Wildcard[]
+  reviewedWildcards Wildcard[] @relation("WildcardReviewedBy")
   stats            Estadistica[]
   sugerencias      Sugerencia[]
   createdAt        DateTime @default(now())
   compras          CompraEntrada[]
+  isActive         Boolean  @default(true)
+  updatedAt        DateTime @default(now())
 }
 
 model CompraEntrada {
@@ -62,17 +65,38 @@ model Evento {
   stats     Estadistica[]
   createdAt DateTime @default(now())
   compras   CompraEntrada[]
+  descripcion String?        
+  lugar       String?       
+  ciudad      String?         
+  direccion   String?         
+  imagen      String?         
+  isPublished Boolean  @default(false) 
+  isTicketed  Boolean  @default(true)  
+  updatedAt   DateTime @default(now())    
+  
+}
+
+enum WildcardStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Wildcard {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   youtubeUrl      String 
   nombreArtistico String?  
-  user            User     @relation(fields: [userId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
   userId          String
-  evento          Evento   @relation(fields: [eventoId], references: [id])
+  evento          Evento         @relation(fields: [eventoId], references: [id])
   eventoId        String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime       @default(now())
+  status          WildcardStatus @default(PENDING)
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      User?          @relation("WildcardReviewedBy", fields: [reviewedById], references: [id])
+  notes           String?
+  updatedAt       DateTime       @default(now())
 }
 
 model Estadistica {

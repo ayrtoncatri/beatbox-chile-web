@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user?.password) return null;
+         if (user.isActive === false) return null; 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
         return { 
@@ -27,6 +28,7 @@ export const authOptions: NextAuthOptions = {
           nombres: user.nombres ?? null,
           apellidoPaterno: user.apellidoPaterno ?? null,
           apellidoMaterno: user.apellidoMaterno ?? null,
+          isActive: user.isActive,
         } as any;
       },
     }),
@@ -39,30 +41,33 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         const existing = await prisma.user.findUnique({ where: { email: user.email! } });
-        if (!existing) {
-          let nombres = user.name ?? "";
-          let apellidoPaterno = "";
-          let apellidoMaterno = "";
-          if (nombres) {
-            const partes = nombres.split(" ");
-            nombres = partes.slice(0, -2).join(" ") || partes[0] || "";
-            apellidoPaterno = partes[partes.length - 2] || "";
-            apellidoMaterno = partes[partes.length - 1] || "";
+        if (existing) {
+          if (existing.isActive === false) return false;
+        } else {
+            let nombres = user.name ?? "";
+            let apellidoPaterno = "";
+            let apellidoMaterno = "";
+            if (nombres) {
+              const partes = nombres.split(" ");
+              nombres = partes.slice(0, -2).join(" ") || partes[0] || "";
+              apellidoPaterno = partes[partes.length - 2] || "";
+              apellidoMaterno = partes[partes.length - 1] || "";
+            }
+            await prisma.user.create({
+              data: {
+                email: user.email!,
+                nombres,
+                apellidoPaterno,
+                apellidoMaterno,
+                image: user.image ?? null,
+                role: "user",
+                // comuna, region, edad quedan null y puedes pedirlos luego
+              },
+            });
           }
-          await prisma.user.create({
-            data: {
-              email: user.email!,
-              nombres,
-              apellidoPaterno,
-              apellidoMaterno,
-              image: user.image ?? null,
-              role: "user",
-              // comuna, region, edad quedan null y puedes pedirlos luego
-            },
-          });
-        }
       }
-      return true;
+    return true;
+
     },
     async jwt({ token, user, account }) { 
       if (account?.provider === "google" || (!token.nombres && token.email)) {
@@ -74,6 +79,7 @@ export const authOptions: NextAuthOptions = {
           token.apellidoMaterno = dbUser.apellidoMaterno ?? null;
           token.role = dbUser.role ?? "user";
           token.image = dbUser.image ?? null;
+
         }
       }
 
@@ -84,13 +90,15 @@ export const authOptions: NextAuthOptions = {
         token.apellidoPaterno = (user as any).apellidoPaterno ?? null;
         token.apellidoMaterno = (user as any).apellidoMaterno ?? null;
         token.image = (user as any).image ?? null;
+        (token as any).isActive = (user as any).isActive ?? true;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) { 
         (session.user as any).id = token.sub; 
-        (session.user as any).role = (token as any).role ?? "user"; 
+        (session.user as any).role = (token as any).role ?? "user";
+        (session.user as any).isActive = (token as any).isActive ?? true; 
         (session.user as any).nombres = (token as any).nombres ?? null;
         (session.user as any).apellidoPaterno = (token as any).apellidoPaterno ?? null;
         (session.user as any).apellidoMaterno = (token as any).apellidoMaterno ?? null;
