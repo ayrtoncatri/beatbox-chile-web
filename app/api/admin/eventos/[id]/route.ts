@@ -1,9 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
 import { z } from "zod";
-
-type Ctx = { params: { id: string } };
 
 const tipoEnum = z
   .string()
@@ -19,18 +17,26 @@ const updateSchema = z.object({
   lugar: z.string().trim().max(200).nullable().optional(),
   ciudad: z.string().trim().max(200).nullable().optional(),
   direccion: z.string().trim().max(300).nullable().optional(),
-  tipo: tipoEnum.optional(), // <- restringido
+  tipo: tipoEnum.optional(),
   reglas: z.string().trim().min(1).max(10000).optional(),
   isPublished: z.boolean().optional(),
   isTicketed: z.boolean().optional(),
 });
 
-export async function GET(_req: Request, { params }: Ctx) {
+function getIdFromRequest(req: NextRequest) {
+  const segments = req.nextUrl.pathname.split("/");
+  return segments[segments.length - 1];
+}
+
+export async function GET(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
 
+  const id = getIdFromRequest(req);
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
   const evento = await prisma.evento.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true, nombre: true, descripcion: true, fecha: true,
       lugar: true, ciudad: true, direccion: true,
@@ -43,9 +49,12 @@ export async function GET(_req: Request, { params }: Ctx) {
   return NextResponse.json({ data: evento }, { status: 200 });
 }
 
-export async function PATCH(req: Request, { params }: Ctx) {
+export async function PATCH(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
+
+  const id = getIdFromRequest(req);
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const body = await req.json().catch(() => null);
   const parsed = updateSchema.safeParse(body);
@@ -66,7 +75,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
     ...(d.isPublished !== undefined ? { isPublished: d.isPublished } : {}),
   };
 
-  // Regla: si el tipo es Online => isTicketed = false
   if (d.tipo === "Online") {
     data.isTicketed = false;
   } else if (d.isTicketed !== undefined) {
@@ -74,7 +82,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 
   const updated = await prisma.evento.update({
-    where: { id: params.id },
+    where: { id },
     data,
     select: { id: true },
   });
@@ -82,10 +90,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
   return NextResponse.json({ data: updated }, { status: 200 });
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
 
-  await prisma.evento.delete({ where: { id: params.id } });
+  const id = getIdFromRequest(req);
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  await prisma.evento.delete({ where: { id } });
   return NextResponse.json({ ok: true }, { status: 200 });
 }

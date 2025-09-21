@@ -1,16 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+function getIdFromRequest(req: NextRequest) {
+  const segments = req.nextUrl.pathname.split("/");
+  return segments[segments.length - 1];
+}
+
+export async function GET(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
 
+  const id = getIdFromRequest(req);
+
   const user = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       email: true,
@@ -36,9 +43,11 @@ const updateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
+
+  const id = getIdFromRequest(req);
 
   const session = await getServerSession(authOptions);
   const actorId = (session?.user as any)?.id as string | undefined;
@@ -51,13 +60,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const data = parsed.data;
 
-  if ("isActive" in data && data.isActive === false && actorId && actorId === params.id) {
+  if ("isActive" in data && data.isActive === false && actorId && actorId === id) {
     return NextResponse.json({ error: "No puedes desactivar tu propia cuenta." }, { status: 400 });
   }
 
   try {
     const updated = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...("nombres" in data ? { nombres: data.nombres } : {}),
         ...("apellidoPaterno" in data ? { apellidoPaterno: data.apellidoPaterno } : {}),

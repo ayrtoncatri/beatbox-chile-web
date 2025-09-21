@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+function getIdFromRequest(req: NextRequest) {
+  // /api/admin/compras/[id]
+  const segments = req.nextUrl.pathname.split("/");
+  return segments[segments.length - 1];
+}
+
+export async function GET(req: NextRequest) {
   await ensureAdminApi();
+  const id = getIdFromRequest(req);
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
   const compra = await prisma.compraEntrada.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       createdAt: true,
@@ -27,11 +34,11 @@ export async function GET(
   return NextResponse.json(compra);
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
   await ensureAdminApi();
-  await prisma.compraEntrada.delete({ where: { id: params.id } });
+  const id = getIdFromRequest(req);
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  await prisma.compraEntrada.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

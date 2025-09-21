@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const id = params.id;
+export async function GET(req: NextRequest) {
+  const segments = req.nextUrl.pathname.split("/");
+  const id = segments[segments.length - 1];
   if (!id) return NextResponse.json({ error: "Falta id" }, { status: 400 });
 
   const evento = await prisma.evento.findFirst({

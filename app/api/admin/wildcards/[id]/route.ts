@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
 import { z } from "zod";
@@ -13,9 +13,16 @@ const updateSchema = z.object({
   youtubeUrl: z.string().url().max(500).optional().nullable(),
 });
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+function getIdFromRequest(req: NextRequest) {
+  const segments = req.nextUrl.pathname.split("/");
+  return segments[segments.length - 1];
+}
+
+export async function PATCH(req: NextRequest) {
   const guard = await ensureAdminApi();
   if (guard) return guard;
+
+  const id = getIdFromRequest(req);
 
   const session = await getServerSession(authOptions);
   const actorId = (session?.user as any)?.id as string | undefined;
@@ -27,7 +34,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
   const data = parsed.data;
 
-  // Construir el objeto de actualización con tipado explícito
   const updateData: Prisma.WildcardUpdateInput = {};
 
   if ("status" in data) updateData.status = data.status!;
@@ -47,7 +53,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   try {
     const updated = await prisma.wildcard.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         user: { select: { id: true, email: true, nombres: true } },
