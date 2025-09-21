@@ -22,32 +22,36 @@ type UserLike = {
   wildcards?: any[];
 };
 
+type PerfilFormState = {
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  region: string;
+  comuna: string;
+  edad: string; // mantener como string en el form
+};
+
 export default function PerfilForm({ user }: { user: UserLike }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<PerfilFormState>({
     nombres: user.nombres || "",
     apellidoPaterno: user.apellidoPaterno || "",
     apellidoMaterno: user.apellidoMaterno || "",
     region: user.region || "",
     comuna: user.comuna || "",
-    edad: user.edad ?? "",
+    edad:
+      user.edad === null || user.edad === undefined || user.edad === ""
+        ? ""
+        : String(user.edad),
   });
   const [msg, setMsg] = useState("");
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateEdad = (edad: string) => {
-    if (!edad || edad.trim() === "") {
-      return "La edad es requerida";
-    }
-    const edadNum = parseInt(edad);
-    if (isNaN(edadNum)) {
-      return "La edad debe ser un número válido";
-    }
-    if (edadNum < 10) {
-      return "La edad mínima es 10 años";
-    }
-    if (edadNum > 80) {
-      return "La edad máxima es 80 años";
-    }
+    if (!edad || edad.trim() === "") return "La edad es requerida";
+    const edadNum = parseInt(edad, 10);
+    if (isNaN(edadNum)) return "La edad debe ser un número válido";
+    if (edadNum < 10) return "La edad mínima es 10 años";
+    if (edadNum > 80) return "La edad máxima es 80 años";
     return "";
   };
 
@@ -68,13 +72,20 @@ export default function PerfilForm({ user }: { user: UserLike }) {
         setRegiones(regs);
 
         if (form.region) {
-          const r = regs.find((x) => normalize(x.nombre) === normalize(form.region));
+          const r = regs.find(
+            (x) => normalize(x.nombre) === normalize(form.region)
+          );
           if (r) {
             setLoadingComunas(true);
             const cms = await fetchComunasByRegionCode(r.codigo);
             if (!alive) return;
             setComunas(cms);
-            if (form.comuna && !cms.some((c) => normalize(c.nombre) === normalize(form.comuna))) {
+            if (
+              form.comuna &&
+              !cms.some(
+                (c) => normalize(c.nombre) === normalize(form.comuna)
+              )
+            ) {
               setForm((f) => ({ ...f, comuna: "" }));
             }
           } else {
@@ -94,10 +105,11 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     return () => {
       alive = false;
     };
+  }, []); // Carga inicial
 
-  }, []);
-
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = async (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
 
     if (name === "region") {
@@ -123,50 +135,40 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     }
 
     setForm((f) => ({ ...f, [name]: value }));
-    
-    // Validar edad en tiempo real
+
+    // Validación en tiempo real de edad
     if (name === "edad") {
       const error = validateEdad(value);
-      setErrors(prev => ({ ...prev, edad: error }));
+      setErrors((prev) => ({ ...prev, edad: error }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
-
     setErrors({});
-    
+
     // Validar edad antes de enviar
     const edadError = validateEdad(form.edad);
     if (edadError) {
       setErrors({ edad: edadError });
       return;
     }
-    
-    const res = await fetch("/api/user/update", {
-      method: "POST",
-      body: JSON.stringify(form),
-      headers: { "Content-Type": "application/json" },
-    });
-    
-    const data = await res.json();
-    if (res.ok) {
-      setMsg("Perfil actualizado correctamente");
-    } else {
-      setMsg(data.error || "Error al actualizar perfil");
-=======
+
     try {
       const res = await fetch("/api/user/update", {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, edad: Number(form.edad) }),
         headers: { "Content-Type": "application/json" },
       });
-      if (res.ok) setMsg("Perfil actualizado correctamente");
-      else setMsg("Error al actualizar perfil");
+      const data = await res.json();
+      if (res.ok) {
+        setMsg("Perfil actualizado correctamente");
+      } else {
+        setMsg(data?.error || "Error al actualizar perfil");
+      }
     } catch {
       setMsg("Error de red al actualizar");
-
     }
   };
 
@@ -174,7 +176,10 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     (form.nombres ? form.nombres.split(" ")[0] : "") +
     (form.apellidoPaterno ? " " + form.apellidoPaterno : "");
 
-  const comunasDisponibles = useMemo(() => comunas.map((c) => c.nombre), [comunas]);
+  const comunasDisponibles = useMemo(
+    () => comunas.map((c) => c.nombre),
+    [comunas]
+  );
 
   return (
     <div className="w-full">
@@ -196,7 +201,9 @@ export default function PerfilForm({ user }: { user: UserLike }) {
             className="rounded-full object-cover border-4 border-blue-700 shadow-lg transition-all"
             priority
           />
-          <span className="text-blue-100 font-semibold text-lg mt-2 break-all text-center">{user.email}</span>
+          <span className="text-blue-100 font-semibold text-lg mt-2 break-all text-center">
+            {user.email}
+          </span>
         </div>
 
         <div className="flex flex-col gap-3 w-full">
@@ -247,7 +254,11 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               name="comuna"
               value={form.comuna}
               onChange={handleChange}
-              disabled={!form.region || loadingComunas || comunasDisponibles.length === 0}
+              disabled={
+                !form.region ||
+                loadingComunas ||
+                comunasDisponibles.length === 0
+              }
               className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <option value="">
@@ -278,26 +289,15 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               max={80}
               required
               className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition ${
-                errors.edad 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : 'border-blue-800/30 focus:ring-blue-500'
+                errors.edad
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-blue-800/30 focus:ring-blue-500"
               }`}
             />
             {errors.edad && (
               <p className="text-red-400 text-sm mt-1">{errors.edad}</p>
             )}
           </div>
-
-          <input
-            name="edad"
-            value={form.edad ?? ""}
-            onChange={handleChange}
-            placeholder="Edad"
-            type="number"
-            min={0}
-            className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
-
         </div>
 
         <button
@@ -324,7 +324,9 @@ export default function PerfilForm({ user }: { user: UserLike }) {
 }
 
 function WildcardEditForm({ wildcard }: { wildcard: any }) {
-  const [nombreArtistico, setNombreArtistico] = useState(wildcard.nombreArtistico || "");
+  const [nombreArtistico, setNombreArtistico] = useState(
+    wildcard.nombreArtistico || ""
+  );
   const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
   const [msg, setMsg] = useState("");
 
