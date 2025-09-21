@@ -32,6 +32,24 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     edad: user.edad ?? "",
   });
   const [msg, setMsg] = useState("");
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  const validateEdad = (edad: string) => {
+    if (!edad || edad.trim() === "") {
+      return "La edad es requerida";
+    }
+    const edadNum = parseInt(edad);
+    if (isNaN(edadNum)) {
+      return "La edad debe ser un número válido";
+    }
+    if (edadNum < 10) {
+      return "La edad mínima es 10 años";
+    }
+    if (edadNum > 80) {
+      return "La edad máxima es 80 años";
+    }
+    return "";
+  };
 
   const [regiones, setRegiones] = useState<DPARegion[]>([]);
   const [comunas, setComunas] = useState<DPAComuna[]>([]);
@@ -105,11 +123,39 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     }
 
     setForm((f) => ({ ...f, [name]: value }));
+    
+    // Validar edad en tiempo real
+    if (name === "edad") {
+      const error = validateEdad(value);
+      setErrors(prev => ({ ...prev, edad: error }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
+
+    setErrors({});
+    
+    // Validar edad antes de enviar
+    const edadError = validateEdad(form.edad);
+    if (edadError) {
+      setErrors({ edad: edadError });
+      return;
+    }
+    
+    const res = await fetch("/api/user/update", {
+      method: "POST",
+      body: JSON.stringify(form),
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    const data = await res.json();
+    if (res.ok) {
+      setMsg("Perfil actualizado correctamente");
+    } else {
+      setMsg(data.error || "Error al actualizar perfil");
+=======
     try {
       const res = await fetch("/api/user/update", {
         method: "POST",
@@ -120,6 +166,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
       else setMsg("Error al actualizar perfil");
     } catch {
       setMsg("Error de red al actualizar");
+
     }
   };
 
@@ -220,6 +267,27 @@ export default function PerfilForm({ user }: { user: UserLike }) {
             </select>
           </div>
 
+          <div className="w-full">
+            <input
+              name="edad"
+              value={form.edad}
+              onChange={handleChange}
+              placeholder="Edad"
+              type="number"
+              min={10}
+              max={80}
+              required
+              className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition ${
+                errors.edad 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : 'border-blue-800/30 focus:ring-blue-500'
+              }`}
+            />
+            {errors.edad && (
+              <p className="text-red-400 text-sm mt-1">{errors.edad}</p>
+            )}
+          </div>
+
           <input
             name="edad"
             value={form.edad ?? ""}
@@ -229,6 +297,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
             min={0}
             className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
+
         </div>
 
         <button
