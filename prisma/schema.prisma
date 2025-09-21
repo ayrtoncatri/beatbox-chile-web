@@ -110,11 +110,19 @@ model Estadistica {
 }
 
 model Sugerencia {
-  id        String   @id @default(cuid())
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    String?
-  mensaje   String
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+
+  nombre      String?            
+  email       String?            
+  asunto      String?            
+  estado      String   @default("nuevo") 
+  notaPrivada String?
+
+  mensaje     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
 }
 
 model Mensaje {
