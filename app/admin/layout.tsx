@@ -4,6 +4,7 @@ import { ensureAdminPage } from "@/lib/permissions";
 
 export const metadata = {
   title: "Admin | Beatbox Chile",
+  description: "Panel de administración de Beatbox Chile",
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

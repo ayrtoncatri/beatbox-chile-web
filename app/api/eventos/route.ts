@@ -5,17 +5,17 @@ export async function GET() {
   try {
     const eventos = await prisma.evento.findMany({
       where: {
-        NOT: { tipo: "Online" },
-        // para mostrar eventos futuros fecha: { gte: new Date() },
+        isPublished: true,
+        isTicketed: true,
+        fecha: { gte: new Date() },
       },
-      select: { id: true, nombre: true, fecha: true, tipo: true },
+      select: { id: true, nombre: true, fecha: true, lugar: true, ciudad: true },
       orderBy: { fecha: "asc" },
     });
-
-    return NextResponse.json({ ok: true, eventos }, { status: 200 });
+    return NextResponse.json({ data: eventos }, { status: 200 });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
 
