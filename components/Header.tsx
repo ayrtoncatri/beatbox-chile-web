@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButtons from "@/components/home/AuthButtons";
@@ -20,6 +20,16 @@ const navItems = [
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 768) {
+        setOpen(false);
+      }
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <header className="w-full bg-neutral-950 bg-opacity-90 py-3 shadow-md sticky top-0 z-50">
@@ -120,7 +130,7 @@ export default function Header() {
               </ul>
               {/* AuthButtons SOLO en mobile menu */}
               <div className="mt-10">
-                <AuthButtons />
+                <AuthButtons setOpen={setOpen} />
               </div>
             </motion.nav>
           </>

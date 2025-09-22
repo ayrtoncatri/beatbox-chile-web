@@ -3,6 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { Cog6ToothIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 
 type CustomUser = {
   name?: string | null;
@@ -11,9 +12,10 @@ type CustomUser = {
   nombres?: string | null;
   apellidoPaterno?: string | null;
   apellidoMaterno?: string | null;
+  role?: string | null;
 };
 
-export default function AuthButtons() {
+export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => void }) {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -36,9 +38,29 @@ export default function AuthButtons() {
           height={40}
           className="rounded-full border-2 border-blue-500 shadow-md object-cover"
         />
-        <span className="text-blue-100 font-medium text-base md:text-lg whitespace-nowrap">
-          Hola, <Link href='/perfil' className="font-bold">{user?.nombres} {user?.apellidoPaterno} {user?.apellidoMaterno}</Link>
+        <span className="flex flex-col items-center justify-center text-blue-100 font-medium text-base md:text-lg whitespace-nowrap">
+          Hola,{" "}
+          <Link
+            href="/perfil"
+            className="font-bold flex items-center gap-1 hover:underline"
+            onClick={() => setOpen?.(false)}
+          >
+            <UserCircleIcon className="w-5 h-5 inline-block" />
+            {user?.nombres} {user?.apellidoPaterno} {user?.apellidoMaterno}
+          </Link>
         </span>
+        {/* Acceso rápido al dashboard solo si es admin */}
+        {user?.role === "admin" && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+            title="Ir al panel de administración"
+            onClick={() => setOpen?.(false)}
+          >
+            <Cog6ToothIcon className="w-5 h-5" />
+            Dashboard
+          </Link>
+        )}
         <button
           className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-5 py-2 rounded-lg font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={() => signOut({ callbackUrl: "/" })}
