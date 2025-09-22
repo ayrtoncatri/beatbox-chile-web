@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { CalendarDaysIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const TIPO_OPCIONES = ["Presencial", "Online"] as const;
 
 type EventoFormData = {
   id?: string;
   nombre: string;
-  fecha: string; // datetime-local
+  fecha: string;
   lugar?: string | null;
   ciudad?: string | null;
   direccion?: string | null;
@@ -39,16 +39,11 @@ export default function EventForm({
     ciudad: initialData?.ciudad ?? "",
     direccion: initialData?.direccion ?? "",
     descripcion: initialData?.descripcion ?? "",
-    tipo: initialData?.tipo ?? "",
+    tipo: initialData?.tipo ?? "Presencial",
     reglas: initialData?.reglas ?? "",
     isPublished: initialData?.isPublished ?? false,
     isTicketed: initialData?.isTicketed ?? true,
   });
-
-  function isWildcard(tipo: string) {
-    const t = (tipo || "").trim().toLowerCase();
-    return t === "wildcard" || t === "wild card" || t.includes("wildcard");
-  }
 
   function toDatetimeLocalString(d: Date) {
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -117,77 +112,71 @@ export default function EventForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-6 bg-white rounded-2xl shadow border border-gray-200 p-8 max-w-2xl">
       {err && <div className="text-red-600 text-sm">{err}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium">Nombre</label>
+          <label className="block text-sm font-medium mb-1">Nombre</label>
           <input
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.nombre}
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             required
             maxLength={200}
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Fecha y hora</label>
+          <label className="block text-sm font-medium mb-1">Fecha y hora</label>
           <input
             type="datetime-local"
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.fecha}
             onChange={(e) => setForm({ ...form, fecha: e.target.value })}
             required
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Lugar</label>
+          <label className="block text-sm font-medium mb-1">Lugar</label>
           <input
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.lugar ?? ""}
             onChange={(e) => setForm({ ...form, lugar: e.target.value })}
             maxLength={200}
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Ciudad</label>
+          <label className="block text-sm font-medium mb-1">Ciudad</label>
           <input
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.ciudad ?? ""}
             onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
             maxLength={200}
           />
         </div>
-
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium">Dirección</label>
+          <label className="block text-sm font-medium mb-1">Dirección</label>
           <input
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.direccion ?? ""}
             onChange={(e) => setForm({ ...form, direccion: e.target.value })}
             maxLength={300}
           />
         </div>
-
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium">Descripción</label>
+          <label className="block text-sm font-medium mb-1">Descripción</label>
           <textarea
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             rows={4}
             value={form.descripcion ?? ""}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
             maxLength={4000}
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Tipo</label>
+          <label className="block text-sm font-medium mb-1">Tipo</label>
           <select
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.tipo ?? "Presencial"}
             onChange={(e) => {
               const nextTipo = e.target.value as (typeof TIPO_OPCIONES)[number];
@@ -203,18 +192,16 @@ export default function EventForm({
             ))}
           </select>
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Reglas</label>
+          <label className="block text-sm font-medium mb-1">Reglas</label>
           <input
-            className="mt-1 w-full border rounded px-3 py-2 bg-white text-black"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
             value={form.reglas}
             onChange={(e) => setForm({ ...form, reglas: e.target.value })}
             required
             maxLength={10000}
           />
         </div>
-
         <div className="flex items-center gap-4 md:col-span-2">
           <label className="inline-flex items-center gap-2">
             <input
@@ -224,7 +211,6 @@ export default function EventForm({
             />
             <span>Publicado</span>
           </label>
-
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
@@ -241,18 +227,19 @@ export default function EventForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-500 disabled:opacity-60"
         >
+          <CalendarDaysIcon className="w-5 h-5" />
           {mode === "create" ? "Crear evento" : "Guardar cambios"}
         </button>
-
         {mode === "edit" && (
           <button
             type="button"
             onClick={onDelete}
             disabled={loading}
-            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-500 disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white font-semibold shadow hover:bg-red-500 disabled:opacity-60"
           >
+            <TrashIcon className="w-5 h-5" />
             Eliminar
           </button>
         )}

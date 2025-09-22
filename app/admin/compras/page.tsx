@@ -44,13 +44,13 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   };
 
   const orderBy =
-  sort === "fecha_asc"
-    ? { createdAt: "asc" as const }
-    : sort === "total_desc"
-    ? { total: "desc" as const }
-    : sort === "total_asc"
-    ? { total: "asc" as const }
-    : { createdAt: "desc" as const };
+    sort === "fecha_asc"
+      ? { createdAt: "asc" as const }
+      : sort === "total_desc"
+      ? { total: "desc" as const }
+      : sort === "total_asc"
+      ? { total: "asc" as const }
+      : { createdAt: "desc" as const };
 
   const [events, total, rows, agg, aggGen, aggVip] = await Promise.all([
     prisma.evento.findMany({ select: { id: true, nombre: true }, orderBy: { fecha: "desc" } }),
@@ -114,60 +114,64 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   ).toString()}`;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Compras</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Compras</h1>
 
-      <ComprasFilters
-        events={events}
-        defaults={{ q, eventId, tipo, from: (sp.from as string) || "", to: (sp.to as string) || "", pageSize }}
-        exportUrl={exportUrl}
-        sort={sort}
-      />
+        <ComprasFilters
+          events={events}
+          defaults={{ q, eventId, tipo, from: (sp.from as string) || "", to: (sp.to as string) || "", pageSize }}
+          exportUrl={exportUrl}
+          sort={sort}
+        />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Ingresos brutos</div>
-          <div className="text-xl font-bold">${summary.ingresosBrutos.toLocaleString("es-CL")}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Entradas vendidas</div>
-          <div className="text-xl font-bold">{summary.entradasVendidas}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Nº de compras</div>
-          <div className="text-xl font-bold">{summary.totalCompras}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Por tipo</div>
-          <div className="text-sm">
-            General: {summary.porTipo.General.entradas} (${summary.porTipo.General.ingresos.toLocaleString("es-CL")})<br />
-            VIP: {summary.porTipo.VIP.entradas} (${summary.porTipo.VIP.ingresos.toLocaleString("es-CL")})
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl border border-gray-200 bg-white shadow flex flex-col gap-1">
+            <div className="text-xs text-gray-500">Ingresos brutos</div>
+            <div className="text-2xl font-bold text-green-700">${summary.ingresosBrutos.toLocaleString("es-CL")}</div>
+          </div>
+          <div className="p-4 rounded-2xl border border-gray-200 bg-white shadow flex flex-col gap-1">
+            <div className="text-xs text-gray-500">Entradas vendidas</div>
+            <div className="text-2xl font-bold">{summary.entradasVendidas}</div>
+          </div>
+          <div className="p-4 rounded-2xl border border-gray-200 bg-white shadow flex flex-col gap-1">
+            <div className="text-xs text-gray-500">Nº de compras</div>
+            <div className="text-2xl font-bold">{summary.totalCompras}</div>
+          </div>
+          <div className="p-4 rounded-2xl border border-gray-200 bg-white shadow flex flex-col gap-1">
+            <div className="text-xs text-gray-500">Por tipo</div>
+            <div className="text-sm">
+              General: <span className="font-semibold">{summary.porTipo.General.entradas}</span> (${summary.porTipo.General.ingresos.toLocaleString("es-CL")})<br />
+              VIP: <span className="font-semibold">{summary.porTipo.VIP.entradas}</span> (${summary.porTipo.VIP.ingresos.toLocaleString("es-CL")})
+            </div>
           </div>
         </div>
+
+        <ComprasTable
+          rows={rows}
+          pagination={{ page, pageSize, total, totalPages, sort }}
+        />
+
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-2">
+          <a
+            className={`btn btn-secondary ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+            href={`?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, String(v)])), page: String(page - 1) })}`}
+          >
+            Anterior
+          </a>
+          <div className="text-sm">
+            Página {page} de {totalPages}
+          </div>
+          <a
+            className={`btn btn-secondary ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+            href={`?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, String(v)])), page: String(page + 1) })}`}
+          >
+            Siguiente
+          </a>
+        </div>
+
+        <CompraDetailDrawer />
       </div>
-
-      <ComprasTable
-        rows={rows}
-        pagination={{ page, pageSize, total, totalPages, sort }}
-      />
-
-      <div className="flex items-center justify-between pt-4">
-        <a
-          className={`btn btn-secondary ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
-          href={`?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, String(v)])), page: String(page - 1) })}`}
-        >
-          Anterior
-        </a>
-        <div>Página {page} de {totalPages}</div>
-        <a
-          className={`btn btn-secondary ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
-          href={`?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, String(v)])), page: String(page + 1) })}`}
-        >
-          Siguiente
-        </a>
-      </div>
-
-      <CompraDetailDrawer />
     </div>
   );
 }

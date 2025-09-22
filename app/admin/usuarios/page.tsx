@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import ToggleUserActiveButton from "@/components/admin/usuarios/ToggleUserActiveButton";
+import { EyeIcon, UserIcon } from "@heroicons/react/24/solid";
 
 type Props = {
   searchParams?: Promise<{
@@ -66,118 +67,182 @@ export default async function UsuariosPage({ searchParams }: Props) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold">Usuarios</h2>
-        <form method="GET" action="/admin/usuarios" className="flex items-center gap-2">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar por nombre o email"
-            className="border rounded px-3 py-2 text-sm w-64"
-          />
-          <select name="status" defaultValue={status} className="border rounded px-2 py-2 text-sm">
-            <option value="all">Todos</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
-          </select>
-          <select name="pageSize" defaultValue={String(pageSize)} className="border rounded px-2 py-2 text-sm">
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
-          <button className="border rounded px-3 py-2 text-sm bg-white hover:bg-gray-50" type="submit">
-            Buscar
-          </button>
-        </form>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Usuarios</h2>
+          <form method="GET" action="/admin/usuarios" className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200">
+            <input
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="Buscar por nombre o email"
+              className="input input-bordered w-40 sm:w-64 bg-gray-50 border-gray-200 focus:border-indigo-400"
+            />
+            <select name="status" defaultValue={status} className="select select-bordered bg-gray-50 border-gray-200 focus:border-indigo-400">
+              <option value="all">Todos</option>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+            </select>
+            <select name="pageSize" defaultValue={String(pageSize)} className="select select-bordered bg-gray-50 border-gray-200 focus:border-indigo-400">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+            <button
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition"
+              type="submit"
+            >
+              Buscar
+            </button>
+          </form>
+        </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="text-left p-3">Usuario</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Rol</th>
-              <th className="text-left p-3">Estado</th>
-              <th className="text-right p-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-t">
-                <td className="p-3">
-                  <div className="flex items-center gap-3">
-                    {u.image ? (
-                      <img src={u.image} alt={u.email ?? "avatar"} className="w-7 h-7 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-200" />
-                    )}
-                    <div>
-                      <div className="font-medium">
-                        {[u.nombres, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(" ") || "—"}
-                      </div>
-                      <div className="text-xs text-gray-500">ID: {u.id}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3 capitalize">{u.role}</td>
-                <td className="p-3">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
-                      u.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                    }`}
-                  >
-                    {u.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="p-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/admin/usuarios/${u.id}`} className="text-blue-600 hover:underline">
-                      Ver
-                    </Link>
-                    <ToggleUserActiveButton
-                      id={u.id}
-                      isActive={u.isActive}
-                      disabledReason={undefined}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
+        {/* Tabla desktop */}
+        <div className="hidden md:block rounded-2xl shadow bg-white border border-gray-200 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <td className="p-6 text-center text-gray-500" colSpan={5}>
-                  No se encontraron usuarios.
-                </td>
+                <th className="text-left p-5 font-semibold">Usuario</th>
+                <th className="text-left p-5 font-semibold">Email</th>
+                <th className="text-left p-5 font-semibold">Rol</th>
+                <th className="text-left p-5 font-semibold">Estado</th>
+                <th className="text-right p-5 font-semibold">Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
+                  <td className="p-5">
+                    <div className="flex items-center gap-3">
+                      {u.image ? (
+                        <img src={u.image} alt={u.email ?? "avatar"} className="w-11 h-11 rounded-full object-cover border-2 border-indigo-200 shadow" />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-xl border-2 border-indigo-200 shadow">
+                          <UserIcon className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-gray-900 text-base">
+                          {[u.nombres, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(" ") || "—"}
+                        </div>
+                        <div className="text-xs text-gray-400">ID: {u.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-5">{u.email}</td>
+                  <td className="p-5 capitalize">{u.role}</td>
+                  <td className="p-5">
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        u.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {u.isActive ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="p-5 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/admin/usuarios/${u.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                        title="Ver usuario"
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                        Ver
+                      </Link>
+                      <ToggleUserActiveButton
+                        id={u.id}
+                        isActive={u.isActive}
+                        disabledReason={undefined}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td className="p-6 text-center text-gray-500" colSpan={5}>
+                    No se encontraron usuarios.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">Mostrando {users.length} de {total} usuarios</div>
-        <div className="flex items-center gap-2">
-          <Link
-            href={buildPageUrl(Math.max(1, page - 1))}
-            className={`px-3 py-1.5 border rounded text-sm ${
-              page === 1 ? "pointer-events-none opacity-50" : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Anterior
-          </Link>
-          <span className="text-sm">Página {page} de {totalPages}</span>
-          <Link
-            href={buildPageUrl(Math.min(totalPages, page + 1))}
-            className={`px-3 py-1.5 border rounded text-sm ${
-              page >= totalPages ? "pointer-events-none opacity-50" : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Siguiente
-          </Link>
+        {/* Lista mobile */}
+        <div className="md:hidden space-y-4">
+          {users.map((u) => (
+            <div key={u.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                {u.image ? (
+                  <img src={u.image} alt={u.email ?? "avatar"} className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 shadow" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg border-2 border-indigo-200 shadow">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                )}
+                <div>
+                  <div className="font-semibold text-gray-900">
+                    {[u.nombres, u.apellidoPaterno, u.apellidoMaterno].filter(Boolean).join(" ") || "—"}
+                  </div>
+                  <div className="text-xs text-gray-400">ID: {u.id}</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">{u.email}</div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="capitalize">{u.role}</span>
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                    u.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {u.isActive ? "Activo" : "Inactivo"}
+                </span>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Link
+                  href={`/admin/usuarios/${u.id}`}
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
+                  >
+                  <EyeIcon className="w-4 h-4" />
+                  Ver
+                </Link>
+                <ToggleUserActiveButton
+                  id={u.id}
+                  isActive={u.isActive}
+                  disabledReason={undefined}
+                />
+              </div>
+            </div>
+          ))}
+          {users.length === 0 && (
+            <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
+              No se encontraron usuarios.
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="text-sm text-gray-600">Mostrando {users.length} de {total} usuarios</div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={buildPageUrl(Math.max(1, page - 1))}
+              className={`btn btn-sm ${page === 1 ? "btn-disabled" : "btn-outline"}`}
+            >
+              Anterior
+            </Link>
+            <span className="text-sm">Página {page} de {totalPages}</span>
+            <Link
+              href={buildPageUrl(Math.min(totalPages, page + 1))}
+              className={`btn btn-sm ${page >= totalPages ? "btn-disabled" : "btn-outline"}`}
+            >
+              Siguiente
+            </Link>
+          </div>
         </div>
       </div>
     </div>

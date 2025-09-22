@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 type Row = {
   id: string;
@@ -56,7 +57,7 @@ export default function SugerenciaDetailDrawer() {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-8 shadow-2xl overflow-auto rounded-l-lg">
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-8 shadow-2xl overflow-auto rounded-l-2xl border-l border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Detalle de sugerencia</h2>
           <button className="btn btn-sm btn-outline" onClick={() => setOpen(false)}>Cerrar</button>
@@ -67,12 +68,33 @@ export default function SugerenciaDetailDrawer() {
             <div><b>ID:</b> <span className="text-gray-600">{data.id}</span></div>
             <div><b>Fecha:</b> <span className="text-gray-600">{new Date(data.createdAt).toLocaleString("es-CL")}</span></div>
             <div><b>Usuario:</b> <span className="text-gray-600">{data.user.nombres ?? "(Sin nombre)"} — {data.user.email ?? "(Sin email)"}</span></div>
-            <div><b>Estado:</b> <span className="text-gray-600">{estado}</span></div>
+            <div><b>Estado:</b> <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+              estado === "PENDIENTE"
+                ? "bg-yellow-100 text-yellow-700"
+                : estado === "REVISADA"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}>{estado}</span></div>
             <div><b>Mensaje:</b> <span className="text-gray-600 whitespace-pre-line">{data.mensaje}</span></div>
             <div className="flex gap-2 pt-2">
-              <button className={`btn btn-xs ${estado === "PENDIENTE" ? "btn-warning" : "btn-outline"}`} onClick={() => handleEstado("PENDIENTE")}>Pendiente</button>
-              <button className={`btn btn-xs ${estado === "REVISADA" ? "btn-success" : "btn-outline"}`} onClick={() => handleEstado("REVISADA")}>Revisada</button>
-              <button className={`btn btn-xs ${estado === "DESCARTADA" ? "btn-error" : "btn-outline"}`} onClick={() => handleEstado("DESCARTADA")}>Descartada</button>
+              <button
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${estado === "PENDIENTE" ? "bg-yellow-500 text-white" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"} font-semibold transition`}
+                onClick={() => handleEstado("PENDIENTE")}
+              >
+                <ClockIcon className="w-4 h-4" /> Pendiente
+              </button>
+              <button
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${estado === "REVISADA" ? "bg-green-600 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"} font-semibold transition`}
+                onClick={() => handleEstado("REVISADA")}
+              >
+                <CheckCircleIcon className="w-4 h-4" /> Revisada
+              </button>
+              <button
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${estado === "DESCARTADA" ? "bg-red-600 text-white" : "bg-red-100 text-red-700 hover:bg-red-200"} font-semibold transition`}
+                onClick={() => handleEstado("DESCARTADA")}
+              >
+                <XCircleIcon className="w-4 h-4" /> Descartada
+              </button>
             </div>
           </div>
         )}

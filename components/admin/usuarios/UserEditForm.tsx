@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PencilSquareIcon, UserIcon } from "@heroicons/react/24/solid";
 
 type User = {
   id: string;
@@ -55,16 +56,16 @@ export default function UserEditForm({ user }: { user: User }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Email</label>
-          <input className="w-full border rounded px-3 py-2 text-sm bg-gray-100" value={user.email || ""} disabled />
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Email</label>
+          <input className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100" value={user.email || ""} disabled />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Rol</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Rol</label>
           <select
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
@@ -73,36 +74,36 @@ export default function UserEditForm({ user }: { user: User }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Nombres</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Nombres</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={nombres}
             onChange={(e) => setNombres(e.target.value)}
             placeholder="Nombres"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Apellido paterno</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Apellido paterno</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={apellidoPaterno}
             onChange={(e) => setApellidoPaterno(e.target.value)}
             placeholder="Apellido paterno"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Apellido materno</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Apellido materno</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={apellidoMaterno}
             onChange={(e) => setApellidoMaterno(e.target.value)}
             placeholder="Apellido materno"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Imagen (URL)</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Imagen (URL)</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder="https://..."
@@ -116,9 +117,10 @@ export default function UserEditForm({ user }: { user: User }) {
       <div className="flex items-center gap-2">
         <button
           type="submit"
-          className="px-4 py-2 border rounded bg-white hover:bg-gray-50 text-sm"
+          className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
           disabled={loading}
         >
+          <PencilSquareIcon className="w-5 h-5" />
           {loading ? "Guardando..." : "Guardar cambios"}
         </button>
       </div>
