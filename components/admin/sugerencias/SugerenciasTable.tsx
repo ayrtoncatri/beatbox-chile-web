@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 type Row = {
   id: string;
@@ -38,49 +39,109 @@ export default function SugerenciasTable(props: {
     window.dispatchEvent(ev);
   };
 
+  // --- DESKTOP TABLE ---
   return (
-    <div className="overflow-auto rounded-lg shadow bg-white">
-      <table className="table w-full">
-        <thead>
-          <tr className="bg-gray-100 text-gray-700 text-sm">
-            <th className="px-3 py-2">Fecha</th>
-            <th className="px-3 py-2">Usuario</th>
-            <th className="px-3 py-2">Email</th>
-            <th className="px-3 py-2">Estado</th>
-            <th className="px-3 py-2">Contenido</th>
-            <th className="px-3 py-2">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="hover:bg-gray-50 transition">
-              <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString("es-CL")}</td>
-              <td className="px-3 py-2">{r.user?.nombres ?? "(Sin nombre)"}</td>
-              <td className="px-3 py-2">{r.user?.email ?? "(Sin email)"}</td>
-              <td className="px-3 py-2">
-                <span className={`badge ${r.estado === "PENDIENTE" ? "badge-warning" : r.estado === "REVISADA" ? "badge-success" : "badge-error"}`}>
-                  {r.estado}
-                </span>
-              </td>
-              <td className="px-3 py-2 max-w-xs truncate">{r.mensaje}</td>
-              <td className="px-3 py-2 flex flex-wrap gap-2">
-                <button className="btn btn-xs btn-outline" onClick={() => openDetail(r.id)}>Ver</button>
-                <button
-                  className={`btn btn-xs btn-error ${loadingId === r.id ? "loading" : ""}`}
-                  onClick={() => handleDelete(r.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
+    <>
+      <div className="hidden md:block overflow-auto rounded-2xl shadow bg-white border border-gray-200">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="bg-gray-100 text-gray-700 text-sm">
+              <th className="px-4 py-3 font-semibold">Fecha</th>
+              <th className="px-4 py-3 font-semibold">Usuario</th>
+              <th className="px-4 py-3 font-semibold">Email</th>
+              <th className="px-4 py-3 font-semibold">Estado</th>
+              <th className="px-4 py-3 font-semibold">Contenido</th>
+              <th className="px-4 py-3 font-semibold">Acciones</th>
             </tr>
-          ))}
-          {rows.length === 0 && (
-            <tr>
-              <td colSpan={6} className="text-center text-sm text-gray-500 py-6">Sin resultados</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="hover:bg-indigo-50/30 transition">
+                <td className="px-4 py-3">{new Date(r.createdAt).toLocaleString("es-CL")}</td>
+                <td className="px-4 py-3">{r.user?.nombres ?? "(Sin nombre)"}</td>
+                <td className="px-4 py-3">{r.user?.email ?? "(Sin email)"}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                    r.estado === "PENDIENTE"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : r.estado === "REVISADA"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}>
+                    {r.estado}
+                  </span>
+                </td>
+                <td className="px-4 py-3 max-w-xs truncate">{r.mensaje}</td>
+                <td className="px-4 py-3 flex flex-wrap gap-2">
+                  <button
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                    onClick={() => openDetail(r.id)}
+                    title="Ver detalle"
+                  >
+                    <EyeIcon className="w-4 h-4" /> Ver
+                  </button>
+                  <button
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition ${loadingId === r.id ? "opacity-60" : ""}`}
+                    onClick={() => handleDelete(r.id)}
+                    title="Eliminar"
+                  >
+                    <TrashIcon className="w-4 h-4" /> Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center text-sm text-gray-500 py-6">Sin resultados</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* --- MOBILE CARDS --- */}
+      <div className="md:hidden space-y-4">
+        {rows.map((r) => (
+          <div key={r.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">{r.user?.nombres ?? "(Sin nombre)"}</div>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                r.estado === "PENDIENTE"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : r.estado === "REVISADA"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}>
+                {r.estado}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500">{r.user?.email ?? "(Sin email)"}</div>
+            <div className="text-xs text-gray-500">Fecha: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
+            <div className="text-sm text-gray-700 whitespace-pre-line">{r.mensaje}</div>
+            <div className="flex gap-2 mt-2">
+              <button
+                className="btn btn-xs btn-info flex-1 flex items-center gap-1"
+                onClick={() => openDetail(r.id)}
+                title="Ver detalle"
+              >
+                <EyeIcon className="w-4 h-4" /> Ver
+              </button>
+              <button
+                className={`btn btn-xs btn-error flex-1 flex items-center gap-1 ${loadingId === r.id ? "loading" : ""}`}
+                onClick={() => handleDelete(r.id)}
+                title="Eliminar"
+              >
+                <TrashIcon className="w-4 h-4" /> Eliminar
+              </button>
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 && (
+          <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
+            Sin resultados
+          </div>
+        )}
+      </div>
+    </>
   );
 }

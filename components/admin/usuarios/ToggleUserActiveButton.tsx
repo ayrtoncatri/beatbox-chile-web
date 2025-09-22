@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { PowerIcon } from "@heroicons/react/24/outline";
 
 export default function ToggleUserActiveButton({
   id,
@@ -39,19 +40,19 @@ export default function ToggleUserActiveButton({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={pending || !!disabledReason}
-        className={`px-3 py-1.5 border rounded text-sm ${
-          isActive ? "bg-white hover:bg-gray-50" : "bg-yellow-50 hover:bg-yellow-100"
-        } ${disabledReason ? "opacity-50 cursor-not-allowed" : ""}`}
-        title={disabledReason}
-      >
-        {pending ? "Guardando..." : label}
-      </button>
-      {error && <div className="text-xs text-red-600">{error}</div>}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={pending || !!disabledReason}
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full font-semibold shadow-sm transition-all
+        ${isActive
+          ? "bg-red-100 text-red-700 hover:bg-red-200"
+          : "bg-green-100 text-green-700 hover:bg-green-200"}
+        ${disabledReason ? "opacity-50 cursor-not-allowed" : ""}`}
+      title={disabledReason}
+    >
+      <PowerIcon className="w-4 h-4" />
+      {pending ? "Guardando..." : label}
+    </button>
   );
 }

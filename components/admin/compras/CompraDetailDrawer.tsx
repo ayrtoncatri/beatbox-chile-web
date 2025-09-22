@@ -46,10 +46,15 @@ export default function CompraDetailDrawer() {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-8 shadow-2xl overflow-auto rounded-l-lg">
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-8 shadow-2xl overflow-auto rounded-l-2xl border-l border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Detalle de compra</h2>
-          <button className="btn btn-sm btn-outline" onClick={() => setOpen(false)}>Cerrar</button>
+          <button
+            className="btn btn-sm px-4 py-1 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold transition"
+            onClick={() => setOpen(false)}
+          >
+            Cerrar
+          </button>
         </div>
         {loading && <div className="text-center text-gray-500">Cargando...</div>}
         {!loading && data && (

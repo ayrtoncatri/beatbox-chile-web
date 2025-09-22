@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PencilSquareIcon from "@heroicons/react/24/solid/esm/PencilSquareIcon";
 
 type Wildcard = {
   id: string;
@@ -49,30 +50,30 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Alias (nombre artístico)</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Alias (nombre artístico)</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={nombreArtistico}
             onChange={(e) => setNombreArtistico(e.target.value)}
             placeholder="Ej: BeatMaster"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">YouTube URL</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">YouTube URL</label>
           <input
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
             value={youtubeUrl}
             onChange={(e) => setYoutubeUrl(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=..."
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm text-gray-600 mb-1">Notas internas</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Notas internas</label>
           <textarea
-            className="w-full border rounded px-3 py-2 text-sm min-h-[100px]"
+            className="w-full border rounded-lg px-3 py-2 text-sm min-h-[100px] bg-gray-50"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Notas de revisión, observaciones, etc."
@@ -85,9 +86,10 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
 
       <button
         type="submit"
-        className="px-4 py-2 border rounded bg-white hover:bg-gray-50 text-sm"
+        className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
         disabled={loading}
       >
+        <PencilSquareIcon className="w-5 h-5" />
         {loading ? "Guardando..." : "Guardar cambios"}
       </button>
     </form>
