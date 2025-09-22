@@ -1,4 +1,4 @@
-import LoginClient from "../../../components/login/LoginClient";
+import LoginClient from "@/components/login/LoginClient";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -6,7 +6,7 @@ export const metadata = { title: "Iniciar sesión — Beatbox Chile" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default async function Page({
+export default async function LoginPage({
   searchParams,
 }: {
   searchParams?: SearchParams;
