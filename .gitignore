@@ -44,4 +44,7 @@ next-env.d.ts
 
 /prisma/dev.db
 
+# Generated data files
+/lib/data/
+
 docker-compose.yml
