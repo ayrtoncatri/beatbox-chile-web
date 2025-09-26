@@ -7,7 +7,8 @@
     "build": "prisma generate && prisma migrate deploy && next build --no-lint",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "geo:snapshot": "node scripts/snapshot-cl-geo.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

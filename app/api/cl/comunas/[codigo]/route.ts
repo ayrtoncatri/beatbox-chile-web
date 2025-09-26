@@ -1,23 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getComunasByRegionCodigoStatic } from "@/lib/cl-geo-static";
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ codigo: string }> }) {
-  const { codigo } = await ctx.params; // 👈 importante: await
+  const { codigo } = await ctx.params;
+  if (!codigo) return NextResponse.json({ ok: false, error: "Código requerido" }, { status: 400 });
 
-  if (!codigo) {
-    return NextResponse.json({ ok: false, error: "Código requerido" }, { status: 400 });
-  }
+  const HTTPS = `https://apis.digital.gob.cl/dpa/regiones/${encodeURIComponent(codigo)}/comunas`;
 
+  // 1) HTTPS
   try {
-    const url = `https://apis.digital.gob.cl/dpa/regiones/${encodeURIComponent(codigo)}/comunas`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      return NextResponse.json({ ok: false, error: "DPA error" }, { status: 502 });
-    }
+    const res = await fetch(HTTPS, { cache: "no-store" });
+    if (!res.ok) throw new Error("https_bad_status");
     const data = await res.json();
     data.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre), "es"));
-    return NextResponse.json({ ok: true, comunas: data }, { status: 200 });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ ok: false, error: "Proxy error" }, { status: 500 });
+    return NextResponse.json({ ok: true, comunas: data, source: "dpa_https" }, { status: 200 });
+  } catch {
+    // 2) Fallback Local (backup completo)
+    const data = getComunasByRegionCodigoStatic(codigo);
+    return NextResponse.json({ ok: true, comunas: data, source: "static_backup" }, { status: 200 });
   }
 }
