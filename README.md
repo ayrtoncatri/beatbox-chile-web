@@ -56,18 +56,7 @@ cd beatbox-chile-web
 npm ci # Instalación limpia de dependencias (recomendado)
 ```
 
-### 2. Configuración de la Base de Datos Local (PostgreSQL)
-
-```bash
-Levante el contenedor de PostgreSQL utilizando Docker Compose:
-# Levanta el contenedor de PostgreSQL en segundo plano
-docker compose up -d
-
-# Verifica que el contenedor esté corriendo (Status: Up/healthy)
-docker compose ps
-```
-
-### 3. Variables de Entorno
+### 2. Variables de Entorno
 Cree un archivo llamado .env en la raíz del proyecto y pegue la siguiente configuración. Las variables de Google son opcionales y están preparadas para la integración futura de OAuth.
 
 | Variable | Descripción | Ejemplo Local (Dev) |
@@ -81,21 +70,41 @@ Cree un archivo llamado .env en la raíz del proyecto y pegue la siguiente confi
 | **Formularios** | **React Hook Form + Yup** | Manejo de estados de formularios y validación de esquemas [1]. |
 | **Animaciones** | **Framer Motion** | Biblioteca para animaciones en la interfaz [1]. |
 
+
+### 3. Configuración de la Base de Datos Local (PostgreSQL)
+Levante el contenedor de PostgreSQL utilizando Docker Compose:
+
+```bash
+# Levanta el contenedor de PostgreSQL en segundo plano
+docker compose up -d
+
+# Verifica que el contenedor esté corriendo (Status: Up/healthy)
+docker compose ps
+```
+
 ### 4. Configuración y Migración de Prisma
 Ejecute los comandos de Prisma para generar el cliente y aplicar las migraciones a la base de datos:
 
+## 1. Genera el cliente de Prisma (necesario para interactuar con la DB)
+
 ```bash
-# 1. Genera el cliente de Prisma (necesario para interactuar con la DB)
 npx prisma generate
+```
 
-# 2. Aplica las migraciones (crea las tablas definidas en schema.prisma)
+## 2. Aplica las migraciones (crea las tablas definidas en schema.prisma)
+
+```bash
 npx prisma migrate dev -n init_postgres
+```
 
-# (Opcional) Inicia Prisma Studio para inspeccionar los datos:
-npx prisma studio
-5. Levantar el Servidor de Desarrollo
+## 3. Levantar el Servidor de Desarrollo
 Inicie el servidor de desarrollo de Next.js en el modo estándar:
+
+```bash
 npm run dev
+```
 La aplicación estará disponible en su navegador en la siguiente dirección:
 http://localhost:3000
-```
+
+## **(Opcional) Inicia Prisma Studio para inspeccionar los datos:**
+npx prisma studio
