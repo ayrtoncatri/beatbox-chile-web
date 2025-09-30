@@ -54,35 +54,37 @@ Siga estas instrucciones detalladas para configurar y ejecutar el servidor de de
 git clone https://github.com/ayrtoncatri/beatbox-chile-web.git
 cd beatbox-chile-web
 npm ci # Instalación limpia de dependencias (recomendado)
-2. Configuración de la Base de Datos Local (PostgreSQL)
+```
+
+### 2. Configuración de la Base de Datos Local (PostgreSQL)
+
+```bash
 Levante el contenedor de PostgreSQL utilizando Docker Compose:
 # Levanta el contenedor de PostgreSQL en segundo plano
 docker compose up -d
 
 # Verifica que el contenedor esté corriendo (Status: Up/healthy)
 docker compose ps
-3. Variables de Entorno
+```
+
+### 3. Variables de Entorno
 Cree un archivo llamado .env en la raíz del proyecto y pegue la siguiente configuración. Las variables de Google son opcionales y están preparadas para la integración futura de OAuth.
-Variable
-Descripción
-Ejemplo Local (Dev)
-DATABASE_URL
-URL de conexión de Prisma a la base de datos PostgreSQL local.
-postgresql://beatbox:beatbox@localhost:5432/beatbox?schema=public
-NEXTAUTH_URL
-URL base de la aplicación para callbacks de autenticación.
-http://localhost:3000
-NEXTAUTH_SECRET
-Cadena aleatoria utilizada por Auth.js para firmar y encriptar los JWT.
-[Genere y use una cadena compleja]
-GOOGLE_CLIENT_ID
-ID del cliente de Google para autenticación OAuth.
-[Su ID de Google]
-GOOGLE_CLIENT_SECRET
-Secreto del cliente de Google para autenticación OAuth.
-[Su Secreto de Google]
-4. Configuración y Migración de Prisma
+
+| Variable | Descripción | Ejemplo Local (Dev) |
+| :--- | :--- | :--- |
+| **DATABASE_URL** | URL de conexión de Prisma a la base de datos PostgreSQL local. | postgresql://beatbox:beatbox@localhost:5432/beatbox?schema=public |
+| **NEXTAUTH_URL** | NEXTAUTH_URL | http://localhost:3000 |
+| **NEXTAUTH_SECRET** | Cadena aleatoria utilizada por Auth.js para firmar y encriptar los JWT | *[Genere y use una cadena compleja]* |
+| **GOOGLE_CLIENT_ID** | ID del cliente de Google para autenticación OAuth. | [Su ID de Google] |
+| **GOOGLE_CLIENT_SECRET** | Secreto del cliente de Google para autenticación OAuth. | [Su Secreto de Google] |
+| **Autenticación** | **Auth.js (NextAuth)** | Implementado con **credentials provider (JWT)** y **bcrypt** para *hash* de contraseñas [1, 8]. |
+| **Formularios** | **React Hook Form + Yup** | Manejo de estados de formularios y validación de esquemas [1]. |
+| **Animaciones** | **Framer Motion** | Biblioteca para animaciones en la interfaz [1]. |
+
+### 4. Configuración y Migración de Prisma
 Ejecute los comandos de Prisma para generar el cliente y aplicar las migraciones a la base de datos:
+
+```bash
 # 1. Genera el cliente de Prisma (necesario para interactuar con la DB)
 npx prisma generate
 
@@ -96,3 +98,4 @@ Inicie el servidor de desarrollo de Next.js en el modo estándar:
 npm run dev
 La aplicación estará disponible en su navegador en la siguiente dirección:
 http://localhost:3000
+```
