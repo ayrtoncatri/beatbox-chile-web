@@ -66,10 +66,6 @@ Cree un archivo llamado .env en la raíz del proyecto y pegue la siguiente confi
 | **NEXTAUTH_SECRET** | Cadena aleatoria utilizada por Auth.js para firmar y encriptar los JWT | *[Genere y use una cadena compleja]* |
 | **GOOGLE_CLIENT_ID** | ID del cliente de Google para autenticación OAuth. | [Su ID de Google] |
 | **GOOGLE_CLIENT_SECRET** | Secreto del cliente de Google para autenticación OAuth. | [Su Secreto de Google] |
-| **Autenticación** | **Auth.js (NextAuth)** | Implementado con **credentials provider (JWT)** y **bcrypt** para *hash* de contraseñas [1, 8]. |
-| **Formularios** | **React Hook Form + Yup** | Manejo de estados de formularios y validación de esquemas [1]. |
-| **Animaciones** | **Framer Motion** | Biblioteca para animaciones en la interfaz [1]. |
-
 
 ### 3. Configuración de la Base de Datos Local (PostgreSQL)
 Levante el contenedor de PostgreSQL utilizando Docker Compose:
@@ -107,4 +103,6 @@ La aplicación estará disponible en su navegador en la siguiente dirección:
 http://localhost:3000
 
 ## **(Opcional) Inicia Prisma Studio para inspeccionar los datos:**
+```bash
 npx prisma studio
+```
