@@ -68,6 +68,9 @@ Cree un archivo llamado .env en la raíz del proyecto y pegue la siguiente confi
 | **GOOGLE_CLIENT_SECRET** | Secreto del cliente de Google para autenticación OAuth. | [Su Secreto de Google] |
 
 ### 3. Configuración de la Base de Datos Local (PostgreSQL)
+
+**Descargar docker desktop: https://www.docker.com/products/docker-desktop/**
+
 Levante el contenedor de PostgreSQL utilizando Docker Compose:
 
 ```bash
