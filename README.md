@@ -84,19 +84,19 @@ docker compose ps
 ### 4. Configuración y Migración de Prisma
 Ejecute los comandos de Prisma para generar el cliente y aplicar las migraciones a la base de datos:
 
-## 1. Genera el cliente de Prisma (necesario para interactuar con la DB)
+**1. Genera el cliente de Prisma (necesario para interactuar con la DB)**
 
 ```bash
 npx prisma generate
 ```
 
-## 2. Aplica las migraciones (crea las tablas definidas en schema.prisma)
+**2. Aplica las migraciones (crea las tablas definidas en schema.prisma)**
 
 ```bash
 npx prisma migrate dev -n init_postgres
 ```
 
-## 3. Levantar el Servidor de Desarrollo
+**3. Levantar el Servidor de Desarrollo**
 Inicie el servidor de desarrollo de Next.js en el modo estándar:
 
 ```bash
@@ -105,7 +105,7 @@ npm run dev
 La aplicación estará disponible en su navegador en la siguiente dirección:
 http://localhost:3000
 
-## **(Opcional) Inicia Prisma Studio para inspeccionar los datos:**
+**(Opcional) Inicia Prisma Studio para inspeccionar los datos:**
 ```bash
 npx prisma studio
 ```
