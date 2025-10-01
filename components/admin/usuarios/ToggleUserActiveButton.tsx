@@ -1,48 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { PowerIcon } from "@heroicons/react/24/outline";
+import { toggleUserActive } from "@/app/admin/usuarios/actions";
 
-export default function ToggleUserActiveButton({
-  id,
-  isActive,
-  disabledReason,
-}: {
-  id: string;
+function ToggleButton({ 
+  isActive, 
+  label, 
+  disabledReason 
+}: { 
   isActive: boolean;
+  label: string;
   disabledReason?: string;
 }) {
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const label = isActive ? "Desactivar" : "Activar";
-
-  function onClick() {
-    setError(null);
-    start(async () => {
-      try {
-        const res = await fetch(`/api/admin/usuarios/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: !isActive }),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || "Error al actualizar");
-        }
-        router.refresh();
-      } catch (e: any) {
-        setError(e.message || "Error al actualizar");
-      }
-    });
-  }
-
+  const { pending } = useFormStatus();
+  
   return (
     <button
-      type="button"
-      onClick={onClick}
+      type="submit"
       disabled={pending || !!disabledReason}
       className={`inline-flex items-center gap-2 px-3 py-1 rounded-full font-semibold shadow-sm transition-all
         ${isActive
@@ -54,5 +30,32 @@ export default function ToggleUserActiveButton({
       <PowerIcon className="w-4 h-4" />
       {pending ? "Guardando..." : label}
     </button>
+  );
+}
+
+export default function ToggleUserActiveButton({
+  id,
+  isActive,
+  disabledReason,
+}: {
+  id: string;
+  isActive: boolean;
+  disabledReason?: string;
+}) {
+  const initialState = { ok: false, error: null };
+  const [state, formAction] = useActionState(toggleUserActive, initialState);
+
+  const label = isActive ? "Desactivar" : "Activar";
+
+  return (
+    <form action={formAction} className="inline">
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="isActive" value={(!isActive).toString()} />
+      <ToggleButton 
+        isActive={isActive}
+        label={label}
+        disabledReason={disabledReason}
+      />
+    </form>
   );
 }

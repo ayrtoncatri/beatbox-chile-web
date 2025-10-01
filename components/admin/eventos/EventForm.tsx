@@ -1,249 +1,424 @@
-'use client';
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { createEvent, editEvent, deleteEvent } from "@/app/admin/eventos/actions";
 import { useRouter } from "next/navigation";
-import { CalendarDaysIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-const TIPO_OPCIONES = ["Presencial", "Online"] as const;
-
-type EventoFormData = {
-  id?: string;
+type Evento = {
+  id: string;
   nombre: string;
-  fecha: string;
-  lugar?: string | null;
-  ciudad?: string | null;
-  direccion?: string | null;
-  descripcion?: string | null;
+  descripcion: string | null;
+  fecha: Date;
+  lugar: string | null;
+  ciudad: string | null;
+  direccion: string | null;
   tipo: string;
   reglas: string;
+  imagen: string | null;
   isPublished: boolean;
   isTicketed: boolean;
+} | null;
+
+type EventFormProps = {
+  evento?: Evento;
+  mode?: "create" | "edit";
 };
 
-export default function EventForm({
-  mode,
-  initialData,
-}: {
-  mode: "create" | "edit";
-  initialData?: Partial<EventoFormData>;
-}) {
+// Definir el tipo de respuesta de los Server Actions
+type ActionResult = {
+  ok: boolean;
+  error?: string;
+  evento?: any;
+};
+
+function SubmitButton({ isEditing, isPending }: { isEditing: boolean; isPending: boolean }) {
+  return (
+    <button
+      type="submit"
+      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition disabled:opacity-50"
+      disabled={isPending}
+    >
+      {isEditing ? <PencilSquareIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
+      {isPending ? "Guardando..." : isEditing ? "Actualizar evento" : "Crear evento"}
+    </button>
+  );
+}
+
+function DeleteButton({ isPending }: { isPending: boolean }) {
+  return (
+    <button
+      type="submit"
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 text-white font-semibold shadow hover:bg-red-700 transition disabled:opacity-50"
+      disabled={isPending}
+    >
+      <TrashIcon className="w-4 h-4" />
+      {isPending ? "Eliminando..." : "Eliminar"}
+    </button>
+  );
+}
+
+export default function EventForm({ evento, mode }: EventFormProps) {
+  const isEditing = !!evento || mode === "edit";
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeletion] = useTransition();
+  
+  // Estados del formulario
+  const [nombre, setNombre] = useState(evento?.nombre ?? "");
+  const [descripcion, setDescripcion] = useState(evento?.descripcion ?? "");
+  const [fecha, setFecha] = useState(
+    evento?.fecha ? new Date(evento.fecha).toISOString().split('T')[0] : ""
+  );
+  const [lugar, setLugar] = useState(evento?.lugar ?? "");
+  const [ciudad, setCiudad] = useState(evento?.ciudad ?? "");
+  const [direccion, setDireccion] = useState(evento?.direccion ?? "");
+  const [tipo, setTipo] = useState(evento?.tipo ?? "");
+  const [reglas, setReglas] = useState(evento?.reglas ?? "");
+  const [imagen, setImagen] = useState(evento?.imagen ?? "");
+  const [isPublished, setIsPublished] = useState(evento?.isPublished ?? false);
+  const [isTicketed, setIsTicketed] = useState(evento?.isTicketed ?? true);
 
-  const [form, setForm] = useState<EventoFormData>({
-    id: initialData?.id,
-    nombre: initialData?.nombre ?? "",
-    fecha: initialData?.fecha ? toDatetimeLocalString(new Date(initialData.fecha)) : "",
-    lugar: initialData?.lugar ?? "",
-    ciudad: initialData?.ciudad ?? "",
-    direccion: initialData?.direccion ?? "",
-    descripcion: initialData?.descripcion ?? "",
-    tipo: initialData?.tipo ?? "Presencial",
-    reglas: initialData?.reglas ?? "",
-    isPublished: initialData?.isPublished ?? false,
-    isTicketed: initialData?.isTicketed ?? true,
-  });
+  // Estados para manejar el resultado
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  function toDatetimeLocalString(d: Date) {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
+  // Limpiar mensaje después de un tiempo
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(null);
-    setLoading(true);
-    try {
-      const payload = {
-        nombre: form.nombre.trim(),
-        fecha: form.fecha,
-        lugar: form.lugar || null,
-        ciudad: form.ciudad || null,
-        direccion: form.direccion || null,
-        descripcion: form.descripcion || null,
-        tipo: form.tipo.trim(),
-        reglas: form.reglas.trim(),
-        isPublished: !!form.isPublished,
-        isTicketed: !!form.isTicketed,
-      };
+  // Sincronizar estados cuando cambie el prop evento
+  useEffect(() => {
+    if (evento) {
+      setNombre(evento.nombre);
+      setDescripcion(evento.descripcion ?? "");
+      setFecha(new Date(evento.fecha).toISOString().split('T')[0]);
+      setLugar(evento.lugar ?? "");
+      setCiudad(evento.ciudad ?? "");
+      setDireccion(evento.direccion ?? "");
+      setTipo(evento.tipo);
+      setReglas(evento.reglas);
+      setImagen(evento.imagen ?? "");
+      setIsPublished(evento.isPublished);
+      setIsTicketed(evento.isTicketed);
+    }
+  }, [evento]);
 
-      const res = await fetch(
-        mode === "create" ? "/api/admin/eventos" : `/api/admin/eventos/${form.id}`,
-        {
-          method: mode === "create" ? "POST" : "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+  const actuallyEditing = isEditing && !!evento;
+
+  // Manejar envío del formulario
+  async function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        let result: ActionResult;
+        
+        if (actuallyEditing) {
+          console.log("🔄 Actualizando evento...");
+          result = await editEvent(null, formData) as ActionResult;
+        } else {
+          console.log("🔄 Creando evento...");
+          result = await createEvent(null, formData) as ActionResult;
         }
-      );
 
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Error al guardar");
+        console.log("📝 Resultado:", result);
+
+        // ✅ Solo proceder si result existe y tiene la propiedad ok
+        if (result && result.ok) {
+          setMessage({ 
+            type: 'success', 
+            text: actuallyEditing ? 'Evento actualizado correctamente' : 'Evento creado correctamente' 
+          });
+          
+          // ✅ Solo redirigir si estamos creando un evento (no editando)
+          if (!actuallyEditing) {
+            setTimeout(() => {
+              console.log("🔄 Redirigiendo...");
+              router.push('/admin/eventos');
+            }, 2000); // 2 segundos para ver el mensaje
+          }
+        } else if (result && result.error) {
+          // Hay un error específico
+          setMessage({ 
+            type: 'error', 
+            text: result.error 
+          });
+        } else {
+          // ✅ No hacer nada si result es undefined
+          console.log("⚠️ Resultado undefined, no se procesará");
+          setMessage({ 
+            type: 'error', 
+            text: 'No se pudo procesar la solicitud' 
+          });
+        }
+      } catch (error) {
+        console.error("❌ Error:", error);
+        setMessage({ 
+          type: 'error', 
+          text: 'Error al procesar la solicitud' 
+        });
       }
-
-      router.push("/admin/eventos");
-      router.refresh();
-    } catch (e: any) {
-      setErr(e.message || "Error");
-    } finally {
-      setLoading(false);
-    }
+    });
   }
 
-  async function onDelete() {
-    if (!form.id) return;
-    if (!confirm("¿Eliminar este evento? Esta acción es irreversible.")) return;
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await fetch(`/api/admin/eventos/${form.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "No se pudo eliminar");
-      }
-      router.push("/admin/eventos");
-      router.refresh();
-    } catch (e: any) {
-      setErr(e.message || "Error");
-    } finally {
-      setLoading(false);
+  // Manejar eliminación del evento
+  async function handleDelete(formData: FormData) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer.')) {
+      return;
     }
+
+    startDeletion(async () => {
+      try {
+        console.log("🗑️ Eliminando evento...");
+        
+        // ✅ CAMBIO: Mostrar mensaje inmediatamente
+        setMessage({ 
+          type: 'success', 
+          text: 'Eliminando evento...' 
+        });
+
+        const result = await deleteEvent(null, formData) as ActionResult;
+        
+        console.log("📝 Resultado eliminación:", result);
+
+        if (result && result.ok) {
+          setMessage({ 
+            type: 'success', 
+            text: 'Evento eliminado correctamente. Redirigiendo...' 
+          });
+          
+          // ✅ CAMBIO: Forzar refresh del cache y redirigir más rápido
+          router.refresh(); // Actualiza el cache
+          setTimeout(() => {
+            router.push('/admin/eventos');
+          }, 500); // Solo 500ms
+        } else if (result && result.error) {
+          setMessage({ 
+            type: 'error', 
+            text: result.error 
+          });
+        } else {
+          console.log("⚠️ Resultado eliminación undefined");
+          setMessage({ 
+            type: 'error', 
+            text: 'No se pudo eliminar el evento' 
+          });
+        }
+      } catch (error) {
+        console.error("❌ Error eliminando:", error);
+        setMessage({ 
+          type: 'error', 
+          text: 'Error al eliminar el evento' 
+        });
+      }
+    });
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6 bg-white rounded-2xl shadow border border-gray-200 p-8 max-w-2xl">
-      {err && <div className="text-red-600 text-sm">{err}</div>}
+    <div className="space-y-6">
+      {/* Formulario Principal */}
+      <form action={handleSubmit} className="space-y-6">
+        {actuallyEditing && <input type="hidden" name="id" value={evento!.id} />}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Nombre del evento *
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Nombre del evento"
+              maxLength={200}
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Tipo *
+            </label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              required
+            >
+              <option value="">Seleccionar tipo</option>
+              <option value="BATALLA">Batalla</option>
+              <option value="TALLER">Taller</option>
+              <option value="COMPETENCIA">Competencia</option>
+              <option value="SHOWCASE">Showcase</option>
+              <option value="OTRO">Otro</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Fecha *
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="fecha"
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Lugar
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="lugar"
+              value={lugar}
+              onChange={(e) => setLugar(e.target.value)}
+              placeholder="Nombre del lugar"
+              maxLength={200}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Ciudad
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="ciudad"
+              value={ciudad}
+              onChange={(e) => setCiudad(e.target.value)}
+              placeholder="Ciudad donde se realiza"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Dirección
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="direccion"
+              value={direccion}
+              onChange={(e) => setDireccion(e.target.value)}
+              placeholder="Dirección exacta"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Imagen (URL)
+            </label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="imagen"
+              type="url"
+              value={imagen}
+              onChange={(e) => setImagen(e.target.value)}
+              placeholder="https://ejemplo.com/imagen.jpg"
+            />
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">
+              Estado
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="isPublished"
+                  checked={isPublished}
+                  onChange={(e) => setIsPublished(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm text-gray-600">Publicado</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="isTicketed"
+                  checked={isTicketed}
+                  onChange={(e) => setIsTicketed(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm text-gray-600">Requiere entrada</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
         <div>
-          <label className="block text-sm font-medium mb-1">Nombre</label>
-          <input
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.nombre}
-            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-            required
-            maxLength={200}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Fecha y hora</label>
-          <input
-            type="datetime-local"
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.fecha}
-            onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Lugar</label>
-          <input
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.lugar ?? ""}
-            onChange={(e) => setForm({ ...form, lugar: e.target.value })}
-            maxLength={200}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Ciudad</label>
-          <input
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.ciudad ?? ""}
-            onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
-            maxLength={200}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Dirección</label>
-          <input
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.direccion ?? ""}
-            onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-            maxLength={300}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Descripción</label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">
+            Descripción *
+          </label>
           <textarea
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            rows={4}
-            value={form.descripcion ?? ""}
-            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-            maxLength={4000}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Tipo</label>
-          <select
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.tipo ?? "Presencial"}
-            onChange={(e) => {
-              const nextTipo = e.target.value as (typeof TIPO_OPCIONES)[number];
-              setForm((prev) => ({
-                ...prev,
-                tipo: nextTipo,
-                isTicketed: nextTipo === "Online" ? false : prev.isTicketed,
-              }));
-            }}
-          >
-            {TIPO_OPCIONES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Reglas</label>
-          <input
-            className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-            value={form.reglas}
-            onChange={(e) => setForm({ ...form, reglas: e.target.value })}
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 h-32 resize-none"
+            name="descripcion"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Describe el evento..."
+            maxLength={1000}
             required
-            maxLength={10000}
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {descripcion.length}/1000 caracteres
+          </div>
+        </div>
+
+        {/* Mensaje entre descripción y reglas */}
+        {message && (
+          <div className={`text-sm p-3 rounded-lg border ${
+            message.type === 'success' 
+              ? 'text-green-700 bg-green-50 border-green-200' 
+              : 'text-red-600 bg-red-50 border-red-200'
+          }`}>
+            {message.type === 'success' ? '✅' : '❌'} {message.text}
+            {message.type === 'success' && !actuallyEditing && ' Redirigiendo en 2 segundos...'}
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">
+            Reglas *
+          </label>
+          <textarea
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 h-32 resize-none"
+            name="reglas"
+            value={reglas}
+            onChange={(e) => setReglas(e.target.value)}
+            placeholder="Reglas del evento, premios, etc."
+            required
           />
         </div>
-        <div className="flex items-center gap-4 md:col-span-2">
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.isPublished}
-              onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
-            />
-            <span>Publicado</span>
-          </label>
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.tipo === "Online" ? false : !!form.isTicketed}
-              disabled={form.tipo === "Online"}
-              onChange={(e) => setForm({ ...form, isTicketed: e.target.checked })}
-            />
-            <span>Presencial (con entradas)</span>
-          </label>
-        </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-500 disabled:opacity-60"
-        >
-          <CalendarDaysIcon className="w-5 h-5" />
-          {mode === "create" ? "Crear evento" : "Guardar cambios"}
-        </button>
-        {mode === "edit" && (
-          <button
-            type="button"
-            onClick={onDelete}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white font-semibold shadow hover:bg-red-500 disabled:opacity-60"
-          >
-            <TrashIcon className="w-5 h-5" />
-            Eliminar
-          </button>
-        )}
-      </div>
-    </form>
+        <div className="flex justify-between items-center">
+          <SubmitButton isEditing={actuallyEditing} isPending={isPending || isDeleting} />
+        </div>
+      </form>
+
+      {/* Formulario de Eliminación (solo en modo edición) */}
+      {actuallyEditing && (
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold text-red-600 mb-4">Zona de peligro</h3>
+          <form action={handleDelete} className="space-y-4">
+            <input type="hidden" name="id" value={evento!.id} />
+            <p className="text-sm text-gray-600">
+              Esta acción eliminará permanentemente el evento y no se puede deshacer.
+            </p>
+            <DeleteButton isPending={isDeleting} />
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
-
-import { useState } from "react";
+import { useActionState, useState, useEffect } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import PencilSquareIcon from "@heroicons/react/24/solid/esm/PencilSquareIcon";
+import { editWildcard } from "@/app/admin/wildcards/actions";
 
 type Wildcard = {
   id: string;
@@ -12,59 +13,55 @@ type Wildcard = {
   status: "PENDING" | "APPROVED" | "REJECTED";
 };
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+      disabled={pending}
+    >
+      <PencilSquareIcon className="w-5 h-5" />
+      {pending ? "Guardando..." : "Guardar cambios"}
+    </button>
+  );
+}
+
 export default function WildcardEditForm({ item }: { item: Wildcard }) {
   const [nombreArtistico, setNombreArtistico] = useState(item.nombreArtistico ?? "");
   const [notes, setNotes] = useState(item.notes ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState(item.youtubeUrl ?? "");
-  const [loading, setLoading] = useState(false);
-  const [ok, setOk] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setOk(false);
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/wildcards/${item.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombreArtistico: nombreArtistico || null,
-          notes: notes || null,
-          youtubeUrl: youtubeUrl || null,
-        }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Error al actualizar");
-      }
-      setOk(true);
+  const initialState = { ok: false, error: undefined };
+  const [state, formAction] = useActionState(editWildcard, initialState);
+  
+  useEffect(() => {
+    if (state.ok) {
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Error al actualizar");
-    } finally {
-      setLoading(false);
     }
-  }
+  }, [state.ok, router]);
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form action={formAction} className="space-y-6">
+      <input type="hidden" name="id" value={item.id} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">Alias (nombre artístico)</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+            name="nombreArtistico"
             value={nombreArtistico}
             onChange={(e) => setNombreArtistico(e.target.value)}
             placeholder="Ej: BeatMaster"
+            maxLength={100}
           />
         </div>
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">YouTube URL</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+            name="youtubeUrl"
             value={youtubeUrl}
             onChange={(e) => setYoutubeUrl(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=..."
@@ -74,24 +71,19 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
           <label className="block text-sm text-gray-600 mb-1 font-medium">Notas internas</label>
           <textarea
             className="w-full border rounded-lg px-3 py-2 text-sm min-h-[100px] bg-gray-50"
+            name="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Notas de revisión, observaciones, etc."
+            maxLength={500}
           />
         </div>
       </div>
 
-      {error && <div className="text-sm text-red-600">{error}</div>}
-      {ok && <div className="text-sm text-green-700">Guardado</div>}
+      {state.error && <div className="text-sm text-red-600">{state.error}</div>}
+      {state.ok && <div className="text-sm text-green-700">Guardado</div>}
 
-      <button
-        type="submit"
-        className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-        disabled={loading}
-      >
-        <PencilSquareIcon className="w-5 h-5" />
-        {loading ? "Guardando..." : "Guardar cambios"}
-      </button>
+      <SubmitButton />
     </form>
   );
 }
