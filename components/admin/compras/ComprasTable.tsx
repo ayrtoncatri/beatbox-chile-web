@@ -1,9 +1,8 @@
 "use client";
 
+import { EyeIcon, TrashIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-import { EyeIcon, TrashIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
 
 type Row = {
   id: string;
@@ -22,8 +21,9 @@ type Row = {
 export default function ComprasTable(props: {
   rows: Row[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  onVerClick?: (compraId: string) => void;
 }) {
-  const { rows } = props;
+  const { rows, onVerClick } = props;
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -31,6 +31,7 @@ export default function ComprasTable(props: {
     if (!confirm("¿Eliminar esta compra?")) return;
     setLoadingId(id);
     try {
+      // Aquí podrías migrar a server action si lo deseas
       const res = await fetch(`/api/admin/compras/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
       router.refresh();
@@ -45,11 +46,6 @@ export default function ComprasTable(props: {
     try {
       await navigator.clipboard.writeText(email);
     } catch {}
-  };
-
-  const openDetail = (id: string) => {
-    const ev = new CustomEvent("compra:open", { detail: { id } });
-    window.dispatchEvent(ev);
   };
 
   // --- DESKTOP TABLE ---
@@ -97,7 +93,7 @@ export default function ComprasTable(props: {
                 <td className="px-4 py-3 flex flex-wrap gap-2">
                   <button
                     className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
-                    onClick={() => openDetail(r.id)}
+                    onClick={() => onVerClick?.(r.id)}
                     title="Ver detalle"
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
@@ -156,7 +152,7 @@ export default function ComprasTable(props: {
             <div className="flex gap-2 mt-2">
               <button
                 className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
-                onClick={() => openDetail(r.id)}
+                onClick={() => onVerClick?.(r.id)}
                 title="Ver detalle"
               >
                 <EyeIcon className="w-4 h-4" /> Ver
