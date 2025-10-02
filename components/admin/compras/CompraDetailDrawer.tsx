@@ -1,75 +1,130 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getCompraById, deleteCompra } from "@/app/admin/compras/actions";
 
-type Compra = {
-  id: string;
-  createdAt: string;
-  userNombre: string;
-  userEmail: string;
-  eventoId: string;
-  eventoNombre: string;
-  eventoFecha: string;
-  tipoEntrada: string;
-  cantidad: number;
-  precioUnitario: number;
-  total: number;
-};
-
-export default function CompraDetailDrawer() {
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState<string | null>(null);
-  const [data, setData] = useState<Compra | null>(null);
+export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
+  compraId: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [compra, setCompra] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // Cargar datos de la compra cuando se abre el drawer
   useEffect(() => {
-    const onOpen = (e: any) => {
-      setId(e.detail.id);
-      setOpen(true);
-    };
-    window.addEventListener("compra:open", onOpen as any);
-    return () => window.removeEventListener("compra:open", onOpen as any);
-  }, []);
+    if (isOpen && compraId) {
+      loadCompra();
+    }
+  }, [isOpen, compraId]);
 
-  useEffect(() => {
-    if (!open || !id) return;
+  // Función para cargar los datos de la compra
+  async function loadCompra() {
     setLoading(true);
-    fetch(`/api/admin/compras/${id}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((j) => setData(j))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [open, id]);
-
-  if (!open) return null;
+    try {
+      const data = await getCompraById(compraId);
+      setCompra(data);
+    } catch (error) {
+      console.error("Error al cargar la compra:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  // Función para eliminar la compra
+  async function handleDelete() {
+    if (!confirm("¿Estás seguro que deseas eliminar esta compra?")) {
+      return;
+    }
+    
+    setDeleteLoading(true);
+    try {
+      const result = await deleteCompra(compraId);
+      if (result.success) {
+        onClose();
+        router.refresh();
+      } else {
+        alert(result.message || "Error al eliminar la compra");
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      alert("Error al eliminar la compra");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-8 shadow-2xl overflow-auto rounded-l-2xl border-l border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Detalle de compra</h2>
-          <button
-            className="btn btn-sm px-4 py-1 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold transition"
-            onClick={() => setOpen(false)}
-          >
+    <div className={`fixed inset-0 z-50 ${isOpen ? "block" : "hidden"}`}>
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+      
+      {/* Drawer */}
+      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-lg">
+        <div className="p-4 flex justify-between items-center border-b">
+          <h2 className="text-xl font-bold">Detalle de compra</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             Cerrar
           </button>
         </div>
-        {loading && <div className="text-center text-gray-500">Cargando...</div>}
-        {!loading && data && (
-          <div className="space-y-3">
-            <div><b>ID:</b> <span className="text-gray-600">{data.id}</span></div>
-            <div><b>Fecha compra:</b> <span className="text-gray-600">{new Date(data.createdAt).toLocaleString("es-CL")}</span></div>
-            <div><b>Evento:</b> <span className="text-gray-600">{data.eventoNombre} ({new Date(data.eventoFecha).toLocaleString("es-CL")})</span></div>
-            <div><b>Comprador:</b> <span className="text-gray-600">{data.userNombre} — {data.userEmail}</span></div>
-            <div><b>Tipo:</b> <span className="text-gray-600">{data.tipoEntrada}</span></div>
-            <div><b>Cantidad:</b> <span className="text-gray-600">{data.cantidad}</span></div>
-            <div><b>Precio unitario:</b> <span className="text-gray-600">${data.precioUnitario.toLocaleString("es-CL")}</span></div>
-            <div><b>Total:</b> <span className="text-gray-600 font-bold">${data.total.toLocaleString("es-CL")}</span></div>
+        
+        {loading ? (
+          <div className="p-4">Cargando...</div>
+        ) : compra ? (
+          <div className="p-4">
+            {/* Información de la compra */}
+            <div className="mb-4">
+              <p><strong>ID:</strong> {compra.id}</p>
+              <p><strong>Fecha compra:</strong> {new Date(compra.createdAt).toLocaleString()}</p>
+            </div>
+            
+            {/* Información del comprador */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-1">Comprador:</h3>
+              <p><strong>Nombre:</strong> {compra.userNombre}</p>
+              <p><strong>Email:</strong> {compra.userEmail}</p>
+            </div>
+            
+            {/* Información del evento */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-1">Evento:</h3>
+              <p><strong>Nombre:</strong> {compra.eventoNombre}</p>
+              <p><strong>Fecha:</strong> {new Date(compra.eventoFecha).toLocaleString()}</p>
+            </div>
+            
+            {/* Información de la entrada */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-1">Entrada:</h3>
+              <p><strong>Tipo:</strong> {compra.tipoEntrada}</p>
+              <p><strong>Cantidad:</strong> {compra.cantidad}</p>
+              <p><strong>Precio unitario:</strong> ${compra.precioUnitario}</p>
+              <p><strong>Total:</strong> ${compra.total}</p>
+            </div>
+            
+            {/* Botones de acción */}
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
+              >
+                {deleteLoading ? 'Eliminando...' : 'Eliminar'}
+              </button>
+              
+              <button
+                onClick={() => router.push(`/admin/eventos/${compra.eventoId}`)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Ver evento
+              </button>
+            </div>
           </div>
+        ) : (
+          <div className="p-4">No se encontró la compra</div>
         )}
-        {!loading && !data && <div className="text-sm text-gray-500">No se encontró la compra.</div>}
       </div>
     </div>
   );

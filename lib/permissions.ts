@@ -26,3 +26,18 @@ export async function ensureAdminApi() {
   }
   return null;
 }
+
+export async function checkAdmin() {
+  const session = await getServerSession(authOptions);
+  const role = (session as any)?.user?.role;
+  
+  if (!session?.user) {
+    throw new Error("No has iniciado sesión");
+  }
+  
+  if (role !== "admin") {
+    throw new Error("No tienes permisos para realizar esta acción");
+  }
+  
+  return session;
+}
