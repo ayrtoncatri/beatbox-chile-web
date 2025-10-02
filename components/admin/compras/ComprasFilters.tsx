@@ -1,16 +1,62 @@
-type EventOpt = { id: string; nombre: string };
+"use client";
+
+import { useState } from "react";
 import { FunnelIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { exportComprasToCSV } from "@/app/admin/compras/actions";
+
+type EventOpt = { id: string; nombre: string };
 
 export default function ComprasFilters(props: {
   events: EventOpt[];
   defaults: { q?: string; eventId?: string; tipo?: string; from?: string; to?: string; pageSize: number };
-  exportUrl: string;
+  exportUrl?: string;
   sort: "fecha_desc" | "fecha_asc" | "total_desc" | "total_asc";
 }) {
-  const { events, defaults, exportUrl, sort } = props;
+  const { events, defaults, sort } = props;
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Exportación sigue igual
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const formElement = document.querySelector('form') as HTMLFormElement;
+      const formData = new FormData(formElement);
+
+      const filters = {
+        search: formData.get('q') as string || undefined,
+        eventId: formData.get('eventId') as string || undefined,
+        tipo: formData.get('tipo') as string || undefined,
+        from: formData.get('from') as string || undefined,
+        to: formData.get('to') as string || undefined,
+      };
+
+      const csvContent = await exportComprasToCSV(filters);
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `compras-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+
+      link.click();
+
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al exportar compras:', error);
+      alert('Error al exportar las compras. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
-    <form className="flex flex-col md:flex-row md:items-end gap-4 bg-white p-6 rounded-2xl shadow border border-gray-200 mb-4">
+    <form
+      className="flex flex-col md:flex-row md:items-end gap-4 bg-white p-6 rounded-2xl shadow border border-gray-200 mb-4"
+      method="GET"
+    >
       <div className="flex-1">
         <label className="block text-xs font-semibold mb-1 text-gray-600">Búsqueda</label>
         <input name="q" defaultValue={defaults.q} className="input input-bordered w-full bg-gray-50 border-gray-200" placeholder="Nombre, email, evento..." />
@@ -60,14 +106,15 @@ export default function ComprasFilters(props: {
         >
           <FunnelIcon className="w-5 h-5" /> Filtrar
         </button>
-        <a
-          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition"
-          href={exportUrl}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition disabled:opacity-70"
         >
-          <ArrowDownTrayIcon className="w-5 h-5" /> Exportar CSV
-        </a>
+          <ArrowDownTrayIcon className="w-5 h-5" />
+          {isExporting ? 'Exportando...' : 'Exportar CSV'}
+        </button>
       </div>
     </form>
   );
