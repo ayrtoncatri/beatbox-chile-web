@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState,useEffect } from "react";
-import { FaBars, FaTimes, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaTimes, FaUserCircle, FaSignOutAlt, FaCog } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButtons from "@/components/home/AuthButtons";
 import { useSession, signOut } from "next-auth/react";
@@ -42,19 +42,19 @@ export default function Header() {
     <header className="w-full bg-neutral-950 bg-opacity-90 py-3 shadow-md sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-2">
         {/* Logo y nombre */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <Link href="/">
             <Image
               src="/ISOTIPO-DEGRADADO.png"
               alt="Logo Beatbox Chile"
-              width={50}
-              height={50}
-              className="rounded-full border-2 border-blue-700 shadow"
+              width={40}
+              height={40}
+              className="md:w-[50px] md:h-[50px] rounded-full border-2 border-blue-700 shadow"
               priority
               style={{ cursor: "pointer" }}
             />
           </Link>
-          <Link href="/" className="text-xl text-blue-100 font-extrabold tracking-tight hover:text-blue-300 transition">
+          <Link href="/" className="text-lg md:text-xl text-blue-100 font-extrabold tracking-tight hover:text-blue-300 transition">
             Beatbox Chile
           </Link>
         </div>
@@ -112,22 +112,38 @@ export default function Header() {
         </ul>
 
         {/* Mostrar opciones de perfil o iniciar sesión */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-2">
           {session?.user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 md:gap-2">
+              {/* Botón de perfil */}
               <Link href="/perfil">
-                <div className="flex items-center gap-2 text-blue-100 hover:text-blue-300 transition">
-                  <FaUserCircle size={32} />
-                  <span>{session.user.name}</span>
+                <div className="flex items-center gap-1 text-blue-100 hover:text-blue-300 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-blue-900/30">
+                  <FaUserCircle size={20} className="md:w-6 md:h-6" />
+                  <span className="hidden md:inline text-sm font-semibold">{session.user.name}</span>
+                  <span className="md:hidden text-sm">Perfil</span>
                 </div>
               </Link>
+              
+              {/* Botón de admin si es admin */}
+              {(session.user as any)?.role === "admin" && (
+                <Link href="/admin">
+                  <div className="flex items-center gap-1 text-blue-100 hover:text-blue-300 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-blue-900/30">
+                    <FaCog size={18} className="md:w-5 md:h-5" />
+                    <span className="hidden md:inline text-sm font-semibold">Admin</span>
+                    <span className="md:hidden text-sm">Admin</span>
+                  </div>
+                </Link>
+              )}
+              
+              {/* Botón de cerrar sesión */}
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-2 text-blue-100 hover:text-red-400 transition p-2 rounded-lg hover:bg-red-900/30"
+                className="flex items-center gap-1 text-blue-100 hover:text-red-400 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-red-900/30"
                 title="Cerrar sesión"
               >
-                <FaSignOutAlt size={20} />
-                <span className="hidden sm:inline">Cerrar sesión</span>
+                <FaSignOutAlt size={16} className="md:w-4 md:h-4" />
+                <span className="hidden md:inline text-sm font-semibold">Cerrar sesión</span>
+                <span className="md:hidden text-sm">Cerrar sesión</span>
               </button>
             </div>
           ) : (
