@@ -1,4 +1,12 @@
 import HomeTienda from "@/components/tienda/HomeTienda";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tienda | Beatbox Chile",
+  description: "Compra productos oficiales de Beatbox Chile. Camisetas, gorras, stickers y más.",
+  keywords: ["Beatbox Chile", "tienda", "productos", "camisetas", "gorras", "stickers"],
+};
+
 
 export default function TiendaPage() {
     return (
