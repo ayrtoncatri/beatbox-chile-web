@@ -72,9 +72,9 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
   }
 
   return (
-    <div className="w-full flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md">
+    <div className="flex flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-1 sm:px-2 py-1 sm:py-2 rounded-md sm:rounded-lg bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md">
       <button
-        className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-5 py-2 rounded-lg font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
         onClick={() => {
           setOpen?.(false);
           router.push("/auth/login");
@@ -83,7 +83,7 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
         Iniciar Sesión
       </button>
       <button
-        className="bg-white/90 text-blue-900 font-semibold px-5 py-2 rounded-lg shadow-md border border-blue-900/20 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="bg-white/90 text-blue-900 font-semibold px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded text-xs sm:text-sm shadow-md border border-blue-900/20 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
         onClick={() => {
           setOpen?.(false);
           router.push("/auth/register");
