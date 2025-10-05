@@ -2,6 +2,13 @@ import InfoCircuito from "@/components/liga-competitiva/InfoCircuito";
 import Clasificados from "@/components/liga-competitiva/Clasificados";
 import ReglasLiga from "@/components/liga-competitiva/ReglasLiga";
 import Colaboradores from "@/components/liga-competitiva/Colaboradores";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Liga Competitiva | Beatbox Chile",
+  description: "Conoce la liga competitiva de Beatbox Chile. Participa, sigue resultados y rankings oficiales de la comunidad.",
+  keywords: ["Beatbox Chile", "liga competitiva", "competencias", "ranking", "eventos beatbox", "participa"],
+};
 
 export default function LigaCompetitivaPage() {
   return (
