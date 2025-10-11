@@ -114,23 +114,23 @@ export default function Header() {
         {/* Mostrar opciones de perfil o iniciar sesión */}
         <div className="flex items-center gap-1 md:gap-2">
           {session?.user ? (
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md rounded-lg p-2">
               {/* Botón de perfil */}
               <Link href="/perfil">
-                <div className="flex items-center gap-1 text-blue-100 hover:text-blue-300 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-blue-900/30">
-                  <FaUserCircle size={20} className="md:w-6 md:h-6" />
-                  <span className="hidden md:inline text-sm font-semibold">{session.user.name}</span>
-                  <span className="md:hidden text-sm">Perfil</span>
+                <div className="flex items-center gap-1 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap">
+                  <FaUserCircle size={16} className="md:w-4 md:h-4" />
+                  <span className="hidden md:inline">{session.user.name}</span>
+                  <span className="md:hidden">Perfil</span>
                 </div>
               </Link>
               
               {/* Botón de admin si es admin */}
               {(session.user as any)?.role === "admin" && (
                 <Link href="/admin">
-                  <div className="flex items-center gap-1 text-blue-100 hover:text-blue-300 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-blue-900/30">
-                    <FaCog size={18} className="md:w-5 md:h-5" />
-                    <span className="hidden md:inline text-sm font-semibold">Admin</span>
-                    <span className="md:hidden text-sm">Admin</span>
+                  <div className="flex items-center gap-1 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap">
+                    <FaCog size={16} className="md:w-4 md:h-4" />
+                    <span className="hidden md:inline">Admin</span>
+                    <span className="md:hidden">Admin</span>
                   </div>
                 </Link>
               )}
@@ -138,12 +138,12 @@ export default function Header() {
               {/* Botón de cerrar sesión */}
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-1 text-blue-100 hover:text-red-400 transition px-2 py-1 md:px-3 md:py-2 rounded-lg hover:bg-red-900/30"
+                className="flex items-center gap-1 bg-white/90 text-blue-900 font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm shadow-md border border-blue-900/20 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
                 title="Cerrar sesión"
               >
                 <FaSignOutAlt size={16} className="md:w-4 md:h-4" />
-                <span className="hidden md:inline text-sm font-semibold">Cerrar sesión</span>
-                <span className="md:hidden text-sm">Cerrar sesión</span>
+                <span className="hidden md:inline">Cerrar sesión</span>
+                <span className="md:hidden">Cerrar sesión</span>
               </button>
             </div>
           ) : (
