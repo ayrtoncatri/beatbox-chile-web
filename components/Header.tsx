@@ -28,7 +28,12 @@ const navItems = [
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const [isClient, setIsClient] = useState(false);
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     function handleResize() {
@@ -115,7 +120,11 @@ export default function Header() {
 
         {/* Mostrar opciones de perfil o iniciar sesión - SOLO EN DESKTOP */}
         <div className="hidden md:flex items-center gap-1 md:gap-2">
-          {session?.user ? (
+          {!isClient || status === "loading" ? (
+            <div className="animate-pulse bg-blue-900/60 rounded-lg px-4 py-2">
+              <div className="text-blue-100 text-sm">Cargando...</div>
+            </div>
+          ) : session?.user ? (
             <div className="flex flex-col items-center gap-1 md:gap-2 bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md rounded-lg p-2">
               {/* Botón de perfil */}
               <Link href="/perfil">
@@ -147,7 +156,6 @@ export default function Header() {
                   title="Cerrar sesión"
                 >
                   <FaSignOutAlt size={16} className="md:w-4 md:h-4" />
-                  
                 </button>
               </div>
             </div>
