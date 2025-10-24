@@ -5,6 +5,7 @@ type Wildcard = {
   id: string;
   youtubeUrl: string;
   nombreArtistico: string;
+  categoria?: string; // 👈 nuevo campo
 };
 
 function getYouTubeId(url: string) {
@@ -47,6 +48,11 @@ export default function ListaWildcards() {
               <div className="mb-2 text-lime-300 font-semibold text-lg">
                 {w.nombreArtistico || "Anónimo"}
               </div>
+              {w.categoria && (
+                <div className="mb-2 text-lime-200 text-sm">
+                  Categoría: <span className="font-bold">{w.categoria}</span>
+                </div>
+              )}
               {ytId ? (
                 <iframe
                   className="rounded-lg mb-2"

@@ -189,6 +189,8 @@ model Wildcard {
   eventoId        String
   evento          Evento         @relation(fields: [eventoId], references: [id], onDelete: Cascade)
 
+  categoria       String?
+
   status          WildcardStatus @default(PENDING)
   notes           String?
   reviewedAt      DateTime?
