@@ -17,6 +17,15 @@ type CompraDetail = Awaited<ReturnType<typeof getCompraById>>;
 
 function CompraDetailPopup({ compra }: { compra: CompraDetail }) {
   if (!compra) return <div className="text-center py-8">No encontrada</div>;
+
+  const nombreCompleto = compra.user?.profile
+    ? [
+        compra.user.profile.nombres,
+        compra.user.profile.apellidoPaterno,
+        compra.user.profile.apellidoMaterno,
+      ].filter(Boolean).join(" ")
+    : "";
+
   return (
     <div>
       <h2 className="text-lg font-bold mb-4">Detalle de compra</h2>
@@ -27,22 +36,44 @@ function CompraDetailPopup({ compra }: { compra: CompraDetail }) {
         <b>Fecha compra:</b> {new Date(compra.createdAt).toLocaleString("es-CL")}
       </div>
       <div className="mb-2 text-sm">
-        <b>Evento:</b> {compra.evento?.nombre} ({compra.evento?.fecha ? new Date(compra.evento.fecha).toLocaleString("es-CL") : "Sin fecha"})
+        <b>Evento:</b> {compra.evento?.nombre ?? "—"}{" "}
+        {compra.evento?.fecha && (
+          <>({new Date(compra.evento.fecha).toLocaleString("es-CL")})</>
+        )}
       </div>
       <div className="mb-2 text-sm">
-        <b>Comprador:</b> {compra.user?.nombres} — {compra.user?.email}
+        <b>Comprador:</b> {nombreCompleto || "—"} — {compra.user?.email}
       </div>
       <div className="mb-2 text-sm">
-        <b>Tipo:</b> {compra.tipoEntrada}
+        <b>Comuna:</b> {compra.user?.profile?.comuna?.name ?? "—"}{" "}
+        <b>Región:</b> {compra.user?.profile?.comuna?.region?.name ?? "—"}
       </div>
       <div className="mb-2 text-sm">
-        <b>Cantidad:</b> {compra.cantidad}
+        <b>Estado:</b> {compra.status}
       </div>
       <div className="mb-2 text-sm">
-        <b>Precio unitario:</b> ${compra.precioUnitario.toLocaleString("es-CL")}
+        <b>Entradas:</b>
+        <ul className="mt-2 space-y-2">
+          {compra.items.map((item) => (
+            <li key={item.id} className="border-b pb-2">
+              <div>
+                <b>Tipo:</b> {item.ticketType.name}
+              </div>
+              <div>
+                <b>Cantidad:</b> {item.quantity}
+              </div>
+              <div>
+                <b>Precio unitario:</b> ${item.unitPrice.toLocaleString("es-CL")}
+              </div>
+              <div>
+                <b>Total:</b> ${item.subtotal.toLocaleString("es-CL")}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
       <div className="mb-2 text-sm">
-        <b>Total:</b> ${compra.total.toLocaleString("es-CL")}
+        <b>Total compra:</b> ${compra.total.toLocaleString("es-CL")}
       </div>
     </div>
   );

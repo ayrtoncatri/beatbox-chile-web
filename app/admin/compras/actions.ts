@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { ensureAdminPage } from "@/lib/permissions";
 
 /**
- * Obtiene todas las compras con filtros opcionales
+ * Obtiene todas las compras con filtros opcionales (modelo normalizado)
  */
 export async function getCompras(filters: {
   search?: string;
@@ -17,134 +17,121 @@ export async function getCompras(filters: {
   pageSize?: number;
   sort?: string;
 }) {
-  const session = await ensureAdminPage();
-  
-  const { 
-    search, 
-    eventId, 
-    tipo, 
-    from, 
-    to, 
-    page = 1, 
+  await ensureAdminPage();
+
+  const {
+    search,
+    eventId,
+    tipo,
+    from,
+    to,
+    page = 1,
     pageSize = 20,
-    sort = "fecha_desc"
+    sort = "fecha_desc",
   } = filters;
-  
-  // Configurar ordenamiento
+
   let orderBy: any = {};
-  
-  switch(sort) {
+  switch (sort) {
     case "fecha_asc":
-      orderBy = { createdAt: 'asc' };
+      orderBy = { createdAt: "asc" };
       break;
     case "total_desc":
-      orderBy = { total: 'desc' };
+      orderBy = { total: "desc" };
       break;
     case "total_asc":
-      orderBy = { total: 'asc' };
+      orderBy = { total: "asc" };
       break;
     case "fecha_desc":
     default:
-      orderBy = { createdAt: 'desc' };
+      orderBy = { createdAt: "desc" };
   }
-  
-  // Construir filtros de búsqueda
+
+  // Filtros normalizados
   const where: any = {};
-  
   if (search) {
     where.OR = [
-      { userNombre: { contains: search, mode: 'insensitive' } },
-      { userEmail: { contains: search, mode: 'insensitive' } },
-      { eventoNombre: { contains: search, mode: 'insensitive' } },
+      { user: { profile: { nombres: { contains: search, mode: "insensitive" } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: "insensitive" } } } },
+      { user: { email: { contains: search, mode: "insensitive" } } },
+      { evento: { nombre: { contains: search, mode: "insensitive" } } },
     ];
   }
-  
-  if (eventId && eventId !== "") {
-    where.eventoId = eventId;
-  }
-  
-  if (tipo && tipo !== "") {
-    where.tipoEntrada = tipo;
-  }
-  
-  if (from) {
-    where.createdAt = {
-      ...where.createdAt,
-      gte: new Date(from),
+  if (eventId) where.eventoId = eventId;
+  if (from) where.createdAt = { ...where.createdAt, gte: new Date(from) };
+  if (to) where.createdAt = { ...where.createdAt, lte: new Date(to) };
+
+  // Filtro por tipo de ticket (en items)
+  if (tipo) {
+    where.items = {
+      some: {
+        ticketType: { name: tipo }
+      }
     };
   }
-  
-  if (to) {
-    where.createdAt = {
-      ...where.createdAt,
-      lte: new Date(to),
-    };
-  }
-  
-  // Obtener total de compras para paginación
-  const total = await prisma.compraEntrada.count({ where });
-  
-  // Obtener compras paginadas
-  const compras = await prisma.compraEntrada.findMany({
-    where,
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          nombres: true,
-          apellidoPaterno: true,
+
+  // Consulta principal
+  const [total, compras] = await Promise.all([
+    prisma.compra.count({ where }),
+    prisma.compra.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                nombres: true,
+                apellidoPaterno: true,
+                apellidoMaterno: true,
+                comuna: { select: { name: true, region: { select: { name: true } } } },
+              },
+            },
+          },
+        },
+        evento: {
+          select: {
+            id: true,
+            nombre: true,
+            fecha: true,
+            tipo: { select: { name: true } },
+            venue: { select: { name: true } },
+          },
+        },
+        items: {
+          include: {
+            ticketType: { select: { name: true, price: true } },
+          },
         },
       },
-      evento: true,
-    },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy,
-  });
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy,
+    }),
+  ]);
 
-  // Calcular estadísticas
-  // Total de ingresos
-  const ingresosBrutos = await prisma.compraEntrada.aggregate({
-    where,
-    _sum: {
-      total: true,
-    },
-  });
-  
-  // Número de entradas vendidas
-  const entradasVendidas = await prisma.compraEntrada.aggregate({
-    where,
-    _sum: {
-      cantidad: true,
-    },
-  });
-  
-  // Conteo por tipo
-  const comprasPorTipo = await prisma.compraEntrada.groupBy({
-    by: ['tipoEntrada'],
-    where,
-    _sum: {
-      cantidad: true,
-      total: true,
-    },
-  });
-  
-  // Formatear estadísticas por tipo
-  const porTipo = comprasPorTipo.reduce((acc, item) => {
-    acc[item.tipoEntrada] = {
-      cantidad: item._sum.cantidad || 0,
-      total: item._sum.total || 0
-    };
-    return acc;
-  }, {} as Record<string, { cantidad: number, total: number }>);
-  
+  // Estadísticas
+  const ingresosBrutos = compras.reduce((acc, c) => acc + c.total, 0);
+  const entradasVendidas = compras.reduce(
+    (acc, c) => acc + c.items.reduce((sum, i) => sum + i.quantity, 0),
+    0
+  );
+  const porTipo: Record<string, { cantidad: number; total: number }> = {};
+  compras.forEach((c) =>
+    c.items.forEach((i) => {
+      const tipo = i.ticketType.name;
+      if (!porTipo[tipo]) porTipo[tipo] = { cantidad: 0, total: 0 };
+      porTipo[tipo].cantidad += i.quantity;
+      porTipo[tipo].total += i.subtotal;
+    })
+  );
+
   return {
     compras,
     total,
     stats: {
-      ingresosBrutos: ingresosBrutos._sum.total || 0,
-      entradasVendidas: entradasVendidas._sum.cantidad || 0,
+      ingresosBrutos,
+      entradasVendidas,
       porTipo,
     },
     totalPages: Math.ceil(total / pageSize),
@@ -152,23 +139,41 @@ export async function getCompras(filters: {
 }
 
 /**
- * Obtiene una compra por su ID
+ * Obtiene una compra por su ID (modelo normalizado)
  */
 export async function getCompraById(id: string) {
   await ensureAdminPage();
-  
-  return prisma.compraEntrada.findUnique({
+  return prisma.compra.findUnique({
     where: { id },
     include: {
       user: {
         select: {
           id: true,
           email: true,
-          nombres: true,
-          apellidoPaterno: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+              apellidoMaterno: true,
+              comuna: { select: { name: true, region: { select: { name: true } } } },
+            },
+          },
         },
       },
-      evento: true,
+      evento: {
+        select: {
+          id: true,
+          nombre: true,
+          fecha: true,
+          tipo: { select: { name: true } },
+          venue: { select: { name: true } },
+        },
+      },
+      items: {
+        include: {
+          ticketType: { select: { name: true, price: true } },
+        },
+      },
     },
   });
 }
@@ -180,7 +185,7 @@ export async function deleteCompra(id: string) {
   await ensureAdminPage();
 
   try {
-    await prisma.compraEntrada.delete({
+    await prisma.compra.delete({
       where: { id },
     });
     revalidatePath("/admin/compras");
@@ -202,51 +207,44 @@ export async function exportComprasToCSV(filters: {
   to?: string;
 }) {
   await ensureAdminPage();
-  
+
   const { search, eventId, tipo, from, to } = filters;
-  
-  // Construir filtros de búsqueda (igual que en getCompras)
+
+  // Filtros normalizados
   const where: any = {};
-  
   if (search) {
     where.OR = [
-      { userNombre: { contains: search, mode: 'insensitive' } },
-      { userEmail: { contains: search, mode: 'insensitive' } },
-      { eventoNombre: { contains: search, mode: 'insensitive' } },
+      { user: { profile: { nombres: { contains: search, mode: "insensitive" } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: "insensitive" } } } },
+      { user: { email: { contains: search, mode: "insensitive" } } },
+      { evento: { nombre: { contains: search, mode: "insensitive" } } },
     ];
   }
-  
-  if (eventId && eventId !== "") {
-    where.eventoId = eventId;
-  }
-  
-  if (tipo && tipo !== "") {
-    where.tipoEntrada = tipo;
-  }
-  
-  if (from) {
-    where.createdAt = {
-      ...where.createdAt,
-      gte: new Date(from),
+  if (eventId) where.eventoId = eventId;
+  if (from) where.createdAt = { ...where.createdAt, gte: new Date(from) };
+  if (to) where.createdAt = { ...where.createdAt, lte: new Date(to) };
+  if (tipo) {
+    where.items = {
+      some: {
+        ticketType: { name: tipo }
+      }
     };
   }
-  
-  if (to) {
-    where.createdAt = {
-      ...where.createdAt,
-      lte: new Date(to),
-    };
-  }
-  
-  // Obtener todas las compras que coincidan con los filtros
-  const compras = await prisma.compraEntrada.findMany({
+
+  const compras = await prisma.compra.findMany({
     where,
     include: {
       user: {
         select: {
           email: true,
-          nombres: true,
-          apellidoPaterno: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+              apellidoMaterno: true,
+              comuna: { select: { name: true, region: { select: { name: true } } } },
+            },
+          },
         },
       },
       evento: {
@@ -255,20 +253,29 @@ export async function exportComprasToCSV(filters: {
           fecha: true,
         },
       },
+      items: {
+        include: {
+          ticketType: { select: { name: true, price: true } },
+        },
+      },
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
   });
 
   // Formatear datos para CSV
-  const csvHeader = 'ID,FechaCompra,Usuario,Email,Evento,FechaEvento,TipoEntrada,Cantidad,PrecioUnitario,Total\n';
-  const csvRows = compras.map(c => {
+  const csvHeader = 'ID,FechaCompra,Usuario,Email,Comuna,Region,Evento,FechaEvento,TipoEntrada,Cantidad,PrecioUnitario,Total\n';
+  const csvRows = compras.flatMap(c => {
     const fechaCompra = c.createdAt.toLocaleString();
-    const fechaEvento = c.eventoFecha.toLocaleDateString();
-    
-    return `"${c.id}","${fechaCompra}","${c.userNombre}","${c.userEmail}","${c.eventoNombre}","${fechaEvento}","${c.tipoEntrada}",${c.cantidad},${c.precioUnitario},${c.total}`;
+    const fechaEvento = c.evento?.fecha ? new Date(c.evento.fecha).toLocaleDateString() : "";
+    const nombreCompleto = c.user?.profile
+      ? [c.user.profile.nombres, c.user.profile.apellidoPaterno, c.user.profile.apellidoMaterno].filter(Boolean).join(" ")
+      : "";
+    return c.items.map(item => (
+      `"${c.id}","${fechaCompra}","${nombreCompleto}","${c.user?.email}","${c.user?.profile?.comuna?.name ?? ""}","${c.user?.profile?.comuna?.region?.name ?? ""}","${c.evento?.nombre ?? ""}","${fechaEvento}","${item.ticketType.name}",${item.quantity},${item.unitPrice},${item.subtotal}`
+    ));
   });
-  
+
   return csvHeader + csvRows.join('\n');
 }
