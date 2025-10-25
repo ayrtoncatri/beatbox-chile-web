@@ -4,6 +4,32 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
 import { getSugerenciaById, updateSugerencia, deleteSugerencia } from "@/app/admin/sugerencias/actions";
+import { SuggestionStatus } from "@prisma/client";
+
+type SugerenciaDetalle = {
+  id: string;
+  createdAt: Date;
+  user: {
+    id: string;
+    email: string;
+    profile: {
+      nombres: string | null;
+      apellidoPaterno: string | null;
+    } | null;
+  } | null;
+  nombre: string | null; // Para anónimos
+  email: string | null; // Para anónimos
+  mensaje: string;
+  asunto: string | null;
+  estado: SuggestionStatus;
+  notaPrivada: string | null;
+};
+const statusLabels: Record<SuggestionStatus, string> = {
+  [SuggestionStatus.nuevo]: "Nuevo",
+  [SuggestionStatus.en_progreso]: "En Progreso",
+  [SuggestionStatus.resuelta]: "Resuelta",
+  [SuggestionStatus.descartada]: "Descartada",
+};
 
 export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }: {
   sugerenciaId: string;
@@ -11,7 +37,7 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
   onClose: () => void;
 }) {
   const router = useRouter();
-  const [sugerencia, setSugerencia] = useState<any>(null);
+  const [sugerencia, setSugerencia] = useState<SugerenciaDetalle | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   
@@ -30,16 +56,16 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
 
   // Función para cargar los datos de la sugerencia
   async function loadSugerencia() {
-    setLoading(true);
-    try {
-      const data = await getSugerenciaById(sugerenciaId);
-      setSugerencia(data);
-    } catch (error) {
-      console.error("Error al cargar la sugerencia:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+    setLoading(true);
+    try {
+      const data = await getSugerenciaById(sugerenciaId);
+      setSugerencia(data as SugerenciaDetalle);
+    } catch (error) {
+      console.error("Error al cargar la sugerencia:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
   
   // Función para eliminar la sugerencia
   async function handleDelete() {
@@ -68,8 +94,25 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
   useEffect(() => {
     if (formState.success) {
       router.refresh();
+      onClose();
     }
   }, [formState.success, router]);
+
+  const renderUserName = () => {
+    if (loading || !sugerencia) return 'Cargando...';
+    
+    if (sugerencia.user) {
+      const userName = [sugerencia.user.profile?.nombres, sugerencia.user.profile?.apellidoPaterno]
+        .filter(Boolean)
+        .join(" ");
+      
+      // Mostrar "Nombre (email)" o "email" si no tiene perfil
+      return userName ? `${userName} (${sugerencia.user.email})` : sugerencia.user.email;
+    }
+    
+    // Fallback para sugerencias anónimas
+    return sugerencia.nombre ? `${sugerencia.nombre} (${sugerencia.email || 'sin email'})` : 'Anónimo';
+  };
 
   return (
     <div className={`fixed inset-0 z-50 ${isOpen ? "block" : "hidden"}`}>
@@ -96,7 +139,7 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
               <div className="mb-4">
                 <p><strong>ID:</strong> {sugerencia.id}</p>
                 <p><strong>Fecha:</strong> {new Date(sugerencia.createdAt).toLocaleString()}</p>
-                <p><strong>Usuario:</strong> {sugerencia.user ? sugerencia.user.email : sugerencia.email || sugerencia.nombre || 'Anónimo'}</p>
+                <p><strong>Usuario:</strong> {renderUserName()}</p>
               </div>
               
               {/* Mensaje */}
@@ -107,17 +150,20 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
               
               {/* Estado */}
               <div className="mb-4">
-                <label className="block font-semibold mb-1">Estado:</label>
-                <select 
-                  name="estado" 
-                  defaultValue={sugerencia.estado}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="nuevo">Nuevo</option>
-                  <option value="revisado">Revisado</option>
-                  <option value="descartado">Descartado</option>
-                </select>
-              </div>
+                <label className="block font-semibold mb-1">Estado:</label>
+                <select 
+                  name="estado" 
+                  defaultValue={sugerencia.estado}
+                  className="w-full p-2 border rounded"
+                >
+                    {/* CAMBIO: Usar los valores y etiquetas del Enum */}
+                    {Object.values(SuggestionStatus).map(status => (
+                      <option key={status} value={status}>
+                        {statusLabels[status] || status}
+                      </option>
+                    ))}
+                </select>
+              </div>
               
               {/* Nota privada */}
               <div className="mb-4">

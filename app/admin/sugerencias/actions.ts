@@ -4,11 +4,12 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ensureAdminPage } from "@/lib/permissions";
+import { Prisma , SuggestionStatus } from "@prisma/client";
 
 // Esquema para validar actualización de sugerencia
 const SugerenciaUpdateSchema = z.object({
   id: z.string(),
-  estado: z.string().optional(),
+  estado: z.nativeEnum(SuggestionStatus).optional(),
   notaPrivada: z.string().optional(),
 });
 
@@ -29,7 +30,7 @@ export async function getSugerencias(filters: {
   const { search, userId, estado, from, to, page = 1, pageSize = 20 } = filters;
   
   // Construir filtros de búsqueda
-  const where: any = {};
+  const where: Prisma.SugerenciaWhereInput = {};
   
   if (search) {
     where.OR = [
@@ -38,7 +39,9 @@ export async function getSugerencias(filters: {
       { email: { contains: search, mode: 'insensitive' } },
       { asunto: { contains: search, mode: 'insensitive' } },
       { user: { email: { contains: search, mode: 'insensitive' } } },
-      { user: { nombres: { contains: search, mode: 'insensitive' } } },
+      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
     ];
   }
   
@@ -47,39 +50,41 @@ export async function getSugerencias(filters: {
   }
   
   if (estado && estado !== "") {
-    where.estado = estado;
-  }
+    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
+      where.estado = estado as SuggestionStatus;
+    }
+  }
   
-  if (from) {
-    where.createdAt = {
-      ...where.createdAt,
-      gte: new Date(from),
-    };
-  }
-  
-  if (to) {
-    where.createdAt = {
-      ...where.createdAt,
-      lte: new Date(to),
-    };
-  }
+  if (from || to) {
+    where.createdAt = {};
+    if (from) {
+      where.createdAt.gte = new Date(from);
+    }
+    if (to) {
+      where.createdAt.lte = new Date(to);
+    }
+  }
   
   // Obtener total de sugerencias para paginación
   const total = await prisma.sugerencia.count({ where });
   
   // Obtener sugerencias paginadas
   const sugerencias = await prisma.sugerencia.findMany({
-    where,
     include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          nombres: true,
-          apellidoPaterno: true,
-        },
-      },
-    },
+      // CAMBIO: Incluir perfil anidado
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+            },
+          },
+        },
+      },
+    },
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: {
@@ -115,18 +120,23 @@ export async function getSugerenciaById(id: string) {
   await ensureAdminPage();
   
   return prisma.sugerencia.findUnique({
-    where: { id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          nombres: true,
-          apellidoPaterno: true,
-        },
-      },
-    },
-  });
+    where: { id },
+    include: {
+      // CAMBIO: Incluir perfil anidado
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -150,13 +160,12 @@ export async function updateSugerencia(prevState: any, formData: FormData) {
   const { id, ...dataToUpdate } = validatedFields.data;
 
   try {
-    await prisma.sugerencia.update({
-      where: { id },
-      data: {
-        ...dataToUpdate,
-        updatedAt: new Date(),
-      },
-    });
+    await prisma.sugerencia.update({
+      where: { id },
+      data: {
+        ...dataToUpdate,
+      },
+    });
 
     revalidatePath("/admin/sugerencias");
     return { success: true, message: "Sugerencia actualizada exitosamente." };
@@ -203,13 +212,15 @@ export async function exportSugerenciasToCSV(filters: {
   
   if (search) {
     where.OR = [
-      { mensaje: { contains: search, mode: 'insensitive' } },
-      { nombre: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-      { asunto: { contains: search, mode: 'insensitive' } },
-      { user: { email: { contains: search, mode: 'insensitive' } } },
-      { user: { nombres: { contains: search, mode: 'insensitive' } } },
-    ];
+      { mensaje: { contains: search, mode: 'insensitive' } },
+      { nombre: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { asunto: { contains: search, mode: 'insensitive' } },
+      { user: { email: { contains: search, mode: 'insensitive' } } },
+      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
+    ];
   }
   
   if (userId && userId !== "") {
@@ -217,35 +228,37 @@ export async function exportSugerenciasToCSV(filters: {
   }
   
   if (estado && estado !== "") {
-    where.estado = estado;
-  }
+    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
+      where.estado = estado as SuggestionStatus;
+    }
+  }
   
-  if (from) {
-    where.createdAt = {
-      ...where.createdAt,
-      gte: new Date(from),
-    };
-  }
-  
-  if (to) {
-    where.createdAt = {
-      ...where.createdAt,
-      lte: new Date(to),
-    };
-  }
+  if (from || to) {
+    where.createdAt = {};
+    if (from) {
+      where.createdAt.gte = new Date(from);
+    }
+    if (to) {
+      where.createdAt.lte = new Date(to);
+    }
+  }
   
   // Obtener todas las sugerencias que coincidan con los filtros
   const sugerencias = await prisma.sugerencia.findMany({
     where,
-    include: {
-      user: {
-        select: {
-          email: true,
-          nombres: true,
-          apellidoPaterno: true,
-        },
-      },
-    },
+    include: {
+      user: {
+        select: {
+          email: true,
+            profile: {
+                select: {
+                nombres: true,
+                apellidoPaterno: true,
+              },
+            },
+          },
+        },
+      },
     orderBy: {
       createdAt: 'desc',
     },
@@ -254,7 +267,7 @@ export async function exportSugerenciasToCSV(filters: {
   // Formatear datos para CSV
   const csvHeader = 'ID,Fecha,Usuario,Email,Estado,Mensaje,NotaPrivada\n';
   const csvRows = sugerencias.map(s => {
-    const userName = s.user ? `${s.user.nombres || ''} ${s.user.apellidoPaterno || ''}`.trim() : s.nombre || '';
+    const userName = s.user ? `${s.user.profile?.nombres || ''} ${s.user.profile?.apellidoPaterno || ''}`.trim() : s.nombre || '';
     const email = s.user ? s.user.email : s.email || '';
     const fecha = s.createdAt.toLocaleString();
     const mensaje = (s.mensaje || '').replace(/"/g, '""').replace(/\n/g, ' ');

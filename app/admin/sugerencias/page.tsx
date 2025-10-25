@@ -1,6 +1,18 @@
 import SugerenciasPageWrapper from "@/components/admin/sugerencias/SugerenciasPageWrapper";
 import { getSugerencias } from "./actions";
 import { prisma } from "@/lib/prisma"; 
+import { Sugerencia, User } from "@prisma/client";
+
+type SugerenciaConPerfil = Sugerencia & {
+  user: {
+    id: string;
+    email: string;
+    profile: {
+      nombres: string | null;
+      apellidoPaterno: string | null;
+    } | null;
+  } | null;
+};
 
 export default async function Page({
   searchParams,
@@ -33,17 +45,23 @@ export default async function Page({
   });
 
   // Mapeo para la tabla
-  const sugerenciasRows = sugerencias.map((s: any) => ({
-    id: s.id,
-    createdAt: s.createdAt,
-    user: s.user
-      ? { id: s.user.id, nombres: s.user.nombres, email: s.user.email }
-      : { id: null, nombres: s.nombre, email: s.email },
-    asunto: s.asunto,
-    estado: s.estado,
-    mensaje: s.mensaje,
-    notaPrivada: s.notaPrivada,
-  }));
+  const sugerenciasRows = (sugerencias as SugerenciaConPerfil[]).map((s) => {
+    const userName = s.user?.profile
+      ? [s.user.profile.nombres, s.user.profile.apellidoPaterno].filter(Boolean).join(" ")
+      : null;
+
+    return {
+      id: s.id,
+      createdAt: s.createdAt,
+      user: s.user
+        ? { id: s.user.id, nombres: userName || s.user.email, email: s.user.email }
+        : { id: null, nombres: s.nombre, email: s.email },
+      asunto: s.asunto,
+      estado: s.estado,
+      mensaje: s.mensaje,
+      notaPrivada: s.notaPrivada,
+    };
+  });
 
   const filterDefaults = {
     q: params.q,
@@ -57,12 +75,33 @@ export default async function Page({
 
   const pagination = { page, pageSize, total, totalPages };
 
-  // --- NUEVO: obtener usuarios para el filtro ---
-  const users = await prisma.user.findMany({
-    select: { id: true, nombres: true },
-    orderBy: { nombres: "asc" },
-    where: { isActive: true },
-  });
+  const usersWithProfile = await prisma.user.findMany({
+    where: { 
+      isActive: true,
+      profile: {
+        nombres: { not: null }
+      }
+    },
+    select: { 
+      id: true, 
+      profile: {
+        select: {
+          nombres: true,
+          apellidoPaterno: true
+        }
+      } 
+    },
+    orderBy: { 
+      profile: {
+        nombres: "asc" 
+      }
+    },
+  });
+  
+  const users = usersWithProfile.map(u => ({
+    id: u.id,
+    nombres: [u.profile?.nombres, u.profile?.apellidoPaterno].filter(Boolean).join(" ")
+  }));
 
   return (
     <SugerenciasPageWrapper

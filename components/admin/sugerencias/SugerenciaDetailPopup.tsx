@@ -2,12 +2,33 @@
 import { useEffect, useState, useTransition } from "react";
 import { getSugerenciaById, updateSugerencia } from "@/app/admin/sugerencias/actions";
 import PopupModal from "@/components/ui/PopupModal";
+import { SuggestionStatus } from "@prisma/client";
 
 const ESTADOS = [
-  { value: "nuevo", label: "Pendiente", color: "bg-yellow-100 text-yellow-700" },
-  { value: "revisada", label: "Revisada", color: "bg-green-100 text-green-700" },
-  { value: "descartada", label: "Descartada", color: "bg-red-100 text-red-700" },
+  { value: SuggestionStatus.nuevo, label: "Nuevo", color: "bg-yellow-100 text-yellow-700" },
+  { value: SuggestionStatus.en_progreso, label: "En Progreso", color: "bg-blue-100 text-blue-700" },
+  { value: SuggestionStatus.resuelta, label: "Resuelta", color: "bg-green-100 text-green-700" },
+  { value: SuggestionStatus.descartada, label: "Descartada", color: "bg-red-100 text-red-700" },
 ];
+
+type SugerenciaDetalle = {
+  id: string;
+  createdAt: Date; 
+  user: {
+    id: string;
+    email: string;
+    profile: {
+      nombres: string | null;
+      apellidoPaterno: string | null;
+    } | null;
+  } | null;
+  nombre: string | null; // Para anónimos
+  email: string | null; // Para anónimos
+  mensaje: string;
+  asunto: string | null;
+  estado: SuggestionStatus;
+  notaPrivada: string | null;
+};
 
 export default function SugerenciaDetailPopup({
   id,
@@ -18,11 +39,11 @@ export default function SugerenciaDetailPopup({
   open: boolean;
   onClose: () => void;
 }) {
-  const [sugerencia, setSugerencia] = useState<any>(null);
-  const [isPending, startTransition] = useTransition();
-  const [estado, setEstado] = useState<string>("");
-  const [notaPrivada, setNotaPrivada] = useState<string>("");
-  const [msg, setMsg] = useState<string | null>(null);
+  const [sugerencia, setSugerencia] = useState<SugerenciaDetalle | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [estado, setEstado] = useState<SuggestionStatus>(SuggestionStatus.nuevo);
+  const [notaPrivada, setNotaPrivada] = useState<string>("");
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
   if (open && id) {
@@ -38,7 +59,7 @@ export default function SugerenciaDetailPopup({
   }
 }, [id, open]);
 
-  const handleEstadoChange = async (nuevoEstado: string) => {
+  const handleEstadoChange = async (nuevoEstado: SuggestionStatus) => {
     if (!id) return;
     const formData = new FormData();
     formData.append("id", id);
@@ -73,27 +94,27 @@ export default function SugerenciaDetailPopup({
             <div className="mb-2">Fecha: {new Date(sugerencia.createdAt).toLocaleString("es-CL")}</div>
             <div className="mb-2">
               Usuario: {sugerencia.user
-                ? `${sugerencia.user.nombres || ""} ${sugerencia.user.apellidoPaterno || ""}`.trim()
-                : sugerencia.nombre || "(Sin nombre)"} — {sugerencia.user ? sugerencia.user.email : sugerencia.email}
+                ? `${sugerencia.user.profile?.nombres || ""} ${sugerencia.user.profile?.apellidoPaterno || ""}`.trim()
+                : sugerencia.nombre || "(Sin nombre)"} — {sugerencia.user ? sugerencia.user.email : sugerencia.email}
             </div>
             <div className="mb-2">Asunto: {sugerencia.asunto || <span className="text-gray-400">(Sin asunto)</span>}</div>
             <div className="mb-2 flex items-center gap-2">
               Estado:
               {ESTADOS.map((e) => (
-                <button
-                  key={e.value}
-                  className={`px-2 py-1 rounded text-xs font-semibold border transition ${
-                    estado === e.value
-                      ? `${e.color} border-gray-300`
-                      : "bg-gray-100 text-gray-500 border-transparent hover:border-gray-300"
-                  }`}
-                  onClick={() => handleEstadoChange(e.value)}
-                  disabled={estado === e.value || isPending}
-                  type="button"
-                >
-                  {e.label}
-                </button>
-              ))}
+                <button
+                  key={e.value}
+                  className={`px-2 py-1 rounded text-xs font-semibold border transition ${
+                    estado === e.value
+                      ? `${e.color} border-gray-300`
+                      : "bg-gray-100 text-gray-500 border-transparent hover:border-gray-300"
+                  }`}
+                  onClick={() => handleEstadoChange(e.value)}
+                  disabled={estado === e.value || isPending}
+                  type="button"
+                >
+                  {e.label}
+                </button>
+              ))}
             </div>
             <div className="mb-2">
               <div className="font-semibold">Mensaje:</div>

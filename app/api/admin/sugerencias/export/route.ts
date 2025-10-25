@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
-import type { Prisma } from "@prisma/client";
+import { Prisma , SuggestionStatus } from "@prisma/client";
+
 
 function parseDate(value?: string) {
   if (!value) return undefined;
@@ -19,19 +20,22 @@ export async function GET(req: Request) {
   const from = parseDate(searchParams.get("from") || undefined);
   const to = parseDate(searchParams.get("to") || undefined);
 
+  const isValidStatus = estado && Object.values(SuggestionStatus).includes(estado as SuggestionStatus);
+
   const where: Prisma.SugerenciaWhereInput = {
     AND: [
       q
         ? {
             OR: [
-              { mensaje: { contains: q, mode: "insensitive" } },
-              { user: { nombres: { contains: q, mode: "insensitive" } } },
               { user: { email: { contains: q, mode: "insensitive" } } },
+              { user: { profile: { nombres: { contains: q, mode: "insensitive" } } } },
+              { user: { profile: { apellidoPaterno: { contains: q, mode: "insensitive" } } } },
+              { user: { profile: { apellidoMaterno: { contains: q, mode: "insensitive" } } } },
             ],
           }
         : {},
-      estado ? { estado } : {},
-      userId ? { userId } : {},
+      isValidStatus ? { estado: estado as SuggestionStatus } : {},
+      userId ? { userId } : {},
       from || to
         ? {
             createdAt: {
@@ -44,16 +48,26 @@ export async function GET(req: Request) {
   };
 
   const rows = await prisma.sugerencia.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 10000,
-    select: {
-      createdAt: true,
-      mensaje: true,
-      estado: true,
-      user: { select: { nombres: true, email: true } },
-    },
-  });
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 10000,
+    select: {
+      createdAt: true,
+      mensaje: true,
+      estado: true,
+      user: { 
+        select: { 
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true
+            }
+          }
+        } 
+      },
+    },
+  });
 
   const header = [
     "fecha",
@@ -63,15 +77,19 @@ export async function GET(req: Request) {
     "mensaje",
   ].join(";");
 
-  const csvLines = rows.map((r) =>
-    [
-      r.createdAt.toISOString(),
-      r.user?.nombres || "",
-      r.user?.email || "",
-      r.estado,
-      (r.mensaje || "").replaceAll(/[\r\n]+/g, " ").replaceAll(";", ","),
-    ].join(";")
-  );
+  const csvLines = rows.map((r) => {
+    const userName = r.user 
+      ? [r.user.profile?.nombres, r.user.profile?.apellidoPaterno].filter(Boolean).join(" ")
+      : "";
+
+    return [
+      r.createdAt.toISOString(),
+      userName,
+      r.user?.email || "",
+      r.estado,
+      (r.mensaje || "").replaceAll(/[\r\n]+/g, " ").replaceAll(";", ","),
+    ].join(";");
+  });
 
   const now = new Date();
   const fecha = now.toLocaleDateString("es-CL").replace(/\//g, "-");
