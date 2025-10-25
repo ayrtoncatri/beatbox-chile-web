@@ -54,12 +54,29 @@ export async function PATCH(req: NextRequest) {
   try {
     const updated = await prisma.wildcard.update({
       where: { id },
-      data: updateData,
-      include: {
-        user: { select: { id: true, email: true, nombres: true } },
-        reviewedBy: { select: { id: true, email: true, nombres: true } },
-      },
-    });
+      data: updateData,
+      // CAMBIO: Corregido el 'include' para usar 'profile'
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true, apellidoMaterno: true },
+            },
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true },
+            },
+          },
+        },
+      },
+    });
     return NextResponse.json({ data: updated });
   } catch (e) {
     console.error(e);

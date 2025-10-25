@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import ReviewButtons from "@/components/admin/wildcards/ReviewButtons";
 import { UserIcon, FunnelIcon, EyeIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,9 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
     where.OR = [
       { nombreArtistico: { contains: q, mode: "insensitive" } },
       { user: { email: { contains: q, mode: "insensitive" } } },
-      { user: { nombres: { contains: q, mode: "insensitive" } } },
-      { user: { apellidoPaterno: { contains: q, mode: "insensitive" } } },
-      { user: { apellidoMaterno: { contains: q, mode: "insensitive" } } },
+      { user: { profile: { nombres: { contains: q, mode: "insensitive" } } } },
+      { user: { profile: { apellidoPaterno: { contains: q, mode: "insensitive" } } } },
+      { user: { profile: { apellidoMaterno: { contains: q, mode: "insensitive" } } } },
     ];
   }
   if (statusParam !== "ALL") where.status = statusParam as any;
@@ -39,12 +40,28 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
     prisma.wildcard.findMany({
       where,
       include: {
-        user: { select: { id: true, email: true, nombres: true, apellidoPaterno: true, apellidoMaterno: true } },
-        reviewedBy: { select: { id: true, email: true, nombres: true } },
-      },
-      orderBy: { id: "desc" },
-      skip,
-      take: pageSize,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true, apellidoMaterno: true },
+            },
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true },
+            },
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+      skip,
+      take: pageSize,
     }),
   ]);
 
@@ -105,9 +122,15 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
             </thead>
             <tbody>
               {items.map((w) => {
-                const nombreUsuario = [w.user?.nombres, w.user?.apellidoPaterno, w.user?.apellidoMaterno]
-                  .filter(Boolean)
-                  .join(" ");
+                const nombreUsuario = [w.user?.profile?.nombres, w.user?.profile?.apellidoPaterno, w.user?.profile?.apellidoMaterno]
+                  .filter(Boolean)
+                  .join(" ");
+                const nombreRevisor = w.reviewedBy
+                  ? [w.reviewedBy.profile?.nombres, w.reviewedBy.profile?.apellidoPaterno]
+                      .filter(Boolean)
+                      .join(" ") || w.reviewedBy.email // Fallback al email
+                  : null;
+
                 return (
                   <tr key={w.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
                     <td className="p-5">{w.nombreArtistico || "—"}</td>
@@ -137,20 +160,20 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                     </td>
                     <td className="p-5">
                       {w.reviewedBy ? (
-                        <span className="text-xs text-gray-700">{w.reviewedBy.nombres || w.reviewedBy.email}</span>
+                        <span className="text-xs text-gray-700">{nombreRevisor}</span>
                       ) : (
                         <span className="text-xs text-gray-500">—</span>
                       )}
                     </td>
                     <td className="p-5 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <a
-                          href={`/admin/wildcards/${w.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
-                          title="Ver wildcard"
-                        >
-                          <EyeIcon className="w-4 h-4" /> Ver
-                        </a>
+                        <Link
+                          href={`/admin/wildcards/${w.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                          title="Ver wildcard"
+                        >
+                          <EyeIcon className="w-4 h-4" /> Ver
+                        </Link>
                         <ReviewButtons id={w.id} status={w.status as any} />
                       </div>
                     </td>
@@ -171,9 +194,15 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
         {/* Lista mobile */}
         <div className="md:hidden space-y-4">
           {items.map((w) => {
-            const nombreUsuario = [w.user?.nombres, w.user?.apellidoPaterno, w.user?.apellidoMaterno]
-              .filter(Boolean)
-              .join(" ");
+            const nombreUsuario = [w.user?.profile?.nombres, w.user?.profile?.apellidoPaterno, w.user?.profile?.apellidoMaterno]
+              .filter(Boolean)
+              .join(" ");
+            const nombreRevisor = w.reviewedBy
+              ? [w.reviewedBy.profile?.nombres, w.reviewedBy.profile?.apellidoPaterno]
+                  .filter(Boolean)
+                  .join(" ") || w.reviewedBy.email // Fallback al email
+              : null;
+
             return (
               <div key={w.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
@@ -200,16 +229,16 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   </span>
                   <span className="text-gray-400">|</span>
                   <span>
-                    {w.reviewedBy?.nombres || w.reviewedBy?.email || "Sin revisión"}
+                    {nombreRevisor || "Sin revisión"}
                   </span>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <a
+                  <Link
                     href={`/admin/wildcards/${w.id}`}
                     className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
-                  </a>
+                  </Link>
                   <ReviewButtons id={w.id} status={w.status as any} />
                 </div>
               </div>
@@ -225,19 +254,19 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="text-sm text-gray-600">Mostrando {items.length} de {total} wildcards</div>
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href={buildPageUrl(Math.max(1, page - 1))}
               className={`btn btn-sm ${page === 1 ? "btn-disabled" : "btn-outline"}`}
             >
               Anterior
-            </a>
+            </Link>
             <span className="text-sm">Página {page} de {totalPages}</span>
-            <a
+            <Link
               href={buildPageUrl(Math.min(totalPages, page + 1))}
               className={`btn btn-sm ${page >= totalPages ? "btn-disabled" : "btn-outline"}`}
             >
               Siguiente
-            </a>
+            </Link>
           </div>
         </div>
       </div>
