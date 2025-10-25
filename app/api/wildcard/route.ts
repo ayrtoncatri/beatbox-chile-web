@@ -17,6 +17,8 @@ const DEFAULT_EVENT = {
   reglas: "Auto-generado para wildcards sin evento asignado",
 };
 
+const DEFAULT_EVENT_TYPE = "Online";
+
 export async function GET() {
   try {
     const wildcards = await prisma.wildcard.findMany({
@@ -24,7 +26,8 @@ export async function GET() {
       select: {
         id: true,
         youtubeUrl: true,
-        nombreArtistico: true, 
+        nombreArtistico: true,
+        categoria: true, // 👈 nuevo campo
       },
     });
     return NextResponse.json({ ok: true, wildcards }, { status: 200 });
@@ -34,7 +37,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { youtubeUrl, userId, nombreArtistico } = await req.json();
+  const { youtubeUrl, userId, nombreArtistico, categoria } = await req.json(); // 👈 nuevo campo
 
   // Validaciones mínimas
   if (!userId) {
@@ -50,16 +53,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Usuario inválido" }, { status: 401 });
   }
 
+  // Busca el EventType "Online"
+  let eventType = await prisma.eventType.findUnique({
+    where: { name: DEFAULT_EVENT_TYPE },
+  });
+
+  if (!eventType) {
+    eventType = await prisma.eventType.create({
+      data: { name: DEFAULT_EVENT_TYPE },
+    });
+  }
+
   // Usa/crea evento por defecto porque el schema exige eventoId
   let evento = await prisma.evento.findFirst({
-    where: { nombre: DEFAULT_EVENT.nombre, tipo: DEFAULT_EVENT.tipo },
+    where: { nombre: DEFAULT_EVENT.nombre, tipoId: eventType.id },
   });
 
   if (!evento) {
     evento = await prisma.evento.create({
       data: {
         nombre: DEFAULT_EVENT.nombre,
-        tipo: DEFAULT_EVENT.tipo,
+        tipoId: eventType.id, // 👈 conecta el tipo por id
         reglas: DEFAULT_EVENT.reglas,
         fecha: new Date(),
       },
@@ -67,8 +81,8 @@ export async function POST(req: Request) {
   }
 
   const wildcard = await prisma.wildcard.create({
-    data: { youtubeUrl, userId, eventoId: evento.id, nombreArtistico }, // 👈 agrega aquí
-    select: { id: true, youtubeUrl: true, nombreArtistico: true, userId: true, eventoId: true, createdAt: true },
+    data: { youtubeUrl, userId, eventoId: evento.id, nombreArtistico, categoria }, // 👈 nuevo campo
+    select: { id: true, youtubeUrl: true, nombreArtistico: true, categoria: true, userId: true, eventoId: true, createdAt: true },
   });
 
   return NextResponse.json({ ok: true, wildcard }, { status: 201 });

@@ -29,13 +29,13 @@ export default async function AdminDashboardPage() {
     prisma.wildcard.count({ where: { status: "APPROVED" } }),
     prisma.wildcard.count({ where: { status: "REJECTED" } }),
     prisma.wildcard.count({ where: { status: "PENDING" } }),
-    prisma.evento.count(),
-    prisma.compraEntrada.aggregate({ _sum: { total: true }, _count: { _all: true } }),
+    prisma.evento.count(), // Si Prisma genera Evento con mayúscula, usa prisma.Evento.count()
+    prisma.compra.aggregate({ _sum: { total: true }, _count: { _all: true } }),
     prisma.sugerencia.count(),
     // Compras por mes (últimos 6 meses)
     prisma.$queryRawUnsafe<{ mes: string; total: number }[]>(`
       SELECT TO_CHAR("createdAt", 'YYYY-MM') as mes, SUM(total)::int as total
-      FROM "CompraEntrada"
+      FROM "Compra"
       WHERE "createdAt" >= NOW() - INTERVAL '6 months'
       GROUP BY mes
       ORDER BY mes ASC

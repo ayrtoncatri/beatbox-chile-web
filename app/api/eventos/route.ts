@@ -9,10 +9,42 @@ export async function GET() {
         isTicketed: true,
         fecha: { gte: new Date() },
       },
-      select: { id: true, nombre: true, fecha: true, lugar: true, ciudad: true, tipo: true },
+      select: {
+        id: true,
+        nombre: true,
+        fecha: true,
+        tipo: { select: { name: true } },
+        venue: {
+          select: {
+            name: true,
+            address: {
+              select: {
+                comuna: {
+                  select: {
+                    name: true,
+                    region: { select: { name: true } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       orderBy: { fecha: "asc" },
     });
-    return NextResponse.json({ data: eventos }, { status: 200 });
+
+    // Adaptar para frontend
+    const data = eventos.map(ev => ({
+      id: ev.id,
+      nombre: ev.nombre,
+      fecha: ev.fecha,
+      tipo: ev.tipo?.name ?? null,
+      lugar: ev.venue?.name ?? null,
+      ciudad: ev.venue?.address?.comuna?.name ?? null,
+      region: ev.venue?.address?.comuna?.region?.name ?? null,
+    }));
+
+    return NextResponse.json({ data }, { status: 200 });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });

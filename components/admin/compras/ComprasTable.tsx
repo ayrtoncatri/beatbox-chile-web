@@ -4,17 +4,26 @@ import { EyeIcon, TrashIcon, CalendarDaysIcon } from "@heroicons/react/24/outlin
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type CompraItemRow = {
+  tipoEntrada: string;
+  cantidad: number;
+  precioUnitario: number;
+  total: number;
+};
+
 type Row = {
   id: string;
   createdAt: string | Date;
   userNombre: string;
   userEmail: string;
+  comuna: string;
+  region: string;
   eventoId: string;
   eventoNombre: string;
   eventoFecha: string | Date;
-  tipoEntrada: string;
-  cantidad: number;
-  precioUnitario: number;
+  eventoTipo: string;
+  eventoVenue: string;
+  items: CompraItemRow[];
   total: number;
 };
 
@@ -75,20 +84,39 @@ export default function ComprasTable(props: {
                 <td className="px-4 py-3">
                   <div className="flex flex-col">
                     <span className="font-medium">{r.userNombre}</span>
+                    <span className="text-xs text-gray-500">{r.comuna}, {r.region}</span>
                     <button className="link text-xs text-blue-600" onClick={() => copyEmail(r.userEmail)} title="Copiar email">
                       {r.userEmail}
                     </button>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    r.tipoEntrada === "VIP" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {r.tipoEntrada}
-                  </span>
+                  {r.items.map((item, idx) => (
+                    <div key={idx} className="mb-1">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        item.tipoEntrada === "VIP" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
+                      }`}>
+                        {item.tipoEntrada}
+                      </span>
+                      <span className="ml-2">x{item.cantidad}</span>
+                      <span className="ml-2">${item.precioUnitario.toLocaleString("es-CL")}</span>
+                      <span className="ml-2 font-semibold">${item.total.toLocaleString("es-CL")}</span>
+                    </div>
+                  ))}
                 </td>
-                <td className="px-4 py-3 text-center">{r.cantidad}</td>
-                <td className="px-4 py-3">${r.precioUnitario.toLocaleString("es-CL")}</td>
+                {/* Cantidad: suma de todas las cantidades de los items */}
+                <td className="px-4 py-3 text-center">
+                  {r.items.reduce((sum, item) => sum + item.cantidad, 0)}
+                </td>
+                {/* Precio unitario: muestra todos los precios unitarios separados por coma */}
+                <td className="px-4 py-3">
+                  {r.items.map((item, idx) => (
+                    <span key={idx}>
+                      {idx > 0 && ", "}
+                      ${item.precioUnitario.toLocaleString("es-CL")}
+                    </span>
+                  ))}
+                </td>
                 <td className="px-4 py-3 font-semibold">${r.total.toLocaleString("es-CL")}</td>
                 <td className="px-4 py-3 flex flex-wrap gap-2">
                   <button
@@ -128,14 +156,7 @@ export default function ComprasTable(props: {
       <div className="md:hidden space-y-4">
         {rows.map((r) => (
           <div key={r.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div className="font-semibold text-base">{r.eventoNombre}</div>
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                r.tipoEntrada === "VIP" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
-              }`}>
-                {r.tipoEntrada}
-              </span>
-            </div>
+            <div className="font-semibold text-base">{r.eventoNombre}</div>
             <div className="text-xs text-gray-500">Fecha compra: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
             <div className="text-xs text-gray-500">Fecha evento: {new Date(r.eventoFecha).toLocaleString("es-CL")}</div>
             <div className="text-xs text-gray-500">
@@ -143,11 +164,21 @@ export default function ComprasTable(props: {
               <button className="ml-2 link text-xs text-blue-600" onClick={() => copyEmail(r.userEmail)} title="Copiar email">
                 {r.userEmail}
               </button>
+              <span className="ml-2">{r.comuna}, {r.region}</span>
             </div>
-            <div className="flex gap-2 text-xs">
-              <span>Cant: <b>{r.cantidad}</b></span>
-              <span>Unit: <b>${r.precioUnitario.toLocaleString("es-CL")}</b></span>
-              <span>Total: <b>${r.total.toLocaleString("es-CL")}</b></span>
+            <div>
+              {r.items.map((item, idx) => (
+                <div key={idx} className="mb-1 flex gap-2 items-center text-xs">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                    item.tipoEntrada === "VIP" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
+                  }`}>
+                    {item.tipoEntrada}
+                  </span>
+                  <span>Cant: <b>{item.cantidad}</b></span>
+                  <span>Unit: <b>${item.precioUnitario.toLocaleString("es-CL")}</b></span>
+                  <span>Total: <b>${item.total.toLocaleString("es-CL")}</b></span>
+                </div>
+              ))}
             </div>
             <div className="flex gap-2 mt-2">
               <button

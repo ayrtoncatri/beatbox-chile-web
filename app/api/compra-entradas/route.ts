@@ -23,61 +23,48 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "cantidad inválida" }, { status: 400 });
     }
 
-    // 1) Sesión de usuario (NextAuth)
+    // Sesión de usuario
     const session = await getServerSession(authOptions);
-    const userIdFromSession = (session?.user as any)?.id as string | undefined;
-    const emailFromSession = session?.user?.email as string | undefined;
-    if (!userIdFromSession && !emailFromSession) {
+    const userId = (session?.user as any)?.id as string | undefined;
+    if (!userId) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // 2) Cargar usuario desde DB (por id si existe, si no por email)
-    const user =
-      (userIdFromSession
-        ? await prisma.user.findUnique({ where: { id: userIdFromSession } })
-        : emailFromSession
-        ? await prisma.user.findUnique({ where: { email: emailFromSession } })
-        : null);
-
-    if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 401 });
-    if (user.isActive === false) {
-      return NextResponse.json({ error: "Cuenta desactivada" }, { status: 403 });
-    }
-
-    // 3) Validar evento público, presencial y futuro
+    // Validar evento
     const evento = await prisma.evento.findFirst({
       where: { id: eventoId, isPublished: true, isTicketed: true, fecha: { gte: new Date() } },
       select: { id: true, nombre: true, fecha: true },
     });
     if (!evento) return NextResponse.json({ error: "Evento no disponible para compra" }, { status: 400 });
 
-    // 4) Calcular totales e insertar compra
-    const precioUnitario = PRECIOS[tipoEntrada];
-    const total = precioUnitario * cantidad;
+    // Buscar tipo de ticket
+    const ticketType = await prisma.ticketType.findFirst({
+      where: { eventId: evento.id, name: tipoEntrada, isActive: true },
+      select: { id: true, price: true },
+    });
+    if (!ticketType) return NextResponse.json({ error: "Tipo de entrada no disponible" }, { status: 400 });
 
-    const compra = await prisma.compraEntrada.create({
+    // Crear compra y compraItem
+    const compra = await prisma.compra.create({
       data: {
-        userId: user.id,
-        userNombre: user.nombres ?? "",
-        userEmail: user.email,
+        userId,
         eventoId: evento.id,
-        eventoNombre: evento.nombre,
-        eventoFecha: evento.fecha,
-        tipoEntrada,
-        cantidad,
-        precioUnitario,
-        total,
+        total: ticketType.price * cantidad,
+        items: {
+          create: [{
+            ticketTypeId: ticketType.id,
+            quantity: cantidad,
+            unitPrice: ticketType.price,
+            subtotal: ticketType.price * cantidad,
+          }]
+        }
       },
       select: {
         id: true,
-        tipoEntrada: true,
-        cantidad: true,
-        precioUnitario: true,
         total: true,
-        eventoNombre: true,
-        eventoFecha: true,
+        items: true,
         createdAt: true,
-      },
+      }
     });
 
     return NextResponse.json({ ok: true, compra }, { status: 201 });

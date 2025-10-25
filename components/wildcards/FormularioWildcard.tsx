@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function FormularioWildcard() {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const { data: session } = useSession();
@@ -30,8 +30,9 @@ export default function FormularioWildcard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           youtubeUrl: data.youtubeUrl?.trim(),
-          nombreArtistico: data.nombre?.trim(),
-          userId, 
+          nombreArtistico: data.nombreArtistico?.trim(),
+          categoria: data.categoria,
+          userId,
         }),
       });
 
@@ -61,25 +62,48 @@ export default function FormularioWildcard() {
                    hover:shadow-lime-500/40 p-8 rounded-2xl flex flex-col gap-6
                    transition-all duration-400"
       >
-        <div className="flex items-center gap-2">
-          <FaUserAlt className="text-lime-400 text-xl" />
-          <input
-            {...register("nombre", { required: true })}
-            type="text"
-            placeholder="Nombre artístico"
-            className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            required
-          />
+        <div className="flex flex-col gap-2">
+          <label className="text-lime-200 font-semibold">Nombre artístico *</label>
+          <div className="flex items-center gap-2">
+            <FaUserAlt className="text-lime-400 text-xl" />
+            <input
+              {...register("nombreArtistico", { required: true })}
+              type="text"
+              placeholder="Nombre artístico"
+              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
+              required
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <FaYoutube className="text-lime-400 text-xl" />
-          <input
-            {...register("youtubeUrl", { required: true })}
-            type="url"
-            placeholder="Link del video de YouTube"
-            className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            required
-          />
+        <div>
+          <label className="block mb-2 text-lime-200 font-semibold">Categoría *</label>
+          <div className="flex gap-6 text-amber-50">
+            <label>
+              <input type="radio" value="Solo" {...register("categoria", { required: true })} />
+              <span className="ml-2">Solo</span>
+            </label>
+            <label>
+              <input type="radio" value="Loopstation" {...register("categoria", { required: true })} />
+              <span className="ml-2">Loopstation</span>
+            </label>
+            <label>
+              <input type="radio" value="Tagteam" {...register("categoria", { required: true })} />
+              <span className="ml-2">Tagteam</span>
+            </label>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-lime-200 font-semibold">Link del video de YouTube *</label>
+          <div className="flex items-center gap-2">
+            <FaYoutube className="text-lime-400 text-xl" />
+            <input
+              {...register("youtubeUrl", { required: true })}
+              type="url"
+              placeholder="Link del video de YouTube"
+              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
+              required
+            />
+          </div>
         </div>
         <button
           type="submit"

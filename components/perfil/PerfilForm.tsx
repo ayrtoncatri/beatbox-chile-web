@@ -18,6 +18,7 @@ type UserLike = {
   apellidoMaterno?: string | null;
   region?: string | null;
   comuna?: string | null;
+  comunaId?: number;
   edad?: number | string | null;
   wildcards?: any[];
 };
@@ -28,7 +29,9 @@ type PerfilFormState = {
   apellidoMaterno: string;
   region: string;
   comuna: string;
-  edad: string; // mantener como string en el form
+  comunaId?: number;
+  birthDate?: string;
+  edad: string;
 };
 
 export default function PerfilForm({ user }: { user: UserLike }) {
@@ -38,22 +41,12 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     apellidoMaterno: user.apellidoMaterno || "",
     region: user.region || "",
     comuna: user.comuna || "",
-    edad:
-      user.edad === null || user.edad === undefined || user.edad === ""
-        ? ""
-        : String(user.edad),
+    comunaId: user.comunaId,
+    birthDate: "",
+    edad: user.edad ? String(user.edad) : "",
   });
   const [msg, setMsg] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validateEdad = (edad: string) => {
-    if (!edad || edad.trim() === "") return "La edad es requerida";
-    const edadNum = parseInt(edad, 10);
-    if (isNaN(edadNum)) return "La edad debe ser un número válido";
-    if (edadNum < 10) return "La edad mínima es 10 años";
-    if (edadNum > 80) return "La edad máxima es 80 años";
-    return "";
-  };
 
   const [regiones, setRegiones] = useState<DPARegion[]>([]);
   const [comunas, setComunas] = useState<DPAComuna[]>([]);
@@ -105,7 +98,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     return () => {
       alive = false;
     };
-  }, []); // Carga inicial
+  }, []);
 
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -134,11 +127,25 @@ export default function PerfilForm({ user }: { user: UserLike }) {
       return;
     }
 
+    if (name === "comuna") {
+      const selectedComuna = comunas.find((c) => c.nombre === value);
+      setForm((f) => ({
+        ...f,
+        comuna: value,
+        comunaId: selectedComuna ? Number(selectedComuna.codigo) : undefined,
+      }));
+      return;
+    }
+
     setForm((f) => ({ ...f, [name]: value }));
 
     // Validación en tiempo real de edad
     if (name === "edad") {
-      const error = validateEdad(value);
+      const edadNum = parseInt(value, 10);
+      let error = "";
+      if (isNaN(edadNum)) error = "La edad debe ser un número válido";
+      else if (edadNum < 10) error = "La edad mínima es 10 años";
+      else if (edadNum > 80) error = "La edad máxima es 80 años";
       setErrors((prev) => ({ ...prev, edad: error }));
     }
   };
@@ -149,16 +156,22 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     setErrors({});
 
     // Validar edad antes de enviar
-    const edadError = validateEdad(form.edad);
-    if (edadError) {
-      setErrors({ edad: edadError });
+    const edadNum = parseInt(form.edad, 10);
+    if (isNaN(edadNum) || edadNum < 10 || edadNum > 80) {
+      setErrors({ edad: "Edad fuera de rango permitido" });
       return;
     }
 
     try {
       const res = await fetch("/api/user/update", {
         method: "POST",
-        body: JSON.stringify({ ...form, edad: Number(form.edad) }),
+        body: JSON.stringify({
+          nombres: form.nombres,
+          apellidoPaterno: form.apellidoPaterno,
+          apellidoMaterno: form.apellidoMaterno,
+          comunaId: form.comunaId,
+          birthDate: calcularBirthDateDesdeEdad(edadNum),
+        }),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
@@ -365,4 +378,10 @@ function WildcardEditForm({ wildcard }: { wildcard: any }) {
       {msg && <p className="text-blue-300">{msg}</p>}
     </form>
   );
+}
+
+// Utilidad para calcular birthDate desde edad (aprox. al 1 de enero)
+function calcularBirthDateDesdeEdad(edad: number) {
+  const hoy = new Date();
+  return new Date(hoy.getFullYear() - edad, 0, 1).toISOString();
 }

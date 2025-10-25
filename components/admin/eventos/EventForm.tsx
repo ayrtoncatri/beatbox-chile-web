@@ -4,28 +4,42 @@ import { useState, useEffect, useTransition } from "react";
 import { PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { createEvent, editEvent, deleteEvent } from "@/app/admin/eventos/actions";
 import { useRouter } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
-type Evento = {
-  id: string;
-  nombre: string;
-  descripcion: string | null;
-  fecha: Date;
-  lugar: string | null;
-  ciudad: string | null;
-  direccion: string | null;
-  tipo: string;
-  reglas: string;
-  imagen: string | null;
-  isPublished: boolean;
-  isTicketed: boolean;
-} | null;
 
-type EventFormProps = {
-  evento?: Evento;
+const eventoWithDetails = Prisma.validator<Prisma.EventoDefaultArgs>()({
+  include: {
+    tipo: true,
+    venue: {
+      include: {
+        address: {
+          include: {
+            comuna: {
+              include: {
+                region: true, 
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+type EventoFormProps = Prisma.EventoGetPayload<typeof eventoWithDetails>;
+type RegionProps = Prisma.RegionGetPayload<null>;
+type ComunaProps = Prisma.ComunaGetPayload<null>;
+type EventTypeProps = Prisma.EventTypeGetPayload<null>;
+
+type EventFormPropsWrapper = {
+  evento?: EventoFormProps | null;
   mode?: "create" | "edit";
+
+  regiones: RegionProps[];
+  comunas: ComunaProps[];
+
+  eventTypes: EventTypeProps[];
 };
 
-// Definir el tipo de respuesta de los Server Actions
 type ActionResult = {
   ok: boolean;
   error?: string;
@@ -58,31 +72,38 @@ function DeleteButton({ isPending }: { isPending: boolean }) {
   );
 }
 
-export default function EventForm({ evento, mode }: EventFormProps) {
+export default function EventForm({ evento, mode, regiones, comunas, eventTypes }: EventFormPropsWrapper) {
   const isEditing = !!evento || mode === "edit";
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeletion] = useTransition();
-  
-  // Estados del formulario
+
   const [nombre, setNombre] = useState(evento?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(evento?.descripcion ?? "");
   const [fecha, setFecha] = useState(
-    evento?.fecha ? new Date(evento.fecha).toISOString().split('T')[0] : ""
+    evento?.fecha ? new Date(evento.fecha).toISOString().split("T")[0] : ""
   );
-  const [lugar, setLugar] = useState(evento?.lugar ?? "");
-  const [ciudad, setCiudad] = useState(evento?.ciudad ?? "");
-  const [direccion, setDireccion] = useState(evento?.direccion ?? "");
-  const [tipo, setTipo] = useState(evento?.tipo ?? "");
+  const [venueName, setVenueName] = useState(evento?.venue?.name ?? "");
+  const [venueStreet, setVenueStreet] = useState(evento?.venue?.address?.street ?? "");
+
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(
+    evento?.venue?.address?.comuna?.regionId?.toString() ?? null
+  );
+  const [selectedComunaId, setSelectedComunaId] = useState<string | null>(
+    evento?.venue?.address?.comunaId?.toString() ?? null
+  );
+  const [selectedTipoId, setSelectedTipoId] = useState<string | null>(
+    evento?.tipoId?.toString() ?? null 
+  );
+
+  const [tipo, setTipo] = useState(evento?.tipo?.name ?? "");
   const [reglas, setReglas] = useState(evento?.reglas ?? "");
-  const [imagen, setImagen] = useState(evento?.imagen ?? "");
+  const [image, setImage] = useState(evento?.image ?? "");
   const [isPublished, setIsPublished] = useState(evento?.isPublished ?? false);
   const [isTicketed, setIsTicketed] = useState(evento?.isTicketed ?? true);
 
-  // Estados para manejar el resultado
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Limpiar mensaje después de un tiempo
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
@@ -92,127 +113,147 @@ export default function EventForm({ evento, mode }: EventFormProps) {
     }
   }, [message]);
 
-  // Sincronizar estados cuando cambie el prop evento
   useEffect(() => {
     if (evento) {
       setNombre(evento.nombre);
       setDescripcion(evento.descripcion ?? "");
-      setFecha(new Date(evento.fecha).toISOString().split('T')[0]);
-      setLugar(evento.lugar ?? "");
-      setCiudad(evento.ciudad ?? "");
-      setDireccion(evento.direccion ?? "");
-      setTipo(evento.tipo);
+      setFecha(new Date(evento.fecha).toISOString().split("T")[0]);
       setReglas(evento.reglas);
-      setImagen(evento.imagen ?? "");
+      setImage(evento.image ?? "");
       setIsPublished(evento.isPublished);
       setIsTicketed(evento.isTicketed);
+
+      setTipo(evento.tipo?.name ?? "");
+      setVenueName(evento.venue?.name ?? "");
+      setVenueStreet(evento.venue?.address?.street ?? "");
+
+      setSelectedComunaId(evento.venue?.address?.comunaId?.toString() ?? null);
+      setSelectedRegionId(evento.venue?.address?.comuna?.regionId?.toString() ?? null);
+
+      setSelectedTipoId(evento.tipoId?.toString() ?? null);
+    } else {
+      setSelectedComunaId(null);
+      setSelectedRegionId(null);
+      setSelectedTipoId(null);
     }
   }, [evento]);
 
+  const filteredComunas = selectedRegionId
+    ? comunas.filter((c) => c.regionId === Number(selectedRegionId))
+    : [];
+
   const actuallyEditing = isEditing && !!evento;
 
-  // Manejar envío del formulario
   async function handleSubmit(formData: FormData) {
+    if (selectedRegionId) {
+      formData.set("selectedRegionId", selectedRegionId);
+    }
+    if (selectedComunaId) {
+      formData.set("selectedComunaId", selectedComunaId);
+    }
+    if (selectedTipoId) {
+      formData.set("selectedTipoId", selectedTipoId);
+    }
+
     startTransition(async () => {
       try {
         let result: ActionResult;
-        
+
         if (actuallyEditing) {
           console.log("🔄 Actualizando evento...");
-          result = await editEvent(null, formData) as ActionResult;
+          result = (await editEvent(null, formData)) as ActionResult;
         } else {
           console.log("🔄 Creando evento...");
-          result = await createEvent(null, formData) as ActionResult;
+          result = (await createEvent(null, formData)) as ActionResult;
         }
 
         console.log("📝 Resultado:", result);
 
-        // ✅ Solo proceder si result existe y tiene la propiedad ok
         if (result && result.ok) {
-          setMessage({ 
-            type: 'success', 
-            text: actuallyEditing ? 'Evento actualizado correctamente' : 'Evento creado correctamente' 
+          setMessage({
+            type: "success",
+            text: actuallyEditing
+              ? "Evento actualizado correctamente"
+              : "Evento creado correctamente",
           });
-          
-          // ✅ Solo redirigir si estamos creando un evento (no editando)
+
           if (!actuallyEditing) {
             setTimeout(() => {
               console.log("🔄 Redirigiendo...");
-              router.push('/admin/eventos');
-            }, 2000); // 2 segundos para ver el mensaje
+              router.push("/admin/eventos");
+            }, 2000);
           }
         } else if (result && result.error) {
-          // Hay un error específico
-          setMessage({ 
-            type: 'error', 
-            text: result.error 
+          setMessage({
+            type: "error",
+            text: result.error,
           });
         } else {
-          // ✅ No hacer nada si result es undefined
           console.log("⚠️ Resultado undefined, no se procesará");
-          setMessage({ 
-            type: 'error', 
-            text: 'No se pudo procesar la solicitud' 
+          setMessage({
+            type: "error",
+            text: "No se pudo procesar la solicitud",
           });
         }
       } catch (error) {
         console.error("❌ Error:", error);
-        setMessage({ 
-          type: 'error', 
-          text: 'Error al procesar la solicitud' 
+        setMessage({
+          type: "error",
+          text: "Error al procesar la solicitud",
         });
       }
     });
   }
 
-  // Manejar eliminación del evento
   async function handleDelete(formData: FormData) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer.')) {
+    if (
+      !confirm(
+        "¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer."
+      )
+    ) {
       return;
     }
 
     startDeletion(async () => {
       try {
         console.log("🗑️ Eliminando evento...");
-        
-        // ✅ CAMBIO: Mostrar mensaje inmediatamente
-        setMessage({ 
-          type: 'success', 
-          text: 'Eliminando evento...' 
+
+        setMessage({
+          type: "success",
+          text: "Eliminando evento...",
         });
 
-        const result = await deleteEvent(null, formData) as ActionResult;
-        
+        const result = (await deleteEvent(null, formData)) as ActionResult;
+
         console.log("📝 Resultado eliminación:", result);
 
         if (result && result.ok) {
-          setMessage({ 
-            type: 'success', 
-            text: 'Evento eliminado correctamente. Redirigiendo...' 
+          setMessage({
+            type: "success",
+            text: "Evento eliminado correctamente. Redirigiendo...",
           });
-          
-          // ✅ CAMBIO: Forzar refresh del cache y redirigir más rápido
-          router.refresh(); // Actualiza el cache
+
+          router.refresh();
           setTimeout(() => {
-            router.push('/admin/eventos');
-          }, 500); // Solo 500ms
+            router.push("/admin/eventos");
+          }, 500);
         } else if (result && result.error) {
-          setMessage({ 
-            type: 'error', 
-            text: result.error 
+          setMessage({
+            type: "error",
+            text: result.error,
           });
         } else {
           console.log("⚠️ Resultado eliminación undefined");
-          setMessage({ 
-            type: 'error', 
-            text: 'No se pudo eliminar el evento' 
+          setMessage({
+            type: "error",
+            text: "No se pudo eliminar el evento",
           });
         }
       } catch (error) {
         console.error("❌ Error eliminando:", error);
-        setMessage({ 
-          type: 'error', 
-          text: 'Error al eliminar el evento' 
+        setMessage({
+          type: "error",
+          text: "Error al eliminar el evento",
         });
       }
     });
@@ -220,10 +261,9 @@ export default function EventForm({ evento, mode }: EventFormProps) {
 
   return (
     <div className="space-y-6">
-      {/* Formulario Principal */}
       <form action={handleSubmit} className="space-y-6">
         {actuallyEditing && <input type="hidden" name="id" value={evento!.id} />}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">
@@ -239,31 +279,27 @@ export default function EventForm({ evento, mode }: EventFormProps) {
               required
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Tipo *
-            </label>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">Tipo *</label>
             <select
               className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
-              name="tipo"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
+              name="tipoId" // <-- CAMBIO: El 'name' ahora es 'tipoId'
+              value={selectedTipoId || ""}
+              onChange={(e) => setSelectedTipoId(e.target.value)}
               required
             >
               <option value="">Seleccionar tipo</option>
-              <option value="BATALLA">Batalla</option>
-              <option value="TALLER">Taller</option>
-              <option value="COMPETENCIA">Competencia</option>
-              <option value="SHOWCASE">Showcase</option>
-              <option value="OTRO">Otro</option>
+              {eventTypes.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.name}
+                </option>
+              ))}
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Fecha *
-            </label>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">Fecha *</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
               name="fecha"
@@ -273,65 +309,90 @@ export default function EventForm({ evento, mode }: EventFormProps) {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Lugar
+              Nombre del Lugar (Venue)
             </label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
-              name="lugar"
-              value={lugar}
-              onChange={(e) => setLugar(e.target.value)}
-              placeholder="Nombre del lugar"
+              name="venueName"
+              value={venueName}
+              onChange={(e) => setVenueName(e.target.value)}
+              placeholder="Nombre del lugar (Ej: Plaza de Maipú)"
               maxLength={200}
             />
           </div>
-          
+
+          {/* --- CAMBIO: Campo de Región (combo box) --- */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">Región</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              value={selectedRegionId || ""}
+              onChange={(e) => {
+                setSelectedRegionId(e.target.value || null);
+                setSelectedComunaId(null); // Resetear comuna al cambiar la región
+              }}
+            >
+              <option value="">Seleccionar región</option>
+              {regiones.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* --- CAMBIO: Campo de Comuna (combo box) --- */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">Comuna</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              name="comunaId" // <-- CAMBIO: El 'name' del input ahora es 'comunaId'
+              value={selectedComunaId || ""}
+              onChange={(e) => setSelectedComunaId(e.target.value || null)}
+              disabled={!selectedRegionId || filteredComunas.length === 0} // Deshabilitar si no hay región o comunas
+            >
+              <option value="">Seleccionar comuna</option>
+              {filteredComunas.map((comuna) => (
+                <option key={comuna.id} value={comuna.id}>
+                  {comuna.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* --- Fin del cambio de Region/Comuna --- */}
+
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Ciudad
+              Dirección (Calle y Nro)
             </label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
-              name="ciudad"
-              value={ciudad}
-              onChange={(e) => setCiudad(e.target.value)}
-              placeholder="Ciudad donde se realiza"
+              name="venueStreet"
+              value={venueStreet}
+              onChange={(e) => setVenueStreet(e.target.value)}
+              placeholder="Ej: Av. Pajaritos 1234"
             />
           </div>
-          
-          <div>
-            <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Dirección
-            </label>
-            <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
-              name="direccion"
-              value={direccion}
-              onChange={(e) => setDireccion(e.target.value)}
-              placeholder="Dirección exacta"
-            />
-          </div>
-          
+
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">
               Imagen (URL)
             </label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
-              name="imagen"
+              name="image"
               type="url"
-              value={imagen}
-              onChange={(e) => setImagen(e.target.value)}
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
               placeholder="https://ejemplo.com/imagen.jpg"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1 font-medium">
-              Estado
-            </label>
+            <label className="block text-sm text-gray-600 mb-1 font-medium">Estado</label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
                 <input
@@ -356,7 +417,7 @@ export default function EventForm({ evento, mode }: EventFormProps) {
             </div>
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">
             Descripción *
@@ -375,22 +436,23 @@ export default function EventForm({ evento, mode }: EventFormProps) {
           </div>
         </div>
 
-        {/* Mensaje entre descripción y reglas */}
         {message && (
-          <div className={`text-sm p-3 rounded-lg border ${
-            message.type === 'success' 
-              ? 'text-green-700 bg-green-50 border-green-200' 
-              : 'text-red-600 bg-red-50 border-red-200'
-          }`}>
-            {message.type === 'success' ? '✅' : '❌'} {message.text}
-            {message.type === 'success' && !actuallyEditing && ' Redirigiendo en 2 segundos...'}
+          <div
+            className={`text-sm p-3 rounded-lg border ${
+              message.type === "success"
+                ? "text-green-700 bg-green-50 border-green-200"
+                : "text-red-600 bg-red-50 border-red-200"
+            }`}
+          >
+            {message.type === "success" ? "✅" : "❌"} {message.text}
+            {message.type === "success" &&
+              !actuallyEditing &&
+              " Redirigiendo en 2 segundos..."}
           </div>
         )}
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">
-            Reglas *
-          </label>
+          <label className="block text-sm text-gray-600 mb-1 font-medium">Reglas *</label>
           <textarea
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 h-32 resize-none"
             name="reglas"
@@ -406,7 +468,6 @@ export default function EventForm({ evento, mode }: EventFormProps) {
         </div>
       </form>
 
-      {/* Formulario de Eliminación (solo en modo edición) */}
       {actuallyEditing && (
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold text-red-600 mb-4">Zona de peligro</h3>

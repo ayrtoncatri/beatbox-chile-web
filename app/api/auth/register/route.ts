@@ -15,7 +15,7 @@ function sanitize(input: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { nombres, apellidoPaterno, apellidoMaterno, comuna, region, edad, email, password } = await req.json();
+    const { nombres, apellidoPaterno, apellidoMaterno, email, password } = await req.json();
 
     // Validaciones OWASP
     if (!email || !password || !nombres || !apellidoPaterno || !apellidoMaterno) {
@@ -32,34 +32,44 @@ export async function POST(req: NextRequest) {
     const safeNombres = sanitize(nombres);
     const safeApellidoPaterno = sanitize(apellidoPaterno);
     const safeApellidoMaterno = sanitize(apellidoMaterno);
-    const safeComuna = sanitize(comuna);
-    const safeRegion = sanitize(region);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      // Mensaje genérico para evitar enumeración de usuarios
       return NextResponse.json({ error: "No se pudo registrar" }, { status: 409 });
     }
 
     const hashed = await bcrypt.hash(password, 10);
+
+    // 1. Crear usuario
     const user = await prisma.user.create({
       data: {
-        nombres: safeNombres ?? null,
-        apellidoPaterno: safeApellidoPaterno ?? null,
-        apellidoMaterno: safeApellidoMaterno ?? null,
-        comuna: safeComuna ?? null,
-        region: safeRegion ?? null,
-        edad: edad ?? null,
         email,
         password: hashed,
-        role: "user"
+        isActive: true,
       },
       select: { id: true },
     });
 
+    // 2. Crear perfil
+    await prisma.userProfile.create({
+      data: {
+        userId: user.id,
+        nombres: safeNombres,
+        apellidoPaterno: safeApellidoPaterno,
+        apellidoMaterno: safeApellidoMaterno,
+      },
+    });
+
+    // 3. Asignar rol "user"
+    const role = await prisma.role.findUnique({ where: { name: "user" } });
+    if (role) {
+      await prisma.userRole.create({
+        data: { userId: user.id, roleId: role.id }
+      });
+    }
+
     return NextResponse.json({ ok: true, id: user.id }, { status: 201 });
   } catch (err: any) {
-    // Mensaje genérico para evitar fuga de información
     return NextResponse.json({ error: "No se pudo registrar" }, { status: 500 });
   }
 }
