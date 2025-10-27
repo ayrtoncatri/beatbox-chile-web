@@ -12,17 +12,15 @@ const navItems = [
   { label: "Estadísticas", href: "/estadisticas" },
   { label: "Quiénes Somos", href: "/quienes-somos" },
   {
-    label: "Ligas", category: true, subItems: [
+    label: "Ligas",
+    category: true,
+    subItems: [
       { label: "Liga competitiva", href: "/liga-competitiva" },
       { label: "Liga Terapéutica", href: "/liga-terapeutica" },
-    ]
+    ],
   },
-  {
-    label: "Eventos", category: true, subItems: [
-      { label: "Entradas", href: "/compra-entradas" },
-      { label: "Wildcard", href: "/wildcard" },
-    ]
-  },
+  // El objeto 'Eventos' ahora es un link simple
+  { label: "Eventos", href: "/eventos" },
 ];
 
 export default function Header() {

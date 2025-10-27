@@ -5,7 +5,11 @@ import { FaUserAlt, FaYoutube } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function FormularioWildcard() {
+interface FormularioWildcardProps {
+  eventoId: string;
+}
+
+export default function FormularioWildcard({ eventoId }: FormularioWildcardProps) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -22,7 +26,6 @@ export default function FormularioWildcard() {
       return;
     }
 
-    const userId = (session.user as { id?: string })?.id;
 
     try {
       const res = await fetch("/api/wildcard", {
@@ -32,16 +35,18 @@ export default function FormularioWildcard() {
           youtubeUrl: data.youtubeUrl?.trim(),
           nombreArtistico: data.nombreArtistico?.trim(),
           categoria: data.categoria,
-          userId,
+          eventoId: eventoId,
         }),
       });
 
       const json = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        setMensaje(json?.error || "❌ No se pudo guardar la wildcard.");
+      if (res.status === 409) {
+          setMensaje(json?.error || '❌ Ya enviaste una wildcard para este evento.');
+        } else {
+          setMensaje(json?.error || '❌ No se pudo guardar la wildcard.');
+        }
         return;
-      }
 
       setMensaje("✅ Wildcard guardada con éxito.");
       reset();

@@ -158,6 +158,7 @@ model Evento {
 
   isPublished Boolean    @default(false)
   isTicketed  Boolean    @default(true)
+  wildcardDeadline DateTime?
 
   wildcards   Wildcard[]
   stats       Puntaje[]
@@ -252,8 +253,8 @@ model Compra {
   eventoId   String?
   evento     Evento?   @relation("EventoCompras", fields: [eventoId], references: [id], onDelete: SetNull)
 
-  status     String    @default("pagada")  // o enum si tienes estados de pago
-  total      Int       @default(0)         // denormalizado para lecturas rápidas
+  status   PaymentStatus @default(pendiente) 
+  total      Int       @default(0)         
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -281,6 +282,14 @@ model CompraItem {
 
   @@index([compraId])
   @@index([ticketTypeId])
+}
+
+
+enum PaymentStatus {
+  pendiente
+  pagada
+  fallida
+  reembolsada
 }
 
 /* =========================
