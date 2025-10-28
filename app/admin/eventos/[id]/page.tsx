@@ -9,7 +9,7 @@ export default async function AdminEditEventoPage({
 }) {
   const { id } = params;
 
-  const [evento, regiones, comunas , eventTypes] = await Promise.all([
+  const [evento, regiones, comunas, eventTypes] = await Promise.all([
     prisma.evento.findUnique({
       where: { id },
       include: {
@@ -20,17 +20,22 @@ export default async function AdminEditEventoPage({
               include: {
                 comuna: {
                   include: {
-                    region: true, 
+                    region: true,
                   },
                 },
               },
             },
           },
         },
+        ticketTypes: {
+          orderBy: {
+            price: "asc",
+          },
+        },
       },
     }),
     prisma.region.findMany({
-      orderBy: { id: "asc" }, 
+      orderBy: { id: "asc" },
     }),
     prisma.comuna.findMany({
       orderBy: { name: "asc" },

@@ -41,19 +41,28 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
 
       const json = await res.json().catch(() => ({}));
 
-      if (res.status === 409) {
-          setMensaje(json?.error || '❌ Ya enviaste una wildcard para este evento.');
-        } else {
-          setMensaje(json?.error || '❌ No se pudo guardar la wildcard.');
-        }
-        return;
+      if (res.ok) {
+        setMensaje('✅ Wildcard guardada con éxito.');
+        reset();
+        return; // Salimos de la función
+      }
 
-      setMensaje("✅ Wildcard guardada con éxito.");
-      reset();
-    } catch {
-      setMensaje("❌ Error de red/servidor al guardar la wildcard.");
+      // 2. Si llegamos aquí, 'res.ok' es 'false' (fue un error 4xx o 5xx)
+
+      // 3. Revisamos errores específicos
+      if (res.status === 409) {
+        setMensaje(json?.error || '❌ Ya enviaste una wildcard para este evento.');
+      } else if (res.status === 403) {
+        setMensaje(json?.error || '❌ El plazo para enviar wildcards ha cerrado.');
+      } else {
+        setMensaje(json?.error || '❌ No se pudo guardar la wildcard.');
+      }
+    } catch (e) {
+      console.error("Error en fetch:", e);
+      setMensaje('❌ Error de red/servidor al guardar la wildcard.');
     }
   };
+
 
   return (
     <section className="mt-12 relative z-10 max-w-2xl mx-auto px-4">
@@ -62,6 +71,7 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
       </h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
+        noValidate
         className="max-w-xl mx-auto bg-gradient-to-br from-gray-900/80 via-neutral-900/80 to-lime-400/10
                    backdrop-blur-lg border border-lime-400/20 shadow-2xl
                    hover:shadow-lime-500/40 p-8 rounded-2xl flex flex-col gap-6
@@ -76,7 +86,6 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
               type="text"
               placeholder="Nombre artístico"
               className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-              required
             />
           </div>
         </div>
@@ -103,10 +112,9 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
             <FaYoutube className="text-lime-400 text-xl" />
             <input
               {...register("youtubeUrl", { required: true })}
-              type="url"
+              type="text"
               placeholder="Link del video de YouTube"
               className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-              required
             />
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
@@ -19,6 +20,8 @@ const EventFormSchema = z.object({
   venueName: z.string().optional(),
   venueStreet: z.string().optional(),
   comunaId: z.coerce.number().int().positive().optional(),
+
+  wildcardDeadline: z.string().optional(),
 });
 
 
@@ -36,6 +39,18 @@ const ToggleEventStatusSchema = z.object({
   isPublished: z.coerce.boolean(),
 });
 
+const TicketTypeFormSchema = z.object({
+  eventId: z.string().cuid("ID de evento inválido"),
+  name: z.string().min(1, "Nombre requerido").max(100),
+  price: z.coerce.number().int().nonnegative("Precio debe ser >= 0"),
+  capacity: z.coerce.number().int().positive().optional().nullable(), // Puede ser null
+});
+
+const DeleteTicketTypeSchema = z.object({
+  id: z.string().cuid("ID de tipo de ticket inválido"),
+  eventId: z.string().cuid("ID de evento inválido"), // Para revalidación
+});
+
 export async function createEvent(prevState: any, formData: FormData) {
   try {
     const data = {
@@ -50,6 +65,7 @@ export async function createEvent(prevState: any, formData: FormData) {
       venueName: formData.get("venueName")?.toString(),
       venueStreet: formData.get("venueStreet")?.toString(),
       comunaId: formData.get("comunaId")?.toString(),
+      wildcardDeadline: formData.get("wildcardDeadline")?.toString(),
     };
 
     const parsed = CreateEventSchema.parse(data);
@@ -85,6 +101,9 @@ export async function createEvent(prevState: any, formData: FormData) {
           isTicketed: parsed.isTicketed,
           tipoId: parsed.tipoId, 
           venueId: venueId, 
+          wildcardDeadline: parsed.wildcardDeadline
+            ? new Date(parsed.wildcardDeadline)
+            : null,
         },
       });
 
@@ -118,6 +137,7 @@ export async function editEvent(prevState: any, formData: FormData) {
       venueName: formData.get("venueName")?.toString(),
       venueStreet: formData.get("venueStreet")?.toString(),
       comunaId: formData.get("comunaId")?.toString(),
+      wildcardDeadline: formData.get("wildcardDeadline")?.toString(),
     };
 
     const parsed = EditEventSchema.parse(data);
@@ -135,7 +155,7 @@ export async function editEvent(prevState: any, formData: FormData) {
       if (parsed.venueName || parsed.venueStreet || parsed.comunaId) {
         // 3b. "Upsert" Address
         const address = await tx.address.upsert({
-          where: { id: existingAddressId || "dummy-id" }, // dummy-id fuerza 'create' si es null
+          where: { id: existingAddressId || "dummy-id" }, 
           update: {
             street: parsed.venueStreet || null,
             comunaId: parsed.comunaId || null,
@@ -182,6 +202,9 @@ export async function editEvent(prevState: any, formData: FormData) {
           isTicketed: parsed.isTicketed,
           tipoId: parsed.tipoId,
           venueId: venueId,
+          wildcardDeadline: parsed.wildcardDeadline
+            ? new Date(parsed.wildcardDeadline)
+            : null,
           updatedAt: new Date(),
         },
       });
@@ -201,7 +224,6 @@ export async function editEvent(prevState: any, formData: FormData) {
   }
 }
 
-// --- SIN CAMBIOS: Esta función es compatible con el nuevo schema ---
 export async function toggleEventStatus(prevState: any, formData: FormData) {
   try {
     const data = {
@@ -228,7 +250,6 @@ export async function toggleEventStatus(prevState: any, formData: FormData) {
   }
 }
 
-// --- SIN CAMBIOS: Esta función es compatible con el nuevo schema ---
 export async function deleteEvent(prevState: any, formData: FormData) {
   try {
     const id = formData.get("id")?.toString();
@@ -246,5 +267,85 @@ export async function deleteEvent(prevState: any, formData: FormData) {
     return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e.message || "Error al eliminar evento" };
+  }
+}
+
+export async function createTicketType(prevState: any, formData: FormData) {
+  try {
+    // 1. Extraer datos
+    const data = {
+      eventId: formData.get("eventId")?.toString(),
+      name: formData.get("name")?.toString(),
+      price: formData.get("price")?.toString(),
+      capacity: formData.get("capacity")?.toString() || null, // Obtener como string o null
+    };
+
+    // 2. Validar con Zod
+    const parsed = TicketTypeFormSchema.parse(data);
+
+    // 3. Crear en la base de datos
+    const newTicketType = await prisma.ticketType.create({
+      data: {
+        eventId: parsed.eventId,
+        name: parsed.name,
+        price: parsed.price,
+        capacity: parsed.capacity, // Prisma maneja el number | null
+        currency: "CLP", // Asumimos CLP por defecto
+        isActive: true, // Activo por defecto
+      },
+    });
+
+    // 4. Revalidar la caché de la página de edición del evento
+    revalidatePath(`/admin/eventos/${parsed.eventId}`);
+
+    return { ok: true, ticketType: newTicketType };
+  } catch (e: any) {
+    if (e.name === "ZodError") {
+      return { ok: false, error: e.errors[0]?.message || "Datos inválidos" };
+    }
+    // Captura errores de unicidad (ej. mismo nombre de ticket en el evento)
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+       return { ok: false, error: "Ya existe un tipo de entrada con ese nombre para este evento." };
+    }
+    return { ok: false, error: e.message || "Error al crear tipo de entrada" };
+  }
+}
+
+/**
+ * Elimina un tipo de entrada.
+ */
+export async function deleteTicketType(prevState: any, formData: FormData) {
+  try {
+    // 1. Extraer datos (solo necesitamos el ID del ticket y el eventId para revalidar)
+    const data = {
+      id: formData.get("id")?.toString(),
+      eventId: formData.get("eventId")?.toString(),
+    };
+
+    // 2. Validar con Zod
+    const parsed = DeleteTicketTypeSchema.parse(data);
+
+    // 3. Eliminar de la base de datos
+    // NOTA: Si ya hay 'CompraItem' asociados, esto fallará por
+    // la restricción 'onDelete: Restrict'. Podrías querer cambiarla
+    // a 'SetNull' o manejar la eliminación de compras asociadas.
+    // Por ahora, asumimos que no hay compras o que el error es aceptable.
+    await prisma.ticketType.delete({
+      where: { id: parsed.id },
+    });
+
+    // 4. Revalidar la caché de la página de edición del evento
+    revalidatePath(`/admin/eventos/${parsed.eventId}`);
+
+    return { ok: true };
+  } catch (e: any) {
+    if (e.name === "ZodError") {
+      return { ok: false, error: e.errors[0]?.message || "ID inválido" };
+    }
+     // Captura error si no se puede borrar por compras asociadas
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') { // Foreign key constraint failed
+       return { ok: false, error: "No se puede eliminar: hay compras asociadas a este tipo de entrada." };
+    }
+    return { ok: false, error: e.message || "Error al eliminar tipo de entrada" };
   }
 }
