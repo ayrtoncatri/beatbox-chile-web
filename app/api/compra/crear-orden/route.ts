@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { tx, webpayReturnUrl } from '@/lib/transbank';
-import { mpPreference, mpUrls } from '@/lib/mercadopago';
+import { mpPreference } from '@/lib/mercadopago';
 
 export async function POST(req: Request) {
   try {
@@ -124,13 +124,12 @@ export async function POST(req: Request) {
     let redirectUrl: string;
 
     if (paymentMethod === 'WEBPAY') {
-      // --- LÓGICA WEBPAY (LA QUE YA TENÍAS) ---
       console.log(`[crear-orden] Iniciando Webpay para Compra ID: ${nuevaCompra.id}`);
       const transaction = await tx.create(
-        nuevaCompra.id, // buyOrder
-        userId, // sessionId
-        nuevaCompra.total, // amount
-        webpayReturnUrl, // returnUrl
+        nuevaCompra.id,
+        userId,
+        nuevaCompra.total,
+        webpayReturnUrl,
       );
       redirectUrl = `${transaction.url}?token_ws=${transaction.token}`;
       
@@ -138,13 +137,13 @@ export async function POST(req: Request) {
       // --- LÓGICA MERCADO PAGO (NUEVA) ---
       console.log(`[crear-orden] Iniciando Mercado Pago para Compra ID: ${nuevaCompra.id}`);
 
-      const appUrl = process.env.APP_URL;
-
+      const appUrl = process.env.APP_URL; 
+  
       if (!appUrl) {
         console.error('[crear-orden] ¡ERROR FATAL! process.env.APP_URL no está definido en el entorno de esta API.');
         throw new Error('Configuración de URL de la aplicación no encontrada.');
       }
-
+      
       console.log(`[crear-orden] Usando APP_URL: ${appUrl}`);
 
       const back_urls = {
@@ -161,7 +160,7 @@ export async function POST(req: Request) {
         description: 'Entrada para evento Beatbox Chile',
         quantity: item.quantity,
         unit_price: item.unitPrice,
-        currency_id: 'CLP', // Asumimos CLP
+        currency_id: 'CLP', 
       }));
 
       // b. Crear la "Preferencia de Pago"
@@ -174,7 +173,6 @@ export async function POST(req: Request) {
           external_reference: nuevaCompra.id, 
           back_urls: back_urls, // <-- Usamos las URLs locales
           notification_url: notification_url, // <-- Usamos la URL local
-          auto_return: 'approved', 
         },
       });
 
