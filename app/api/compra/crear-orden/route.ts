@@ -2,65 +2,37 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-// --- (INICIO) SIMULACIÓN DE WEBPAY ---
-// Esto simula la llamada al SDK de Transbank.
-// En el futuro, reemplazarás esto con el SDK real 'transbank-sdk'.
-async function mockIntegrarWebpay(compraId: string, total: number) {
-  console.log(
-    `[Webpay MOCK] Iniciando transacción para Compra ID: ${compraId} por $${total}`,
-  );
-  
-  // Aquí es donde llamarías a:
-  // const transaction = await (new WebpayPlus.Transaction(...)).create(
-  //   buyOrder,   // -> compraId
-  //   sessionId,  // -> session.user.id
-  //   amount,     // -> total
-  //   returnUrl   // -> "https://tusitio.com/compra/resultado"
-  // );
-  // const redirectUrl = transaction.url + "?token_ws=" + transaction.token;
-
-  // Como es un mock, creamos una URL de pago falsa.
-  // Te redirigirá a una página de "éxito" que AÚN NO HEMOS CREADO.
-  const mockToken = `token_ws_${Math.random().toString(36).substring(7)}`;
-  const mockRedirectUrl = `/compra/resultado?token_ws=${mockToken}&compra_id=${compraId}`;
-
-  // Simulamos una pequeña demora de la API
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  console.log(`[Webpay MOCK] URL de redirección: ${mockRedirectUrl}`);
-  
-  return {
-    redirectUrl: mockRedirectUrl,
-  };
-}
-// --- (FIN) SIMULACIÓN DE WEBPAY ---
-
-
-// --- El Endpoint de la API ---
+import { tx, webpayReturnUrl } from '@/lib/transbank';
+import { mpPreference, mpUrls } from '@/lib/mercadopago';
 
 export async function POST(req: Request) {
   try {
     // 1. Validar Sesión
     const session = await getServerSession(authOptions);
     const userId = (session?.user as { id?: string })?.id;
-    if (!userId) {
+    const userEmail = session?.user?.email;
+    if (!userId || !userEmail) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
     // 2. Obtener y validar el Body
     const body = await req.json();
-    const { eventoId, items } = body;
+    const { eventoId, items, paymentMethod } = body;
 
-    if (!eventoId) {
+    if (
+      !eventoId ||
+      !items ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
       return NextResponse.json(
-        { error: 'ID de evento faltante' },
+        { error: 'Datos de carrito inválidos' },
         { status: 400 },
       );
     }
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    if (!paymentMethod || !['WEBPAY', 'MERCADOPAGO'].includes(paymentMethod)) {
       return NextResponse.json(
-        { error: 'Carrito de compras vacío' },
+        { error: 'Método de pago no válido' },
         { status: 400 },
       );
     }
@@ -128,37 +100,98 @@ export async function POST(req: Request) {
     }
 
     // 5. Crear la Compra (¡En una transacción!)
-    // Esto asegura que la Compra y sus Items se creen juntos, o no se cree nada.
     const nuevaCompra = await prisma.compra.create({
       data: {
         userId: userId,
         eventoId: eventoId,
         total: total,
-        status: 'pendiente', // <- Usamos el 'default' del schema que cambiamos
+        status: 'pendiente',
         items: {
-          create: itemsParaCrear, // Crea los 'CompraItem' anidados
+          create: itemsParaCrear,
         },
       },
-      select: {
-        id: true, // <- Necesitamos el ID para Webpay
-        total: true,
+      include: {
+        // Necesitamos los items creados para pasarlos a MP
+        items: {
+          include: {
+            ticketType: { select: { name: true } }, // <-- Para el 'title' en MP
+          },
+        },
       },
     });
 
-    // 6. Integrar con Webpay (Usando nuestro MOCK)
-    const webpayResponse = await mockIntegrarWebpay(
-      nuevaCompra.id,
-      nuevaCompra.total,
-    );
+    // 6. (NUEVO) LÓGICA DEL "DIRECTOR" DE PAGOS
+    let redirectUrl: string;
 
-    // 7. Devolver la URL de redirección al frontend
-    return NextResponse.json(
-      { redirectUrl: webpayResponse.redirectUrl },
-      { status: 201 },
-    );
+    if (paymentMethod === 'WEBPAY') {
+      // --- LÓGICA WEBPAY (LA QUE YA TENÍAS) ---
+      console.log(`[crear-orden] Iniciando Webpay para Compra ID: ${nuevaCompra.id}`);
+      const transaction = await tx.create(
+        nuevaCompra.id, // buyOrder
+        userId, // sessionId
+        nuevaCompra.total, // amount
+        webpayReturnUrl, // returnUrl
+      );
+      redirectUrl = `${transaction.url}?token_ws=${transaction.token}`;
+      
+    } else if (paymentMethod === 'MERCADOPAGO') {
+      // --- LÓGICA MERCADO PAGO (NUEVA) ---
+      console.log(`[crear-orden] Iniciando Mercado Pago para Compra ID: ${nuevaCompra.id}`);
+
+      const appUrl = process.env.APP_URL;
+
+      if (!appUrl) {
+        console.error('[crear-orden] ¡ERROR FATAL! process.env.APP_URL no está definido en el entorno de esta API.');
+        throw new Error('Configuración de URL de la aplicación no encontrada.');
+      }
+
+      console.log(`[crear-orden] Usando APP_URL: ${appUrl}`);
+
+      const back_urls = {
+        success: `${appUrl}/compra/resultado-mp?status=success`,
+        failure: `${appUrl}/compra/resultado-mp?status=failure`,
+        pending: `${appUrl}/compra/resultado-mp?status=pending`,
+      };
+      const notification_url = `${appUrl}/api/compra/webhook-mp`;
+      
+      // a. Formatear items para el body de MP
+      const itemsParaMP = nuevaCompra.items.map((item) => ({
+        id: item.ticketTypeId,
+        title: item.ticketType.name,
+        description: 'Entrada para evento Beatbox Chile',
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        currency_id: 'CLP', // Asumimos CLP
+      }));
+
+      // b. Crear la "Preferencia de Pago"
+      const preference = await mpPreference.create({
+        body: {
+          items: itemsParaMP,
+          payer: {
+            email: userEmail,
+          },
+          external_reference: nuevaCompra.id, 
+          back_urls: back_urls, // <-- Usamos las URLs locales
+          notification_url: notification_url, // <-- Usamos la URL local
+          auto_return: 'approved', 
+        },
+      });
+
+      redirectUrl = preference.init_point!; // Esta es la URL de checkout de MP
+    } else {
+      // Por si acaso
+      return NextResponse.json(
+        { error: 'Método de pago no implementado' },
+        { status: 500 },
+      );
+    }
+
+    // 7. Devolver la URL de redirección (de Webpay O Mercado Pago)
+    return NextResponse.json({ redirectUrl: redirectUrl }, { status: 201 });
     
   } catch (e) {
-    console.error(e);
+    console.error('[crear-orden] Error:', e);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 },

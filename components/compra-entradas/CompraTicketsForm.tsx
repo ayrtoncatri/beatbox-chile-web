@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaTicketAlt } from 'react-icons/fa';
+import { FaCreditCard } from 'react-icons/fa';
+import { SiMercadopago } from 'react-icons/si';
 
 // 1. Definimos los tipos de props que este componente recibirá
 // (Estos vienen de la página del evento, app/eventos/[id])
@@ -25,6 +27,8 @@ type CartItem = {
   quantity: number;
 };
 
+type PaymentMethod = 'WEBPAY' | 'MERCADOPAGO';
+
 export default function CompraTicketsForm({
   eventoId,
   ticketTypes,
@@ -33,6 +37,8 @@ export default function CompraTicketsForm({
   const [cart, setCart] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('WEBPAY');
 
   const { data: session } = useSession();
   const router = useRouter();
@@ -92,6 +98,7 @@ export default function CompraTicketsForm({
         body: JSON.stringify({
           eventoId: eventoId,
           items: itemsToPurchase,
+          paymentMethod: paymentMethod,
         }),
       });
 
@@ -175,7 +182,40 @@ export default function CompraTicketsForm({
           </span>
         </div>
 
-        {/* 9. Botón de envío */}
+        {/* --- 9. SELECCIÓN DE MÉTODO DE PAGO --- */}
+        <div className="border-t border-lime-400/30 pt-4">
+          <span className="text-lg font-semibold text-lime-200/90 mb-3 block">
+            Selecciona tu método de pago
+          </span>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Botón Webpay */}
+            <button
+              type="button" // Previene que envíe el formulario
+              onClick={() => setPaymentMethod('WEBPAY')}
+              className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 text-center font-semibold transition-all ${
+                paymentMethod === 'WEBPAY'
+                  ? 'bg-lime-500/20 border-lime-400 text-white shadow-lime-500/40'
+                  : 'bg-neutral-800/50 border-neutral-700 text-gray-400 hover:bg-neutral-700'
+              }`}
+            >
+              <FaCreditCard /> Webpay
+            </button>
+            {/* Botón Mercado Pago */}
+            <button
+              type="button" // Previene que envíe el formulario
+              onClick={() => setPaymentMethod('MERCADOPAGO')}
+              className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 text-center font-semibold transition-all ${
+                paymentMethod === 'MERCADOPAGO'
+                  ? 'bg-lime-500/20 border-lime-400 text-white shadow-lime-500/40'
+                  : 'bg-neutral-800/50 border-neutral-700 text-gray-400 hover:bg-neutral-700'
+              }`}
+            >
+              <SiMercadopago /> Mercado Pago
+            </button>
+          </div>
+        </div>
+
+        {/* 10. Botón de envío */}
         <button
           type="submit"
           disabled={submitting || total === 0}
