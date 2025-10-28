@@ -12,6 +12,7 @@ export default async function Page({
   const params = {
     q: typeof paramsObj.q === "string" ? paramsObj.q : undefined,
     eventId: typeof paramsObj.eventId === "string" ? paramsObj.eventId : undefined,
+    status: typeof paramsObj.status === "string" ? paramsObj.status : undefined,
     tipo: typeof paramsObj.tipo === "string" ? paramsObj.tipo : undefined,
     from: typeof paramsObj.from === "string" ? paramsObj.from : undefined,
     to: typeof paramsObj.to === "string" ? paramsObj.to : undefined,
@@ -39,6 +40,7 @@ export default async function Page({
   const comprasRows = compras.map((c: any) => ({
     id: c.id,
     createdAt: c.createdAt,
+    status: c.status,
     userNombre: [
       c.user?.profile?.nombres,
       c.user?.profile?.apellidoPaterno,

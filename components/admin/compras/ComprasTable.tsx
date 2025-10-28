@@ -3,6 +3,7 @@
 import { EyeIcon, TrashIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { PaymentStatus } from "@prisma/client";
 
 type CompraItemRow = {
   tipoEntrada: string;
@@ -14,6 +15,7 @@ type CompraItemRow = {
 type Row = {
   id: string;
   createdAt: string | Date;
+  status: PaymentStatus;
   userNombre: string;
   userEmail: string;
   comuna: string;
@@ -26,6 +28,40 @@ type Row = {
   items: CompraItemRow[];
   total: number;
 };
+
+
+function StatusBadge({ status }: { status: PaymentStatus }) {
+  let bgColor = "bg-gray-100";
+  let textColor = "text-gray-700";
+
+  switch (status) {
+    case "pagada":
+      bgColor = "bg-green-100";
+      textColor = "text-green-700";
+      break;
+    case "pendiente":
+      bgColor = "bg-yellow-100";
+      textColor = "text-yellow-700";
+      break;
+    case "fallida":
+      bgColor = "bg-red-100";
+      textColor = "text-red-700";
+      break;
+    case "reembolsada": // Añadir si lo usas
+      bgColor = "bg-blue-100";
+      textColor = "text-blue-700";
+      break;
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${bgColor} ${textColor}`}
+    >
+      {status}
+    </span>
+  );
+}
+
 
 export default function ComprasTable(props: {
   rows: Row[];
@@ -40,7 +76,6 @@ export default function ComprasTable(props: {
     if (!confirm("¿Eliminar esta compra?")) return;
     setLoadingId(id);
     try {
-      // Aquí podrías migrar a server action si lo deseas
       const res = await fetch(`/api/admin/compras/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
       router.refresh();
@@ -65,6 +100,7 @@ export default function ComprasTable(props: {
           <thead>
             <tr className="bg-gray-100 text-gray-700 text-sm">
               <th className="px-4 py-3 font-semibold">Fecha compra</th>
+              <th className="px-4 py-3 font-semibold">Estado</th>
               <th className="px-4 py-3 font-semibold">Evento</th>
               <th className="px-4 py-3 font-semibold">Fecha evento</th>
               <th className="px-4 py-3 font-semibold">Comprador</th>
@@ -78,7 +114,12 @@ export default function ComprasTable(props: {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="hover:bg-indigo-50/30 transition">
-                <td className="px-4 py-3">{new Date(r.createdAt).toLocaleString("es-CL")}</td>
+                <td className="px-4 py-3">
+                  {new Date(r.createdAt).toLocaleString("es-CL")}
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={r.status} />
+                </td>
                 <td className="px-4 py-3">{r.eventoNombre}</td>
                 <td className="px-4 py-3">{new Date(r.eventoFecha).toLocaleString("es-CL")}</td>
                 <td className="px-4 py-3">
@@ -158,6 +199,7 @@ export default function ComprasTable(props: {
           <div key={r.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
             <div className="font-semibold text-base">{r.eventoNombre}</div>
             <div className="text-xs text-gray-500">Fecha compra: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
+            <div><StatusBadge status={r.status} /></div>
             <div className="text-xs text-gray-500">Fecha evento: {new Date(r.eventoFecha).toLocaleString("es-CL")}</div>
             <div className="text-xs text-gray-500">
               Comprador: <span className="font-medium">{r.userNombre}</span>
