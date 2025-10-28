@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// =======================================================
+// Prisma schema — Beatbox Chile (normalizado)
+// =======================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -13,67 +11,166 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/* =========================
+   Catálogos / Lookups
+   ========================= */
+
+model Role {
+  id        String    @id @default(cuid())
+  name      String    @unique          // "admin", "judge", "user", etc.
+  users     UserRole[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model EventType {
+  id        String   @id @default(cuid())
+  name      String   @unique           // "Liga", "Exhibición", "Batalla", etc.
+  events    Evento[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SuggestionStatus {
+  nuevo
+  en_progreso
+  resuelta
+  descartada
+}
+
+/* =========================
+   Ubicación
+   ========================= */
+
+model Region {
+  id        Int      @id               // Puedes cargar IDs oficiales (1..16)
+  name      String   @unique
+  comunas   Comuna[]
+}
+
+model Comuna {
+  id        Int      @id               // ID oficial si lo deseas
+  name      String
+  regionId  Int
+  region    Region   @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  addresses Address[]
+
+  userProfiles UserProfile[]
+
+  @@unique([name, regionId])
+  @@index([regionId])
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  street    String?
+  reference String?
+  comunaId  Int?
+  comuna    Comuna?  @relation(fields: [comunaId], references: [id], onDelete: SetNull)
+  lat       Decimal? @db.Decimal(10, 7)
+  lng       Decimal? @db.Decimal(10, 7)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venues Venue[]
+}
+
+model Venue {
+  id        String   @id @default(cuid())
+  name      String
+  addressId String?
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  image     String?
+  events    Evento[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* =========================
+   Usuarios / Autenticación
+   ========================= */
+
 model User {
-  id               String   @id @default(cuid())
+  id         String       @id @default(cuid())
+  email      String       @unique
+  password   String?
+  image      String?
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // Relaciones
+  profile           UserProfile?
+  roles             UserRole[]
+  wildcards         Wildcard[]
+  reviewedWildcards Wildcard[] @relation("WildcardReviewedBy")
+  stats             Puntaje[]
+  compras           Compra[]
+  sugerencias       Sugerencia[]
+  mensajes          Mensaje[]
+}
+
+model UserProfile {
+  userId           String  @id
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   nombres          String?
   apellidoPaterno  String?
   apellidoMaterno  String?
-  comuna           String?
-  region           String?
-  edad             Int?
-  email            String   @unique
-  password         String?
-  image            String?
-  role             String   @default("user")
-  wildcards        Wildcard[]
-  reviewedWildcards Wildcard[] @relation("WildcardReviewedBy")
-  stats            Estadistica[]
-  sugerencias      Sugerencia[]
+  birthDate        DateTime?     // en UI calculas edad si la necesitas
+  comunaId         Int?
+  comuna           Comuna? @relation(fields: [comunaId], references: [id], onDelete: SetNull)
+
   createdAt        DateTime @default(now())
-  compras          CompraEntrada[]
-  isActive         Boolean  @default(true)
-  updatedAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([comunaId])
 }
 
-model CompraEntrada {
-  id             String   @id @default(cuid())
-  user           User     @relation(fields: [userId], references: [id])
-  userId         String
-  userNombre     String
-  userEmail      String
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  evento         Evento   @relation(fields: [eventoId], references: [id])
-  eventoId       String
-  eventoNombre   String
-  eventoFecha    DateTime
-
-  tipoEntrada    String   
-  cantidad       Int
-  precioUnitario Int
-  total          Int
-
-  createdAt      DateTime  @default(now())
+  @@id([userId, roleId])
+  @@index([roleId])
 }
+
+/* =========================
+   Eventos y participación
+   ========================= */
 
 model Evento {
-  id        String   @id @default(cuid())
-  nombre    String
-  fecha     DateTime
-  tipo      String
-  reglas    String
-  wildcards Wildcard[]
-  stats     Estadistica[]
-  createdAt DateTime @default(now())
-  compras   CompraEntrada[]
-  descripcion String?        
-  lugar       String?       
-  ciudad      String?         
-  direccion   String?         
-  imagen      String?         
-  isPublished Boolean  @default(false) 
-  isTicketed  Boolean  @default(true)  
-  updatedAt   DateTime @default(now())    
-  
+  id          String     @id @default(cuid())
+  nombre      String
+  fecha       DateTime
+
+  tipoId      String?
+  tipo        EventType? @relation(fields: [tipoId], references: [id], onDelete: SetNull)
+
+  reglas      String
+  descripcion String?
+  image       String?
+
+  venueId     String?
+  venue       Venue?     @relation(fields: [venueId], references: [id], onDelete: SetNull)
+
+  isPublished Boolean    @default(false)
+  isTicketed  Boolean    @default(true)
+  wildcardDeadline DateTime?
+
+  wildcards   Wildcard[]
+  stats       Puntaje[]
+  ticketTypes TicketType[]
+  compras     Compra[]   @relation("EventoCompras")
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([fecha])
+  @@index([tipoId])
+  @@index([venueId])
 }
 
 enum WildcardStatus {
@@ -84,49 +181,145 @@ enum WildcardStatus {
 
 model Wildcard {
   id              String         @id @default(cuid())
-  youtubeUrl      String 
-  nombreArtistico String?  
-  user            User           @relation(fields: [userId], references: [id])
+  youtubeUrl      String
+  nombreArtistico String?
+
   userId          String
-  evento          Evento         @relation(fields: [eventoId], references: [id])
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   eventoId        String
-  createdAt       DateTime       @default(now())
+  evento          Evento         @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  categoria       String?
+
   status          WildcardStatus @default(PENDING)
+  notes           String?
   reviewedAt      DateTime?
   reviewedById    String?
-  reviewedBy      User?          @relation("WildcardReviewedBy", fields: [reviewedById], references: [id])
-  notes           String?
-  updatedAt       DateTime       @default(now())
+  reviewedBy      User?          @relation("WildcardReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([userId, eventoId])   // 1 wildcard por usuario por evento
+  @@index([eventoId])
+  @@index([reviewedById])
 }
 
-model Estadistica {
+model Puntaje {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  evento    Evento   @relation(fields: [eventoId], references: [id])
   eventoId  String
   puntos    Int
   detalle   String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventoId])   // permite upsert por compuesta
+  @@index([eventoId])
 }
 
-model Sugerencia {
-  id          String   @id @default(cuid())
-  user        User?    @relation(fields: [userId], references: [id])
-  userId      String?
+/* =========================
+   Tickets y Compras
+   ========================= */
 
-  nombre      String?            
-  email       String?            
-  asunto      String?            
-  estado      String   @default("nuevo") 
+model TicketType {
+  id         String   @id @default(cuid())
+  eventId    String
+  event      Evento   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  name       String               // "General", "VIP", etc.
+  price      Int                  // CLP (usa Decimal si prefieres)
+  currency   String   @default("CLP")
+  capacity   Int?
+  isActive   Boolean  @default(true)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  items      CompraItem[]
+
+  @@unique([eventId, name])       // no repetir el nombre dentro del evento
+  @@index([eventId])
+}
+
+model Compra {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ancla opcional para filtrar por evento en dashboards
+  eventoId   String?
+  evento     Evento?   @relation("EventoCompras", fields: [eventoId], references: [id], onDelete: SetNull)
+
+  status   PaymentStatus @default(pendiente) 
+  total      Int       @default(0)         
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  items      CompraItem[]
+
+  @@index([userId])
+  @@index([eventoId])
+}
+
+model CompraItem {
+  id            String     @id @default(cuid())
+  compraId      String
+  compra        Compra     @relation(fields: [compraId], references: [id], onDelete: Cascade)
+
+  ticketTypeId  String
+  ticketType    TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+
+  quantity      Int
+  unitPrice     Int        // snapshot del precio
+  subtotal      Int        // quantity * unitPrice
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([compraId])
+  @@index([ticketTypeId])
+}
+
+
+enum PaymentStatus {
+  pendiente
+  pagada
+  fallida
+  reembolsada
+}
+
+/* =========================
+   Comunicación
+   ========================= */
+
+model Sugerencia {
+  id          String           @id @default(cuid())
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  nombre      String?
+  email       String?
+  asunto      String?
+  estado      SuggestionStatus @default(nuevo)
   notaPrivada String?
 
   mensaje     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([estado])
+  @@index([userId])
 }
 
 model Mensaje {
   id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   nombre    String
   email     String
   mensaje   String

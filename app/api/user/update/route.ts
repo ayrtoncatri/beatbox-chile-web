@@ -8,38 +8,47 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.email) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const { nombres, apellidoPaterno, apellidoMaterno, region, comuna, edad, image } = await req.json();
-
-  // Validar edad
-  if (edad !== undefined && edad !== null && edad !== "") {
-    const edadNum = Number(edad);
-    if (isNaN(edadNum)) {
-      return NextResponse.json({ error: "La edad debe ser un número válido" }, { status: 400 });
-    }
-    if (edadNum < 10) {
-      return NextResponse.json({ error: "La edad mínima es 10 años" }, { status: 400 });
-    }
-    if (edadNum > 80) {
-      return NextResponse.json({ error: "La edad máxima es 80 años" }, { status: 400 });
-    }
-  }
+  const { nombres, apellidoPaterno, apellidoMaterno, comunaId, birthDate, image } = await req.json();
 
   try {
-    const updateData: any = {};
-    
-    if (nombres !== undefined) updateData.nombres = nombres;
-    if (apellidoPaterno !== undefined) updateData.apellidoPaterno = apellidoPaterno;
-    if (apellidoMaterno !== undefined) updateData.apellidoMaterno = apellidoMaterno;
-    if (region !== undefined) updateData.region = region;
-    if (comuna !== undefined) updateData.comuna = comuna;
-    if (edad !== undefined) updateData.edad = edad ? Number(edad) : null;
-    if (image !== undefined) updateData.image = image;
-
-    const user = await prisma.user.update({
+    // Busca el usuario y actualiza el perfil
+    const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      data: updateData,
+      select: { id: true },
     });
-    return NextResponse.json({ ok: true, user });
+    if (!user) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // Actualiza UserProfile
+    await prisma.userProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        birthDate: birthDate ? new Date(birthDate) : undefined,
+        comunaId: comunaId ? Number(comunaId) : undefined,
+      },
+      create: {
+        userId: user.id,
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        birthDate: birthDate ? new Date(birthDate) : undefined,
+        comunaId: comunaId ? Number(comunaId) : undefined,
+      },
+    });
+
+    // Actualiza imagen si corresponde
+    if (image !== undefined) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { image },
+      });
+    }
+
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
   }

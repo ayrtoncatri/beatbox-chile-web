@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { FunnelIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { exportSugerenciasToCSV } from "@/app/admin/sugerencias/actions";
+import { SuggestionStatus } from "@prisma/client";
 
 type UserOpt = { id: string; nombres: string | null };
+
+const statusLabels: Record<SuggestionStatus, string> = {
+  [SuggestionStatus.nuevo]: "Nuevo",
+  [SuggestionStatus.en_progreso]: "En Progreso",
+  [SuggestionStatus.resuelta]: "Resuelta",
+  [SuggestionStatus.descartada]: "Descartada",
+};
 
 export default function SugerenciasFilters(props: {
   users: UserOpt[];
@@ -74,10 +82,11 @@ export default function SugerenciasFilters(props: {
       <div>
         <label className="block text-xs font-semibold mb-1 text-gray-600">Estado</label>
         <select name="estado" defaultValue={defaults.estado || ""} className="select select-bordered w-full bg-gray-50 border-gray-200">
-          <option value="">Todos</option>
-          <option value="nuevo">Nuevo</option>
-          <option value="revisado">Revisado</option>
-          <option value="descartado">Descartado</option>
+          {Object.values(SuggestionStatus).map(status => (
+            <option key={status} value={status}>
+              {statusLabels[status] || status}
+            </option>
+          ))}
         </select>
       </div>
       <div>

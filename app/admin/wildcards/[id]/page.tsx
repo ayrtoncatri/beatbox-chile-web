@@ -24,14 +24,30 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
   const { id } = await params;
 
   const w = await prisma.wildcard.findUnique({
-    where: { id },
-    include: {
-      user: {
-        select: { id: true, email: true, nombres: true, apellidoPaterno: true, apellidoMaterno: true },
-      },
-      reviewedBy: { select: { id: true, email: true, nombres: true } },
-    },
-  });
+    where: { id },
+    include: {
+      user: {
+        // CAMBIO: Seleccionamos el perfil anidado
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: { nombres: true, apellidoPaterno: true, apellidoMaterno: true },
+          },
+        },
+      },
+      reviewedBy: {
+        // CAMBIO: Seleccionamos el perfil anidado
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: { nombres: true, apellidoPaterno: true },
+          },
+        },
+      },
+    },
+  });
 
   if (!w) {
     return (
@@ -42,9 +58,15 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
     );
   }
 
-  const nombreUsuario = [w.user?.nombres, w.user?.apellidoPaterno, w.user?.apellidoMaterno]
-    .filter(Boolean)
-    .join(" ");
+  const nombreUsuario = [w.user?.profile?.nombres, w.user?.profile?.apellidoPaterno, w.user?.profile?.apellidoMaterno]
+    .filter(Boolean)
+    .join(" ");
+  
+  // CAMBIO: Creamos una variable para el nombre del revisor
+  const nombreRevisor = [w.reviewedBy?.profile?.nombres, w.reviewedBy?.profile?.apellidoPaterno]
+    .filter(Boolean)
+    .join(" ");
+
   const embed = toYouTubeEmbed(w.youtubeUrl);
 
   return (
@@ -130,7 +152,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                     {w.status}
                   </span>
                 </div>
-                <div><span className="text-gray-500">Revisado por:</span> {w.reviewedBy?.nombres || w.reviewedBy?.email || "—"}</div>
+                <div><span className="text-gray-500">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
                 <div><span className="text-gray-500">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">

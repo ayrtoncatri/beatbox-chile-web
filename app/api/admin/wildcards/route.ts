@@ -17,14 +17,14 @@ export async function GET(req: Request) {
   const where: Prisma.WildcardWhereInput = {};
 
   if (q) {
-    where.OR = [
-      { nombreArtistico: { contains: q, mode: "insensitive" as const } },
-      { user: { email: { contains: q, mode: "insensitive" as const } } },
-      { user: { nombres: { contains: q, mode: "insensitive" as const } } },
-      { user: { apellidoPaterno: { contains: q, mode: "insensitive" as const } } },
-      { user: { apellidoMaterno: { contains: q, mode: "insensitive" as const } } },
-    ];
-  }
+    where.OR = [
+      { nombreArtistico: { contains: q, mode: "insensitive" as const } },
+      { user: { email: { contains: q, mode: "insensitive" as const } } },
+      { user: { profile: { nombres: { contains: q, mode: "insensitive" as const } } } },
+      { user: { profile: { apellidoPaterno: { contains: q, mode: "insensitive" as const } } } },
+      { user: { profile: { apellidoMaterno: { contains: q, mode: "insensitive" as const } } } },
+    ];
+  }
 
   if (status === "PENDING" || status === "APPROVED" || status === "REJECTED") {
     where.status = status as any;
@@ -35,17 +35,23 @@ export async function GET(req: Request) {
     prisma.wildcard.findMany({
       where,
       include: {
-        user: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true, apellidoMaterno: true },
+            },
+          },
+        },
+        reviewedBy: {
           select: {
             id: true,
             email: true,
-            nombres: true,
-            apellidoPaterno: true,
-            apellidoMaterno: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true },
+            },
           },
-        },
-        reviewedBy: {
-          select: { id: true, email: true, nombres: true },
         },
       },
       orderBy: { id: "desc" },

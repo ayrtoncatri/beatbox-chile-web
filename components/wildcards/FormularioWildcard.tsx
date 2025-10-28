@@ -5,8 +5,12 @@ import { FaUserAlt, FaYoutube } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function FormularioWildcard() {
-  const { register, handleSubmit, reset } = useForm();
+interface FormularioWildcardProps {
+  eventoId: string;
+}
+
+export default function FormularioWildcard({ eventoId }: FormularioWildcardProps) {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const { data: session } = useSession();
@@ -22,7 +26,6 @@ export default function FormularioWildcard() {
       return;
     }
 
-    const userId = (session.user as { id?: string })?.id;
 
     try {
       const res = await fetch("/api/wildcard", {
@@ -30,24 +33,36 @@ export default function FormularioWildcard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           youtubeUrl: data.youtubeUrl?.trim(),
-          nombreArtistico: data.nombre?.trim(),
-          userId, 
+          nombreArtistico: data.nombreArtistico?.trim(),
+          categoria: data.categoria,
+          eventoId: eventoId,
         }),
       });
 
       const json = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        setMensaje(json?.error || "❌ No se pudo guardar la wildcard.");
-        return;
+      if (res.ok) {
+        setMensaje('✅ Wildcard guardada con éxito.');
+        reset();
+        return; // Salimos de la función
       }
 
-      setMensaje("✅ Wildcard guardada con éxito.");
-      reset();
-    } catch {
-      setMensaje("❌ Error de red/servidor al guardar la wildcard.");
+      // 2. Si llegamos aquí, 'res.ok' es 'false' (fue un error 4xx o 5xx)
+
+      // 3. Revisamos errores específicos
+      if (res.status === 409) {
+        setMensaje(json?.error || '❌ Ya enviaste una wildcard para este evento.');
+      } else if (res.status === 403) {
+        setMensaje(json?.error || '❌ El plazo para enviar wildcards ha cerrado.');
+      } else {
+        setMensaje(json?.error || '❌ No se pudo guardar la wildcard.');
+      }
+    } catch (e) {
+      console.error("Error en fetch:", e);
+      setMensaje('❌ Error de red/servidor al guardar la wildcard.');
     }
   };
+
 
   return (
     <section className="mt-12 relative z-10 max-w-2xl mx-auto px-4">
@@ -56,30 +71,52 @@ export default function FormularioWildcard() {
       </h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
+        noValidate
         className="max-w-xl mx-auto bg-gradient-to-br from-gray-900/80 via-neutral-900/80 to-lime-400/10
                    backdrop-blur-lg border border-lime-400/20 shadow-2xl
                    hover:shadow-lime-500/40 p-8 rounded-2xl flex flex-col gap-6
                    transition-all duration-400"
       >
-        <div className="flex items-center gap-2">
-          <FaUserAlt className="text-lime-400 text-xl" />
-          <input
-            {...register("nombre", { required: true })}
-            type="text"
-            placeholder="Nombre artístico"
-            className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            required
-          />
+        <div className="flex flex-col gap-2">
+          <label className="text-lime-200 font-semibold">Nombre artístico *</label>
+          <div className="flex items-center gap-2">
+            <FaUserAlt className="text-lime-400 text-xl" />
+            <input
+              {...register("nombreArtistico", { required: true })}
+              type="text"
+              placeholder="Nombre artístico"
+              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <FaYoutube className="text-lime-400 text-xl" />
-          <input
-            {...register("youtubeUrl", { required: true })}
-            type="url"
-            placeholder="Link del video de YouTube"
-            className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            required
-          />
+        <div>
+          <label className="block mb-2 text-lime-200 font-semibold">Categoría *</label>
+          <div className="flex gap-6 text-amber-50">
+            <label>
+              <input type="radio" value="Solo" {...register("categoria", { required: true })} />
+              <span className="ml-2">Solo</span>
+            </label>
+            <label>
+              <input type="radio" value="Loopstation" {...register("categoria", { required: true })} />
+              <span className="ml-2">Loopstation</span>
+            </label>
+            <label>
+              <input type="radio" value="Tagteam" {...register("categoria", { required: true })} />
+              <span className="ml-2">Tagteam</span>
+            </label>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-lime-200 font-semibold">Link del video de YouTube *</label>
+          <div className="flex items-center gap-2">
+            <FaYoutube className="text-lime-400 text-xl" />
+            <input
+              {...register("youtubeUrl", { required: true })}
+              type="text"
+              placeholder="Link del video de YouTube"
+              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
+            />
+          </div>
         </div>
         <button
           type="submit"

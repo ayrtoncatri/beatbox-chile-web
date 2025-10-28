@@ -1,5 +1,5 @@
 import ComprasPageWrapper from "@/components/admin/compras/ComprasPageWrapper";
-import { getCompras, getCompraById } from "./actions";
+import { getCompras } from "./actions";
 
 export default async function Page({
   searchParams,
@@ -12,6 +12,7 @@ export default async function Page({
   const params = {
     q: typeof paramsObj.q === "string" ? paramsObj.q : undefined,
     eventId: typeof paramsObj.eventId === "string" ? paramsObj.eventId : undefined,
+    status: typeof paramsObj.status === "string" ? paramsObj.status : undefined,
     tipo: typeof paramsObj.tipo === "string" ? paramsObj.tipo : undefined,
     from: typeof paramsObj.from === "string" ? paramsObj.from : undefined,
     to: typeof paramsObj.to === "string" ? paramsObj.to : undefined,
@@ -39,14 +40,26 @@ export default async function Page({
   const comprasRows = compras.map((c: any) => ({
     id: c.id,
     createdAt: c.createdAt,
-    userNombre: c.userNombre,
-    userEmail: c.userEmail,
-    eventoId: c.eventoId,
-    eventoNombre: c.eventoNombre,
-    eventoFecha: c.eventoFecha,
-    tipoEntrada: c.tipoEntrada,
-    cantidad: c.cantidad,
-    precioUnitario: c.precioUnitario,
+    status: c.status,
+    userNombre: [
+      c.user?.profile?.nombres,
+      c.user?.profile?.apellidoPaterno,
+      c.user?.profile?.apellidoMaterno,
+    ].filter(Boolean).join(" "),
+    userEmail: c.user?.email,
+    comuna: c.user?.profile?.comuna?.name,
+    region: c.user?.profile?.comuna?.region?.name,
+    eventoId: c.evento?.id,
+    eventoNombre: c.evento?.nombre,
+    eventoFecha: c.evento?.fecha,
+    eventoTipo: c.evento?.tipo?.name,
+    eventoVenue: c.evento?.venue?.name,
+    items: c.items.map((i: any) => ({
+      tipoEntrada: i.ticketType.name,
+      cantidad: i.quantity,
+      precioUnitario: i.unitPrice,
+      total: i.subtotal,
+    })),
     total: c.total,
   }));
 

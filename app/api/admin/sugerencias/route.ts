@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
-import type { Prisma } from "@prisma/client";
+import { Prisma , SuggestionStatus } from "@prisma/client";
 
 function parseDate(value?: string) {
   if (!value) return undefined;
@@ -23,18 +23,23 @@ export async function GET(req: Request) {
   const pageSizeRaw = Number(searchParams.get("pageSize") || 20);
   const pageSize = Math.min(100, Math.max(1, isNaN(pageSizeRaw) ? 20 : pageSizeRaw));
 
+  const isValidStatus = estado && Object.values(SuggestionStatus).includes(estado as SuggestionStatus);
+
   const where: Prisma.SugerenciaWhereInput = {
     AND: [
       q
         ? {
             OR: [
               { mensaje: { contains: q, mode: "insensitive" } },
-              { user: { nombres: { contains: q, mode: "insensitive" } } },
-              { user: { email: { contains: q, mode: "insensitive" } } },
+              { user: { email: { contains: q, mode: "insensitive" } } },
+              // CAMBIO: Buscar en el perfil anidado
+              { user: { profile: { nombres: { contains: q, mode: "insensitive" } } } },
+              { user: { profile: { apellidoPaterno: { contains: q, mode: "insensitive" } } } },
+              { user: { profile: { apellidoMaterno: { contains: q, mode: "insensitive" } } } },
             ],
           }
         : {},
-      estado ? { estado } : {},
+      isValidStatus ? { estado: estado as SuggestionStatus } : {},
       userId ? { userId } : {},
       from || to
         ? {
@@ -51,17 +56,28 @@ export async function GET(req: Request) {
     prisma.sugerencia.count({ where }),
     prisma.sugerencia.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      select: {
-        id: true,
-        mensaje: true,
-        estado: true,
-        createdAt: true,
-        user: { select: { id: true, nombres: true, email: true } },
-      },
-    }),
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        mensaje: true,
+        estado: true,
+        createdAt: true,
+        user: { 
+          select: { 
+            id: true, 
+            email: true,
+            profile: {
+              select: {
+                nombres: true,
+                apellidoPaterno: true
+              }
+            }
+          } 
+        },
+      },
+    }),
     prisma.sugerencia.groupBy({
       by: ["estado"],
       _count: { _all: true },

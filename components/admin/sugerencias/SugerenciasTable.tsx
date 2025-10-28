@@ -3,13 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { SuggestionStatus } from "@prisma/client";
 
 type Row = {
   id: string;
   mensaje: string;
-  estado: string;
+  estado: SuggestionStatus;
   createdAt: string | Date;
   user: { id: string; nombres: string | null; email: string | null } | null;
+};
+
+const statusConfig: Record<SuggestionStatus, { label: string; color: string }> = {
+  [SuggestionStatus.nuevo]: { label: "Nuevo", color: "bg-yellow-100 text-yellow-700" },
+  [SuggestionStatus.en_progreso]: { label: "En Progreso", color: "bg-blue-100 text-blue-700" },
+  [SuggestionStatus.resuelta]: { label: "Resuelta", color: "bg-green-100 text-green-700" },
+  [SuggestionStatus.descartada]: { label: "Descartada", color: "bg-red-100 text-red-700" },
 };
 
 export default function SugerenciasTable(props: {
@@ -62,14 +70,10 @@ export default function SugerenciasTable(props: {
                 <td className="px-4 py-3">{r.user?.email ?? "(Sin email)"}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    r.estado === "PENDIENTE"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : r.estado === "REVISADA"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
-                    {r.estado}
-                  </span>
+                    statusConfig[r.estado]?.color ?? "bg-gray-100 text-gray-700"
+                  }`}>
+                    {statusConfig[r.estado]?.label ?? r.estado}
+                  </span>
                 </td>
                 <td className="px-4 py-3 max-w-xs truncate">{r.mensaje}</td>
                 <td className="px-4 py-3 flex flex-wrap gap-2">
@@ -106,14 +110,10 @@ export default function SugerenciasTable(props: {
             <div className="flex items-center justify-between">
               <div className="font-semibold">{r.user?.nombres ?? "(Sin nombre)"}</div>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                r.estado === "PENDIENTE"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : r.estado === "REVISADA"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}>
-                {r.estado}
-              </span>
+                statusConfig[r.estado]?.color ?? "bg-gray-100 text-gray-700"
+              }`}>
+                {statusConfig[r.estado]?.label ?? r.estado}
+              </span>
             </div>
             <div className="text-xs text-gray-500">{r.user?.email ?? "(Sin email)"}</div>
             <div className="text-xs text-gray-500">Fecha: {new Date(r.createdAt).toLocaleString("es-CL")}</div>

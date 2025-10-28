@@ -8,6 +8,7 @@ export type EventoDTO = {
   fecha: string;
   lugar?: string | null;
   ciudad?: string | null;
+  region?: string | null;
   tipo?: string | null;
 };
 
@@ -85,7 +86,7 @@ export default function EventosDisponibles({ onSelect, selectedId }: Props) {
                 })}
               </p>
               <p className="text-neutral-300 mt-1">
-                {[ev.lugar, ev.ciudad].filter(Boolean).join(" — ")}
+                {[ev.lugar, ev.ciudad, ev.region].filter(Boolean).join(" — ")}
               </p>
               {active && <p className="text-lime-200/90 mt-2">Seleccionado ✓</p>}
             </button>

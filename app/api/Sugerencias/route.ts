@@ -1,42 +1,64 @@
-// app/api/sugerencias/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse , NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { asunto, mensaje }: { asunto?: string; mensaje: string } = body;
+
+  if (!mensaje || mensaje.trim() === '') {
+    return NextResponse.json(
+      { error: 'El campo mensaje es requerido' },
+      { status: 400 },
+    );
+  }
+
   try {
-    const { mensaje, userId } = await req.json();
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
 
-    if (!mensaje || typeof mensaje !== "string" || mensaje.trim().length < 5) {
+    if (!user) {
       return NextResponse.json(
-        { error: "El mensaje es demasiado corto." },
-        { status: 400 }
+        { error: 'Usuario no encontrado' },
+        { status: 404 },
       );
-    }
-
-    // Si llega userId, validamos que exista. (Si no, se guarda anónima)
-    if (userId) {
-      const exists = await prisma.user.findUnique({ where: { id: userId } });
-      if (!exists) {
-        return NextResponse.json({ error: "Usuario inválido." }, { status: 400 });
-      }
     }
 
     const sugerencia = await prisma.sugerencia.create({
       data: {
-        mensaje: mensaje.trim(),
-        userId: userId ?? null,
+        mensaje: mensaje,
+        asunto: asunto,
+        userId: user.id,
       },
-      select: { id: true, mensaje: true, userId: true, createdAt: true },
+      select: {
+        id: true,
+        asunto: true,
+        mensaje: true,
+        estado: true,
+        createdAt: true,
+        userId: true,
+      },
     });
 
     return NextResponse.json({ ok: true, sugerencia }, { status: 201 });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Error al crear la sugerencia' },
+      { status: 500 },
+    );
   }
 }
 
-// (opcional, útil para probar rápido en el navegador)
 export async function GET() {
   const ultimas = await prisma.sugerencia.findMany({
     orderBy: { createdAt: "desc" },
