@@ -2,11 +2,18 @@ import { prisma } from "@/lib/prisma";
 import EventForm from "@/components/admin/eventos/EventForm";
 import { notFound } from "next/navigation";
 
+// --- (INICIO DE LA CORRECCIÓN) ---
+// Hacemos la definición de props más explícita
+type AdminEditEventoPageProps = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
 export default async function AdminEditEventoPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: AdminEditEventoPageProps) { // <-- Usamos el nuevo tipo aquí
+// --- (FIN DE LA CORRECCIÓN) ---
+
   const { id } = params;
 
   const [evento, regiones, comunas, eventTypes] = await Promise.all([
@@ -44,7 +51,6 @@ export default async function AdminEditEventoPage({
       orderBy: { name: "asc" },
     }),
   ]);
-
 
   if (!evento) notFound();
 
