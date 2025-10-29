@@ -5,7 +5,7 @@ import {
   Options,
 } from 'transbank-sdk';
 
-// --- (INICIO DE LA CORRECCIÓN) ---
+// --- (INICIO DE LA LÓGICA CORRECTA) ---
 // 1. Revisamos si queremos FORZAR el modo Integración
 const forceIntegration = process.env.FORCE_WEBPAY_INTEGRATION === 'true';
 
@@ -15,7 +15,7 @@ const environment =
   forceIntegration || process.env.NODE_ENV !== 'production'
     ? Environment.Integration
     : Environment.Production;
-// --- (FIN DE LA CORRECCIÓN) ---
+// --- (FIN DE LA LÓGICA CORRECTA) ---
 
 
 // 3. LEER las credenciales SIEMPRE desde variables de entorno
