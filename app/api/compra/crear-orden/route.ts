@@ -124,7 +124,19 @@ export async function POST(req: Request) {
     let redirectUrl: string;
 
     if (paymentMethod === 'WEBPAY') {
-      console.log(`[crear-orden] Iniciando Webpay para Compra ID: ${nuevaCompra.id}`);
+      console.log("--- DEBUG WEBPAY EN VERCEL ---");
+      console.log(`[crear-orden Runtime] Forzando Integración?: ${process.env.FORCE_WEBPAY_INTEGRATION}`);
+      console.log(`[crear-orden Runtime] NODE_ENV: ${process.env.NODE_ENV}`);
+
+      // Accedemos a las propiedades internas del SDK para ver qué está usando REALMENTE
+      // @ts-ignore // Ignoramos error TS porque accedemos a props internas para debug
+      console.log(`[crear-orden Runtime] SDK Commerce Code: ${tx.commerceCode}`);
+      // @ts-ignore
+      console.log(`[crear-orden Runtime] SDK API Key: ${tx.apiKey}`);
+      // @ts-ignore
+      console.log(`[crear-orden Runtime] SDK Environment: ${tx.environment}`); // ¿Es 'Integration' o 'Production'?
+
+      console.log(`[crear-orden Runtime] Llamando a tx.create con: buyOrder=${nuevaCompra.id}, sessionId=${userId}, amount=${nuevaCompra.total}, returnUrl=${webpayReturnUrl}`);
       const transaction = await tx.create(
         nuevaCompra.id,
         userId,
