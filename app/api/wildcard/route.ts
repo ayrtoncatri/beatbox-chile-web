@@ -10,8 +10,6 @@ export const revalidate = 0;
 // youtu.be/XXXXX o youtube.com/watch?v=XXXXX
 const YT_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w\-]{11}(\S+)?$/i;
-
-// --- GET (Sin cambios) ---
 export async function GET() {
   try {
     const wildcards = await prisma.wildcard.findMany({
@@ -32,9 +30,8 @@ export async function GET() {
   }
 }
 
-// --- POST (Actualizado con validación de deadline) ---
 export async function POST(req: Request) {
-  // 1. Obtener la sesión de forma segura en el servidor
+
   const session = await getServerSession(authOptions);
 
   const userId = (session?.user as { id?: string })?.id;
@@ -42,11 +39,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
   }
 
-  // 2. Obtener los datos del body
   const { youtubeUrl, nombreArtistico, categoria, eventoId } =
     await req.json();
 
-  // 3. Validaciones de los datos recibidos
   if (!youtubeUrl || !YT_REGEX.test(youtubeUrl)) {
     return NextResponse.json(
       { error: 'URL de YouTube inválida' },
@@ -61,10 +56,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    // 4. Verificar que el evento exista
     const evento = await prisma.evento.findUnique({
       where: { id: eventoId },
-      // Traemos solo el campo que necesitamos
       select: { wildcardDeadline: true },
     });
     if (!evento) {
@@ -74,7 +67,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. --- 🔽 ¡NUEVA VALIDACIÓN DE DEADLINE! 🔽 ---
     if (!evento.wildcardDeadline) {
       return NextResponse.json(
         { error: 'Este evento no acepta wildcards.' },
@@ -87,9 +79,7 @@ export async function POST(req: Request) {
         { status: 403 }, // 403 Forbidden
       );
     }
-    // --- 🔼 FIN DE LA VALIDACIÓN 🔼 ---
 
-    // 6. (Clave) Verificar que el usuario no haya enviado antes
     const existingWildcard = await prisma.wildcard.findUnique({
       where: {
         userId_eventoId: {
@@ -106,7 +96,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 7. Crear la Wildcard
     const wildcard = await prisma.wildcard.create({
       data: {
         youtubeUrl,
@@ -136,11 +125,9 @@ export async function POST(req: Request) {
   }
 }
 
-// --- PUT (Actualizado con validación de deadline) ---
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
 
-  // 1. Validar por ID de sesión
   const userId = (session?.user as { id?: string })?.id;
   if (!userId) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -161,16 +148,13 @@ export async function PUT(req: Request) {
     );
   }
 
-  // 2. Busca la wildcard Y el deadline de su evento
   const wildcard = await prisma.wildcard.findFirst({
     where: { id, userId: userId },
-    // --- 🔽 CAMBIO AQUÍ 🔽 ---
     include: {
       evento: {
         select: { wildcardDeadline: true },
       },
     },
-    // --- 🔼 FIN DEL CAMBIO 🔼 ---
   });
 
   if (!wildcard) {
@@ -180,7 +164,6 @@ export async function PUT(req: Request) {
     );
   }
 
-  // 3. (Opcional) Verificar si la wildcard está PENDING
   if (wildcard.status !== 'PENDING') {
     return NextResponse.json(
       { error: 'No puedes modificar una wildcard que ya ha sido revisada' },
@@ -188,7 +171,6 @@ export async function PUT(req: Request) {
     );
   }
 
-  // 4. --- 🔽 ¡NUEVA VALIDACIÓN DE DEADLINE! 🔽 ---
   const deadline = wildcard.evento.wildcardDeadline;
   if (!deadline || new Date(deadline) < new Date()) {
     return NextResponse.json(
@@ -196,9 +178,7 @@ export async function PUT(req: Request) {
       { status: 403 },
     );
   }
-  // --- 🔼 FIN DE LA VALIDACIÓN 🔼 ---
 
-  // 5. Actualizar
   const updated = await prisma.wildcard.update({
     where: { id: wildcard.id },
     data: { nombreArtistico, youtubeUrl },
