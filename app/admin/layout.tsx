@@ -3,6 +3,8 @@ import { ensureAdminPage } from "@/lib/permissions";
 import MobileSidebar from "@/components/admin/home/MobileSidebar"; // Importa directo, SIN dynamic
 import SidebarNav from "@/components/admin/home/SidebarNav"; // Importa directo, SIN dynamic
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Admin | Beatbox Chile",
   description: "Panel de administración de Beatbox Chile",

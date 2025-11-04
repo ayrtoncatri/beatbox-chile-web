@@ -19,24 +19,34 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
           include: {
             profile: true,
-            roles: { include: { role: true } }
-          }
+            roles: {
+              include: {
+                role: {
+                  select: { name: true },
+                },
+              },
+            },
+          },
         });
+
+        if (!user) return null;
         if (!user?.password) return null;
         if (user.isActive === false) return null;
+
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
-        // Obtiene el primer rol (puedes adaptar para múltiples roles)
-        const role = user.roles[0]?.role?.name ?? "user";
+
+        const roles = user.roles.map((r) => r.role.name);
+
         return {
           id: user.id,
           email: user.email,
-          role,
           image: user.image ?? null,
+          isActive: user.isActive,
           nombres: user.profile?.nombres ?? null,
           apellidoPaterno: user.profile?.apellidoPaterno ?? null,
           apellidoMaterno: user.profile?.apellidoMaterno ?? null,
-          isActive: user.isActive,
+          roles: roles.length > 0 ? roles : ["user"],
         } as any;
       },
     }),
@@ -49,86 +59,135 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const existing = await prisma.user.findUnique({ where: { email: user.email! } });
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
         if (existing) {
           if (existing.isActive === false) return false;
         } else {
-          let nombres = user.name ?? "";
+          // --- INICIO DE CORRECCIÓN DE NOMBRES DE GOOGLE ---
+          let nombres = "";
           let apellidoPaterno = "";
           let apellidoMaterno = "";
-          if (nombres) {
-            const partes = nombres.split(" ");
-            nombres = partes.slice(0, -2).join(" ") || partes[0] || "";
-            apellidoPaterno = partes[partes.length - 2] || "";
-            apellidoMaterno = partes[partes.length - 1] || "";
+
+          if (user.name) {
+            const partes = user.name.trim().split(" ");
+            if (partes.length === 1) {
+              // Ej: "Ayrton"
+              nombres = partes[0];
+            } else if (partes.length === 2) {
+              // Ej: "Ayrton Catri"
+              nombres = partes[0];
+              apellidoPaterno = partes[1];
+            } else if (partes.length === 3) {
+              // Ej: "Ayrton David Catri"
+              nombres = partes.slice(0, 2).join(" "); // "Ayrton David"
+              apellidoPaterno = partes[2]; // "Catri"
+            } else {
+              // Ej: "Ayrton David Catri Pizarro" (4 o más)
+              nombres = partes.slice(0, 2).join(" "); // "Ayrton David"
+              apellidoPaterno = partes[2]; // "Catri"
+              apellidoMaterno = partes.slice(3).join(" "); // "Pizarro"
+            }
           }
-          // Crea User y UserProfile
-          const newUser = await prisma.user.create({
-            data: {
-              email: user.email!,
-              image: user.image ?? null,
-              isActive: true,
-            },
-          });
-          await prisma.userProfile.create({
-            data: {
-              userId: newUser.id,
-              nombres,
-              apellidoPaterno,
-              apellidoMaterno,
-            },
-          });
-          // Asigna rol "user" por defecto
-          const userRole = await prisma.role.findUnique({ where: { name: "user" } });
-          if (userRole) {
-            await prisma.userRole.create({
-              data: { userId: newUser.id, roleId: userRole.id }
+          // --- FIN DE CORRECCIÓN DE NOMBRES DE GOOGLE ---
+
+          try {
+            const defaultUserRole = await prisma.role.findUnique({
+              where: { name: "user" },
             });
+            if (!defaultUserRole) {
+              console.error("Rol 'user' no encontrado en la BD.");
+              return false;
+            }
+
+            await prisma.user.create({
+              data: {
+                email: user.email!,
+                image: user.image ?? null,
+                isActive: true,
+                profile: {
+                  create: {
+                    nombres, // Nombre corregido
+                    apellidoPaterno, // Apellido corregido
+                    apellidoMaterno, // Apellido corregido
+                  },
+                },
+                roles: {
+                  create: {
+                    roleId: defaultUserRole.id,
+                  },
+                },
+              },
+            });
+          } catch (error) {
+            console.error("Error al crear usuario de Google:", error);
+            return false;
           }
         }
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      // Obtiene datos completos del usuario
-      if (token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-          include: {
-            profile: true,
-            roles: { include: { role: true } }
-          }
-        });
-        if (dbUser) {
-          token.sub = dbUser.id;
-          token.nombres = dbUser.profile?.nombres ?? null;
-          token.apellidoPaterno = dbUser.profile?.apellidoPaterno ?? null;
-          token.apellidoMaterno = dbUser.profile?.apellidoMaterno ?? null;
-          token.role = dbUser.roles[0]?.role?.name ?? "user";
-          token.image = dbUser.image ?? null;
-          token.isActive = dbUser.isActive;
-        }
+
+    async jwt({ token, user }) {
+      // El objeto 'user' solo existe en el login inicial.
+      // Después de eso, necesitamos consultar la BD para hidratar el token
+      // con los datos de nuestro schema (roles y profile).
+
+      if (!token.email) {
+        return token; 
       }
-      if (user) {
-        token.sub = (user as any).id;
-        token.role = (user as any).role ?? "user";
-        token.nombres = (user as any).nombres ?? null;
-        token.apellidoPaterno = (user as any).apellidoPaterno ?? null;
-        token.apellidoMaterno = (user as any).apellidoMaterno ?? null;
-        token.image = (user as any).image ?? null;
-        token.isActive = (user as any).isActive ?? true;
+
+      // 1. Consultar la BD en CADA llamada JWT
+      //    (Esto es necesario para OAuth y para reflejar cambios de rol inmediatos)
+      const dbUser = await prisma.user.findUnique({
+        where: { email: token.email as string },
+        include: {
+          profile: true,
+          roles: {
+            include: {
+              role: { select: { name: true } },
+            },
+          },
+        },
+      });
+
+      if (!dbUser) {
+        // Si el usuario fue eliminado de la BD, invalidar el token
+        return { ...token, error: "UserNotFound" };
       }
-      return token;
+
+      // 2. Mapear roles a un array de strings
+      const roles = dbUser.roles.map((r) => r.role.name);
+
+      // 3. Hidratar el token con los datos FRESCOS de la BD
+      return {
+        ...token, // Mantener datos base del token (email, iat, exp, etc.)
+        sub: dbUser.id,
+        isActive: dbUser.isActive,
+        image: dbUser.image ?? null,
+        nombres: dbUser.profile?.nombres ?? null,
+        apellidoPaterno: dbUser.profile?.apellidoPaterno ?? null,
+        apellidoMaterno: dbUser.profile?.apellidoMaterno ?? null,
+        roles: roles.length > 0 ? roles : ["user"], // Array de roles
+      };
     },
+
     async session({ session, token }) {
+      
       if (session.user) {
-        (session.user as any).id = token.sub;
-        (session.user as any).role = (token as any).role ?? "user";
-        (session.user as any).isActive = (token as any).isActive ?? true;
-        (session.user as any).nombres = (token as any).nombres ?? null;
-        (session.user as any).apellidoPaterno = (token as any).apellidoPaterno ?? null;
-        (session.user as any).apellidoMaterno = (token as any).apellidoMaterno ?? null;
+        session.user.id = token.sub!;
+        session.user.image = token.image as string | null;
+        
+        // Agregar campos personalizados
+        (session.user as any).isActive = token.isActive;
+        (session.user as any).nombres = token.nombres;
+        (session.user as any).apellidoPaterno = token.apellidoPaterno;
+        (session.user as any).apellidoMaterno = token.apellidoMaterno;
+        (session.user as any).roles = token.roles;
       }
+
       return session;
     },
   },

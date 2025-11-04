@@ -43,6 +43,8 @@ export default function Header() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const user = session?.user;
+
   return (
     <header className="w-full bg-neutral-950 bg-opacity-90 py-3 shadow-md sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 flex items-center justify-around gap-2">
@@ -122,14 +124,16 @@ export default function Header() {
             <div className="animate-pulse bg-blue-900/60 rounded-lg px-4 py-2">
               <div className="text-blue-100 text-sm">Cargando...</div>
             </div>
-          ) : session?.user ? (
+          ) : user ? (
             <div className="flex flex-col items-center gap-1 md:gap-2 bg-gradient-to-r from-blue-900/60 to-blue-700/40 shadow-lg border border-blue-800/40 backdrop-blur-md rounded-lg p-2">
               {/* Botón de perfil */}
               <Link href="/perfil">
                 <div className="flex items-start gap-1 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap">
                   <div className="flex gap-1">
                     <FaUserCircle size={16} className="md:w-4 md:h-4" />
-                    <span className="hidden md:inline">{session.user.nombres}</span>
+                    <span className="hidden md:inline">
+                      {(user as any).nombres ?? user.email}
+                    </span>
                     <span className="md:hidden">Perfil</span>
                   </div>
                 </div>
@@ -137,7 +141,7 @@ export default function Header() {
 
               <div className="flex gap-2">
                 {/* Botón de admin si es admin */}
-                {(session.user as any)?.role === "admin" && (
+                {(user as any)?.roles?.includes("admin") && (
                   <Link href="/admin">
                     <div className="flex items-center gap-1 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap">
                       <FaCog size={16} className="md:w-4 md:h-4" />
@@ -243,8 +247,50 @@ export default function Header() {
                 )}
               </ul>
               {/* AuthButtons SOLO en mobile menu */}
-              <div className="mt-10">
-                <AuthButtons setOpen={setOpen} />
+              <div className="mt-10 border-t border-blue-800/40 pt-6">
+                {!isClient || status === "loading" ? (
+                  <div className="animate-pulse bg-blue-900/60 rounded-lg px-4 py-2 text-blue-100 text-lg">
+                    Cargando...
+                  </div>
+                ) : user ? (
+                  <div className="flex flex-col items-start gap-6">
+                    {/* Perfil */}
+                    <Link
+                      href="/perfil"
+                      className="flex items-center gap-3 text-2xl text-blue-100 font-semibold hover:text-blue-400"
+                      onClick={() => setOpen(false)}
+                    >
+                      <FaUserCircle size={26} />
+                      <span>{(user as any).nombres ?? user.email}</span>
+                    </Link>
+
+                    {/* Admin (¡con la lógica corregida!) */}
+                    {(user as any)?.roles?.includes("admin") && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 text-2xl text-blue-100 font-semibold hover:text-blue-400"
+                        onClick={() => setOpen(false)}
+                      >
+                        <FaCog size={26} />
+                        <span>Admin</span>
+                      </Link>
+                    )}
+
+                    {/* Cerrar Sesión */}
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        signOut();
+                      }}
+                      className="flex items-center gap-3 text-2xl text-blue-100 font-semibold hover:text-blue-400"
+                    >
+                      <FaSignOutAlt size={26} />
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
+                ) : (
+                  <AuthButtons setOpen={setOpen} />
+                )}
               </div>
             </motion.nav>
           </>
