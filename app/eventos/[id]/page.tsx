@@ -151,11 +151,11 @@ function CompraEntradasSeccion({ evento }: { evento: any }) {
 
 // --- Página de detalle del evento principal (Textos Rediseñados) ---
 export default async function EventoPage({
-  params,
+ params: { id },
 }: {
   params: { id: string };
 }) {
-  const evento = await getEvento(params.id);
+  const evento = await getEvento(id);
 
   const boxStyle =
     'max-w-3xl mx-auto bg-gray-900/70 backdrop-blur-md p-6 lg:p-8 rounded-2xl border border-lime-400/20';

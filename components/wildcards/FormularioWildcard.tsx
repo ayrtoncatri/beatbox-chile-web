@@ -26,6 +26,12 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
       return;
     }
 
+    if (!data.categoria) {
+      setMensaje("⚠️ Debes seleccionar una categoría (Solo/Loopstation/Tagteam).");
+      return;
+    }
+
+    const categoriaLimpia = data.categoria.toUpperCase();
 
     try {
       const res = await fetch("/api/wildcard", {
@@ -34,7 +40,7 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
         body: JSON.stringify({
           youtubeUrl: data.youtubeUrl?.trim(),
           nombreArtistico: data.nombreArtistico?.trim(),
-          categoria: data.categoria,
+          categoria: categoriaLimpia,
           eventoId: eventoId,
         }),
       });
@@ -93,16 +99,16 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
           <label className="block mb-2 text-lime-200 font-semibold">Categoría *</label>
           <div className="flex gap-6 text-amber-50">
             <label>
-              <input type="radio" value="Solo" {...register("categoria", { required: true })} />
-              <span className="ml-2">Solo</span>
+              <input type="radio" value="SOLO" {...register("categoria", { required: true })} />
+              <span className="ml-2">SOLO</span>
             </label>
             <label>
-              <input type="radio" value="Loopstation" {...register("categoria", { required: true })} />
-              <span className="ml-2">Loopstation</span>
+              <input type="radio" value="LOOPSTATION" {...register("categoria", { required: true })} />
+              <span className="ml-2">LOOPSTATION</span>
             </label>
             <label>
-              <input type="radio" value="Tagteam" {...register("categoria", { required: true })} />
-              <span className="ml-2">Tagteam</span>
+              <input type="radio" value="TAG_TEAM" {...register("categoria", { required: true })} />
+              <span className="ml-2">TAG TEAM</span>
             </label>
           </div>
         </div>

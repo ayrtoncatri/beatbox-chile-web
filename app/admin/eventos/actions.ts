@@ -1,9 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, RoundPhase , ScoreStatus } from "@prisma/client";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+
+export type AssignJudgeState = {
+  ok: boolean;
+  message?: string; // string o undefined
+  error?: string;   // string o undefined
+}
 
 const EventFormSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(200),
@@ -347,5 +353,265 @@ export async function deleteTicketType(prevState: any, formData: FormData) {
        return { ok: false, error: "No se puede eliminar: hay compras asociadas a este tipo de entrada." };
     }
     return { ok: false, error: e.message || "Error al eliminar tipo de entrada" };
+  }
+}
+
+/* ==================================================================
+   ASIGNACIÓN DE JUECES (NUEVA FUNCIONALIDAD)
+   ================================================================== */
+
+// Zod Schema para validar el formulario del Admin
+const assignJudgeSchema = z.object({
+  eventoId: z.string().cuid('Evento inválido'),
+  judgeId: z.string().cuid('Juez inválido'),
+  categoriaId: z.string().cuid('Categoría inválida'),
+  phase: z.nativeEnum(RoundPhase, {
+    message: 'Fase inválida', // <-- CORREGIDO
+  }),
+});
+
+/**
+ * Asigna un Juez a un Evento/Categoría/Fase específicos.
+ */
+export async function assignJudgeAction(prevState: AssignJudgeState, formData: FormData): Promise<AssignJudgeState> {
+  // 1. Validar los datos del formulario
+  const validation = assignJudgeSchema.safeParse({
+    eventoId: formData.get('eventoId'),
+    judgeId: formData.get('judgeId'),
+    categoriaId: formData.get('categoriaId'),
+    phase: formData.get('phase'),
+  });
+
+  if (!validation.success) {
+    return { ok: false, error: validation.error.issues[0]?.message || "Datos inválidos" }; // <-- CORREGIDO
+  }
+
+  const { eventoId, judgeId, categoriaId, phase } = validation.data;
+
+  try {
+    // 2. Crear la asignación
+    await prisma.judgeAssignment.create({
+      data: {
+        eventoId,
+        judgeId,
+        categoriaId,
+        phase,
+      },
+    });
+
+    // 3. Éxito
+    revalidatePath(`/admin/eventos/${eventoId}`); // Refrescar la página del admin
+    revalidatePath('/judge/dashboard'); // Refrescar el dashboard del juez asignado
+    return { ok: true, message: "Juez asignado exitosamente." };
+  } catch (error: any) {
+    // Manejar error si la asignación ya existe (por la llave unique)
+    if (error.code === 'P2002') {
+      return { ok: false, error: 'Este juez ya está asignado a esta tarea específica.' };
+    }
+    console.error('Error al asignar juez:', error);
+    return { ok: false, error: 'Error interno del servidor al asignar juez.' };
+  }
+}
+
+/* ==================================================================
+   LÓGICA Y RANKING (FASE 6)
+   ================================================================== */
+
+// Definición de tipo para el resultado del ranking
+export type RankingResult = {
+  rank: number;
+  participantId: string;
+  nombreArtistico: string | null;
+  avgScore: number;
+  totalJudges: number;
+  isClassified: boolean;
+  wildcardId: string;
+};
+
+/**
+ * Función helper que calcula el ranking para una categoría/fase.
+ * Regla 2: Nota final = promedio de 'totalScore' entre jueces.
+ * Regla 3: Ranking = orden descendente por 'avgScore'.
+ */
+export async function getWildcardRanking(
+  eventoId: string,
+  categoriaName: string,
+  phase: RoundPhase = RoundPhase.WILDCARD
+): Promise<RankingResult[]> {
+  
+  // 1. Obtener la Categoría ID
+  const categoria = await prisma.categoria.findUnique({
+    where: { name: categoriaName },
+    select: { id: true },
+  });
+
+  if (!categoria) return [];
+
+  const categoriaId = categoria.id;
+
+  // 2. Calcular el promedio de los puntajes de los jueces
+  // Agregamos por participante y calculamos el promedio (avg) de sus totalScores
+  const scoresAggregation = await prisma.score.groupBy({
+    by: ['participantId'],
+    where: {
+      eventoId,
+      categoriaId,
+      phase,
+      status: ScoreStatus.SUBMITTED, // Solo contamos puntajes finales
+    },
+    _avg: {
+      totalScore: true, // Promedio de la nota total del juez
+    },
+    _count: {
+      judgeId: true, // Contamos cuántos jueces han votado
+    },
+  });
+
+  // 3. Obtener metadatos de los participantes (Wildcard y Nombre Artístico)
+  const participantIds = scoresAggregation.map((a) => a.participantId);
+  
+  const participantsData = await prisma.wildcard.findMany({
+    where: {
+      userId: { in: participantIds },
+      eventoId,
+      categoriaId,
+    },
+    select: {
+      id: true,
+      userId: true,
+      nombreArtistico: true,
+      isClassified: true,
+    },
+  });
+
+  // 4. Mapear, calcular el ranking y ordenar
+  let ranking = scoresAggregation
+    .map((agg) => {
+      const wildcard = participantsData.find((p) => p.userId === agg.participantId);
+      
+      // Manejo de participantes sin wildcard (aunque no debería pasar aquí)
+      if (!wildcard) return null; 
+
+      return {
+        // rank se calcula después del sort
+        participantId: agg.participantId,
+        nombreArtistico: wildcard.nombreArtistico,
+        avgScore: agg._avg.totalScore ?? 0, // Nota Final
+        totalJudges: agg._count.judgeId,
+        isClassified: wildcard.isClassified,
+        wildcardId: wildcard.id,
+      };
+    })
+    .filter((r): r is RankingResult => r !== null) // Filtra nulos
+    .sort((a, b) => {
+      // Regla 3: Orden descendente por Nota Final
+      if (b.avgScore !== a.avgScore) {
+        return b.avgScore - a.avgScore;
+      }
+      // Regla de Desempate (V2: Originalidad. Por ahora, mantenemos el orden de llegada si es empate)
+      return 0; 
+    });
+    
+  // 5. Asignar el rank basado en el orden
+  return ranking.map((r, index) => ({
+    ...r,
+    rank: index + 1,
+  }));
+}
+
+
+// Schema para clasificar (recibe los IDs de las wildcards a marcar)
+const classifySchema = z.object({
+  wildcardIds: z.array(z.string().cuid('ID de wildcard inválido')).min(1, 'Se requiere al menos una wildcard.'),
+  eventoId: z.string().cuid('ID de evento inválido'), // Para revalidar
+});
+
+/**
+ * Server Action para marcar Wildcards como clasificados.
+ */
+export async function classifyWildcardsAction(prevState: any, formData: FormData): Promise<{ ok: boolean; message?: string; error?: string }> {
+  const rawIds = formData.getAll('wildcardIds');
+  const eventoId = formData.get('eventoId')?.toString();
+
+  // 1. Validación (ZOD)
+  const validation = classifySchema.safeParse({ wildcardIds: rawIds, eventoId });
+  
+  if (!validation.success) {
+    return { ok: false, error: validation.error.issues[0]?.message || 'Datos inválidos para clasificación.' };
+  }
+  
+  const { wildcardIds } = validation.data;
+
+  try {
+    // 2. Actualizar las wildcards
+    await prisma.wildcard.updateMany({
+      where: {
+        id: { in: wildcardIds },
+        eventoId: eventoId,
+      },
+      data: {
+        isClassified: true, // Marcar como clasificado
+      },
+    });
+
+    // 3. Éxito
+    revalidatePath(`/admin/eventos/${eventoId}`); // Refrescar la tabla de ranking en el admin
+    revalidatePath('/eventos'); // O donde se muestren los clasificados públicamente
+    
+    return { ok: true, message: `Se marcaron ${wildcardIds.length} participantes como clasificados.` };
+    
+  } catch (error: any) {
+    console.error('Error al clasificar wildcards:', error);
+    return { ok: false, error: 'Error interno al actualizar la clasificación.' };
+  }
+}
+
+/* ==================================================================
+   GESTIÓN DE COMPETITION CATEGORY (NUEVO)
+   ================================================================== */
+
+const manageCategorySchema = z.object({
+  eventoId: z.string().cuid('ID de evento inválido'),
+  categoriaId: z.string().cuid('ID de categoría inválida'),
+  wildcardSlots: z.coerce.number().int().min(0, 'Los cupos deben ser 0 o más'),
+});
+
+/**
+ * Crea o actualiza una CompetitionCategory para un evento (define cupos).
+ */
+export async function upsertCompetitionCategoryAction(prevState: any, formData: FormData): Promise<{ ok: boolean; message?: string; error?: string }> {
+  const data = {
+    eventoId: formData.get('eventoId'),
+    categoriaId: formData.get('categoriaId'),
+    wildcardSlots: formData.get('wildcardSlots'),
+  };
+
+  const validation = manageCategorySchema.safeParse(data);
+  if (!validation.success) {
+    return { ok: false, error: validation.error.issues[0]?.message || 'Datos de categoría inválidos.' };
+  }
+
+  const { eventoId, categoriaId, wildcardSlots } = validation.data;
+
+  try {
+    await prisma.competitionCategory.upsert({
+      where: {
+        eventoId_categoriaId: {
+          eventoId: eventoId,
+          categoriaId: categoriaId,
+        },
+      },
+      update: { wildcardSlots },
+      create: {
+        eventoId,
+        categoriaId,
+        wildcardSlots,
+      },
+    });
+
+    revalidatePath(`/admin/eventos/${eventoId}`);
+    return { ok: true, message: `Categoría ${categoriaId} actualizada con ${wildcardSlots} cupos.` };
+  } catch (e) {
+    return { ok: false, error: 'Error al gestionar la categoría del evento.' };
   }
 }

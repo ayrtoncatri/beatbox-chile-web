@@ -10,24 +10,26 @@ export const revalidate = 0;
 // youtu.be/XXXXX o youtube.com/watch?v=XXXXX
 const YT_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w\-]{11}(\S+)?$/i;
+
 export async function GET() {
-  try {
-    const wildcards = await prisma.wildcard.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        youtubeUrl: true,
-        nombreArtistico: true,
-        categoria: true,
-      },
-    });
-    return NextResponse.json({ ok: true, wildcards }, { status: 200 });
-  } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: 'Error interno' },
-      { status: 500 },
-    );
-  }
+  try {
+    const wildcards = await prisma.wildcard.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        youtubeUrl: true,
+        nombreArtistico: true,
+        // CORRECCIÓN 1: Seleccionar el nombre de la Categoría a través de la relación
+        categoria: { select: { name: true } },
+      },
+    });
+    return NextResponse.json({ ok: true, wildcards }, { status: 200 });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: 'Error interno' },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -39,8 +41,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
   }
 
-  const { youtubeUrl, nombreArtistico, categoria, eventoId } =
-    await req.json();
+  const { youtubeUrl, nombreArtistico, categoria: categoriaName, eventoId } =
+    await req.json();
 
   if (!youtubeUrl || !YT_REGEX.test(youtubeUrl)) {
     return NextResponse.json(
@@ -54,6 +56,13 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  if (!eventoId || !categoriaName) {
+    return NextResponse.json(
+      { error: 'ID de evento o categoría faltante' },
+      { status: 400 },
+    );
+  }
 
   try {
     const evento = await prisma.evento.findUnique({
@@ -80,14 +89,28 @@ export async function POST(req: Request) {
       );
     }
 
+    const categoria = await prisma.categoria.findUnique({
+      where: { name: categoriaName },
+      select: { id: true },
+    });
+
+    if (!categoria) {
+      return NextResponse.json(
+        { error: `Categoría "${categoriaName}" no válida.` },
+        { status: 400 },
+      );
+    }
+    const categoriaId = categoria.id;
+
     const existingWildcard = await prisma.wildcard.findUnique({
-      where: {
-        userId_eventoId: {
-          userId: userId,
-          eventoId: eventoId,
-        },
-      },
-    });
+      where: {
+        userId_eventoId_categoriaId: { // <-- NUEVA LLAVE
+          userId: userId,
+          eventoId: eventoId,
+          categoriaId: categoriaId, // <-- Usamos el ID de la categoría
+        },
+      },
+    });
 
     if (existingWildcard) {
       return NextResponse.json(
@@ -97,23 +120,23 @@ export async function POST(req: Request) {
     }
 
     const wildcard = await prisma.wildcard.create({
-      data: {
-        youtubeUrl,
-        nombreArtistico,
-        categoria,
-        userId: userId,
-        eventoId: eventoId,
-      },
-      select: {
-        id: true,
-        youtubeUrl: true,
-        nombreArtistico: true,
-        categoria: true,
-        userId: true,
-        eventoId: true,
-        createdAt: true,
-      },
-    });
+      data: {
+        youtubeUrl,
+        nombreArtistico,
+        categoriaId: categoriaId, // <-- USAMOS EL ID REAL
+        userId: userId,
+        eventoId: eventoId,
+      },
+      select: {
+        id: true,
+        youtubeUrl: true,
+        nombreArtistico: true,
+        categoria: { select: { name: true } }, // Devolvemos el nombre
+        userId: true,
+        eventoId: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json({ ok: true, wildcard }, { status: 201 });
   } catch (e) {
