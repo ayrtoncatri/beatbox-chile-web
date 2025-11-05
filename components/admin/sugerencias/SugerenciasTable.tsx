@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { SuggestionStatus } from "@prisma/client";
+import { deleteSugerencia } from "@/app/admin/sugerencias/actions";
 
 type Row = {
   id: string;
@@ -26,21 +27,29 @@ export default function SugerenciasTable(props: {
 }) {
   const { rows } = props;
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar esta sugerencia?")) return;
-    setLoadingId(id);
-    try {
-      const res = await fetch(`/api/admin/sugerencias/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error");
-      router.refresh();
-    } catch {
-      alert("No se pudo eliminar");
-    } finally {
-      setLoadingId(null);
-    }
-  };
+  const handleDelete = async (sugerenciaId: string) => {
+    if (!confirm("¿Eliminar esta sugerencia?")) return;
+
+    // 2. Usa 'sugerenciaId' aquí
+    setLoadingId(sugerenciaId); 
+    startTransition(async () => {
+      try {
+        // 3. Usa 'sugerenciaId' aquí también.
+        //    Esto resuelve el error de scope de TypeScript.
+        const result = await deleteSugerencia(sugerenciaId); 
+        if (!result.success) {
+          throw new Error(result.message || "Error al eliminar");
+        }
+      } catch (error: any) {
+        alert(error.message || "No se pudo eliminar");
+      } finally {
+        setLoadingId(null);
+      }
+    });
+  };
 
   const openDetail = (id: string) => {
     const ev = new CustomEvent("sugerencia:open", { detail: { id } });

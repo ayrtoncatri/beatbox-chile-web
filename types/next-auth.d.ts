@@ -1,26 +1,43 @@
-import NextAuth from "next-auth";
-import { DefaultSession } from "next-auth";
+// lib/next-auth.d.ts
+import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
+import { JWT, DefaultJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
-  interface User {
-    role?: string;
-  }
+  /**
+   * Extiende el objeto Session para incluir tus campos personalizados
+   */
   interface Session {
-    user: DefaultSession["user"] & {
-      id?: string;
-      role?: string;
-      nombres?: string | null;
-      apellidoPaterno?: string | null;
-      apellidoMaterno?: string | null;
-    };
+    user: {
+      id: string;
+      isActive: boolean;
+      nombres: string | null;
+      apellidoPaterno: string | null;
+      apellidoMaterno: string | null;
+      roles: string[]; // Array de roles
+    } & DefaultSession["user"]; // Mantiene email, name, image
+  }
+
+  /**
+   * Extiende el objeto User (el que viene de authorize)
+   */
+  interface User extends DefaultUser {
+    isActive: boolean;
+    nombres: string | null;
+    apellidoPaterno: string | null;
+    apellidoMaterno: string | null;
+    roles: string[];
   }
 }
 
 declare module "next-auth/jwt" {
-  interface JWT {
-    role?: string;
-    nombres?: string | null;
-    apellidoPaterno?: string | null;
-    apellidoMaterno?: string | null;
+  /**
+   * Extiende el Token JWT
+   */
+  interface JWT extends DefaultJWT {
+    isActive: boolean;
+    nombres: string | null;
+    apellidoPaterno: string | null;
+    apellidoMaterno: string | null;
+    roles: string[];
   }
 }

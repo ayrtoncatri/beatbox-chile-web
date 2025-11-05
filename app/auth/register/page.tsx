@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 // Utilidades OWASP
 function isValidEmail(email: string) {
@@ -19,20 +20,26 @@ function sanitize(input: string) {
 
 export default function RegisterPage() {
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
   const handleRegister = async (e: any) => {
     e.preventDefault();
+
+    if (loading) return;
+    setLoading(true);
+    setError("");
+
     const nombres = sanitize(e.target.nombres.value.trim());
     const apellidoPaterno = sanitize(e.target.apellidoPaterno.value.trim());
-    const apellidoMaterno = sanitize(e.target.apellidoMaterno.value.trim());
+    const apellidoMaterno = sanitize(e.target.apellidoMaterno.value.trim()) || "";
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
     const confirmPassword = e.target.confirmPassword.value;
 
-    if (!nombres || !apellidoPaterno || !apellidoMaterno || !email || !password || !confirmPassword) {
+    if (!nombres || !apellidoPaterno || !email || !password || !confirmPassword) {
       setError("Todos los campos son obligatorios.");
       return;
     }
@@ -49,17 +56,31 @@ export default function RegisterPage() {
       return;
     }
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ nombres, apellidoPaterno, apellidoMaterno, email, password }),
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          nombres,
+          apellidoPaterno,
+          apellidoMaterno,
+          email,
+          password,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
 
-    if (res.ok) {
-      router.push("/auth/login?registered=1");
-    } else {
-      setError("No se pudo registrar. Intenta con otro correo o más tarde.");
+      if (res.ok) {
+        // Éxito: Redirigir al login
+        router.push("/auth/login?registered=1");
+      } else {
+        const data = await res.json();
+        setError(data.error || "No se pudo registrar. Intente más tarde.");
+      }
+    } catch (err) {
+      setError("Error de red. Por favor, intente de nuevo.");
     }
+
+    setLoading(false); // Detener la carga
   };
 
   return (
@@ -69,11 +90,14 @@ export default function RegisterPage() {
         className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-blue-900/80 via-neutral-900/90 to-blue-950/80 p-8 text-center shadow-2xl border border-blue-800/40 backdrop-blur-lg"
         autoComplete="off"
       >
-        <h2 className="text-3xl font-extrabold text-blue-100 mb-6 drop-shadow">Registrarse</h2>
+        <h2 className="text-3xl font-extrabold text-blue-100 mb-6 drop-shadow">
+          Registrarse
+        </h2>
+        
         <button
           type="button"
           onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="mb-6 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-700 hover:bg-blue-800 transition py-2 font-semibold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="mb-6 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-700 hover:bg-blue-800 transition py-2 font-semibold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>Registrarse con Google</span>
           <Image
@@ -84,6 +108,7 @@ export default function RegisterPage() {
             className="inline-block"
           />
         </button>
+
         <div className="flex flex-col gap-3 mb-2">
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -93,6 +118,7 @@ export default function RegisterPage() {
             required
             maxLength={50}
             autoComplete="off"
+            disabled={loading}
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -102,15 +128,16 @@ export default function RegisterPage() {
             required
             maxLength={50}
             autoComplete="off"
+            disabled={loading}
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             name="apellidoMaterno"
             type="text"
             placeholder="Apellido materno"
-            required
             maxLength={50}
             autoComplete="off"
+            disabled={loading}
           />
           <input
             className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -120,6 +147,7 @@ export default function RegisterPage() {
             required
             maxLength={100}
             autoComplete="off"
+            disabled={loading}
           />
           <div className="relative">
             <input
@@ -130,13 +158,15 @@ export default function RegisterPage() {
               required
               minLength={8}
               autoComplete="new-password"
+              disabled={loading}
             />
             <button
               type="button"
               tabIndex={-1}
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100 disabled:opacity-50"
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              disabled={loading}
             >
               {showPassword ? (
                 // Ojo abierto
@@ -180,6 +210,16 @@ export default function RegisterPage() {
         </button>
         {error && <p className="text-red-400 mt-4 font-semibold">{error}</p>}
       </form>
+
+      <p className="text-blue-200/90 mt-6">
+        ¿Ya tienes cuenta?{" "}
+        <Link
+          href="/auth/login"
+          className="font-bold text-blue-400 hover:text-blue-300 transition"
+        >
+          Inicia sesión
+        </Link>
+      </p>
     </main>
   );
 }

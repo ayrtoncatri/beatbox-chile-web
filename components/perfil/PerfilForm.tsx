@@ -337,47 +337,91 @@ export default function PerfilForm({ user }: { user: UserLike }) {
 }
 
 function WildcardEditForm({ wildcard }: { wildcard: any }) {
-  const [nombreArtistico, setNombreArtistico] = useState(
-    wildcard.nombreArtistico || ""
-  );
-  const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
-  const [msg, setMsg] = useState("");
+  const [nombreArtistico, setNombreArtistico] = useState(
+    wildcard.nombreArtistico || ""
+  );
+  const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
+  const [msg, setMsg] = useState("");
+  const [errMsg, setErrMsg] = useState(""); // Estado separado para errores
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setMsg("");
-    const res = await fetch("/api/wildcard", {
-      method: "PUT",
-      body: JSON.stringify({ id: wildcard.id, nombreArtistico, youtubeUrl }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (res.ok) setMsg("Wildcard actualizada correctamente");
-    else setMsg("Error al actualizar wildcard");
-  };
+  // 1. Leemos la fecha límite que cargamos desde la página
+  // El 'wildcard.evento' ahora existe gracias al Paso 1
+  const deadline = wildcard.evento?.wildcardDeadline
+    ? new Date(wildcard.evento.wildcardDeadline)
+    : null;
+  
+  // 2. Verificamos si la edición está permitida
+  // (La wildcard también debe estar 'PENDING', como chequea tu API)
+  const isEditingAllowed =
+    (!deadline || new Date() < deadline) && wildcard.status === "PENDING";
+  
+  // 3. Mensaje de por qué está deshabilitado
+  const disabledMessage =
+    wildcard.status !== "PENDING"
+      ? "Tu wildcard ya fue revisada."
+      : "La fecha límite para editar ya pasó.";
 
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <input
-        value={nombreArtistico}
-        onChange={(e) => setNombreArtistico(e.target.value)}
-        placeholder="Nombre artístico"
-        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-      />
-      <input
-        value={youtubeUrl}
-        onChange={(e) => setYoutubeUrl(e.target.value)}
-        placeholder="Link del video (YouTube)"
-        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-      />
-      <button
-        type="submit"
-        className="rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      >
-        Guardar cambios
-      </button>
-      {msg && <p className="text-blue-300">{msg}</p>}
-    </form>
-  );
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setMsg("");
+    setErrMsg("");
+
+    const res = await fetch("/api/wildcard", {
+      method: "PUT",
+      body: JSON.stringify({ id: wildcard.id, nombreArtistico, youtubeUrl }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // 4. Mejoramos el manejo de mensajes
+    if (res.ok) {
+      setMsg("Wildcard actualizada correctamente");
+    } else {
+      // Mostramos el error real que envía el backend
+      const data = await res.json();
+      setErrMsg(data.error || "Error al actualizar wildcard");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      {wildcard.evento?.nombre && (
+        <p className="text-sm text-center text-blue-300 -mb-1">
+          Evento: <span className="font-semibold">{wildcard.evento.nombre}</span>
+        </p>
+      )}
+      <input
+        value={nombreArtistico}
+        onChange={(e) => setNombreArtistico(e.target.value)}
+        placeholder="Nombre artístico"
+        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!isEditingAllowed} // 5. Deshabilitar input
+      />
+  _    <input
+        value={youtubeUrl}
+        onChange={(e) => setYoutubeUrl(e.target.value)}
+        placeholder="Link del video (YouTube)"
+        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!isEditingAllowed} // 6. Deshabilitar input
+      />
+      <button
+        type="submit"
+        className="rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-500"
+        disabled={!isEditingAllowed} // 7. Deshabilitar botón
+      >
+        {isEditingAllowed ? "Guardar cambios" : "Edición cerrada"}
+      </button>
+      
+      {msg && <p className="text-center text-green-400 text-sm">{msg}</p>}
+      {errMsg && <p className="text-center text-red-400 text-sm">{errMsg}</p>}
+      
+      {/* 8. Mensaje claro de por qué está deshabilitado */}
+      {!isEditingAllowed && (
+        <p className="text-center text-yellow-400 text-xs mt-2">
+          {disabledMessage}
+        </p>
+      )}
+    </form>
+  );
 }
 
 // Utilidad para calcular birthDate desde edad (aprox. al 1 de enero)

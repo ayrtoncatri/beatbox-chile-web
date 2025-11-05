@@ -19,7 +19,17 @@ export default async function PerfilPage() {
           comuna: { include: { region: true } }
         }
       },
-      wildcards: true,
+      wildcards: {
+        include: {
+          evento: {
+            select: {
+              nombre: true, // Para saber a qué evento pertenece
+              wildcardDeadline: true // ¡Esta es la fecha que necesitamos!
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" } 
+      }
     },
   });
 

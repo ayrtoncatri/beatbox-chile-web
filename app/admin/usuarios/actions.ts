@@ -3,15 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { checkAdmin } from "@/lib/permissions";
 
-// --- CAMBIO: Actualizamos el schema de Zod ---
-// Añadimos 'judge' (o cualquier otro rol que tengas)
+
 const EditUserSchema = z.object({
   id: z.string().min(1),
   nombres: z.string().optional(),
   apellidoPaterno: z.string().optional(),
   apellidoMaterno: z.string().optional(),
-  role: z.enum(["user", "admin", "judge"]), // <-- Asegúrate que esto incluya todos tus roles
+  role: z.enum(["user", "admin", "judge"]),
   image: z.string().optional(),
 });
 
@@ -21,22 +23,49 @@ const ToggleUserActiveSchema = z.object({
 });
 
 export async function editUser(prevState: any, formData: FormData) {
+  const session = await getServerSession(authOptions);
+
+  try {
+    // 3. VERIFICAR QUE EL USUARIO ACTUAL ES ADMIN
+    await checkAdmin();
+  } catch (e: any) {
+    return { ok: false, error: "No tienes permisos de administrador." };
+  }
+  // Obtenemos el ID del admin que realiza la acción
+  const currentUserId = (session?.user as any)?.id;
+
   try {
     const data = {
       id: formData.get("id") as string,
       nombres: formData.get("nombres")?.toString(),
       apellidoPaterno: formData.get("apellidoPaterno")?.toString(),
       apellidoMaterno: formData.get("apellidoMaterno")?.toString(),
-      role: formData.get("role")?.toString(), // "admin"
+      role: formData.get("role")?.toString(),
       image: formData.get("image")?.toString(),
     };
 
     const parsed = EditUserSchema.parse(data);
     const userId = parsed.id;
 
-    // --- CAMBIO: Usamos una transacción para actualizar 3 modelos ---
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: { select: { name: true } } } } },
+    });
+
+    if (!targetUser) {
+      return { ok: false, error: "Usuario a editar no encontrado." };
+    }
+
+    const isSelf = targetUser.id === currentUserId;
+    const isTargetAdmin = targetUser.roles.some(r => r.role.name === 'admin');
+    const currentRoleName = targetUser.roles[0]?.role.name;
+    const isRoleChanging = parsed.role !== currentRoleName;
+
+    if ((isSelf || isTargetAdmin) && isRoleChanging) {
+      return { ok: false, error: "No tienes permisos para cambiar el rol de un administrador." };
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
-      // 1. Encontrar el ID del Rol basado en el nombre ("admin" -> "cl...id...")
       const roleRecord = await tx.role.findUnique({
         where: { name: parsed.role },
         select: { id: true },
@@ -72,18 +101,17 @@ export async function editUser(prevState: any, formData: FormData) {
         },
       });
 
-      // 4. Actualizar el Rol (borramos todos los anteriores y asignamos el nuevo)
-      // Esto asegura que el usuario solo tenga el rol seleccionado en el formulario.
-      await tx.userRole.deleteMany({
-        where: { userId: userId },
-      });
-
-      await tx.userRole.create({
-        data: {
-          userId: userId,
-          roleId: roleRecord.id,
-        },
-      });
+      if (isRoleChanging) {
+        await tx.userRole.deleteMany({
+          where: { userId: userId },
+        });
+        await tx.userRole.create({
+          data: {
+            userId: userId,
+            roleId: roleRecord.id,
+          },
+        });
+      }
       
       return true; // Éxito de la transacción
     });
@@ -99,8 +127,18 @@ export async function editUser(prevState: any, formData: FormData) {
   }
 }
 
-// --- SIN CAMBIOS: Esta función es compatible con el nuevo schema ---
 export async function toggleUserActive(prevState: any, formData: FormData) {
+  const session = await getServerSession(authOptions);
+
+  try {
+    // 2. VERIFICAR QUE EL USUARIO ACTUAL ES ADMIN
+    await checkAdmin();
+  } catch (e: any) {
+    return { ok: false, error: "No tienes permisos de administrador." };
+  }
+  // Obtenemos el ID del admin que realiza la acción
+  const currentUserId = (session?.user as any)?.id;
+
   try {
     const data = {
       id: formData.get("id") as string,
@@ -108,6 +146,26 @@ export async function toggleUserActive(prevState: any, formData: FormData) {
     };
 
     const parsed = ToggleUserActiveSchema.parse(data);
+    const targetUserId = parsed.id;
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { roles: { include: { role: { select: { name: true } } } } },
+    });
+
+    if (!targetUser) {
+      return { ok: false, error: "Usuario no encontrado." };
+    }
+
+    const isSelf = targetUser.id === currentUserId;
+    const isTargetAdmin = targetUser.roles.some(r => r.role.name === 'admin');
+
+    if (isSelf) {
+      return { ok: false, error: "No puedes desactivar tu propia cuenta." };
+    }
+    if (isTargetAdmin) {
+      return { ok: false, error: "No puedes desactivar a otro administrador." };
+    }
 
     const updated = await prisma.user.update({
       where: { id: parsed.id },
