@@ -8,29 +8,32 @@ import {
   TicketIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
-import { Prisma } from "@prisma/client"; // <-- Importar Prisma para el tipo 'where'
+import { Prisma } from "@prisma/client"; 
 
-// --- CAMBIO: El tipo 'Row' se ha eliminado ---
-// Dejaremos que TypeScript infiera el tipo de 'data'
-// basado en la consulta con 'include'.
+export const dynamic = "force-dynamic";
 
 function toInt(v: string | undefined, def: number) {
   const n = parseInt(v ?? "", 10);
   return Number.isFinite(n) && n > 0 ? n : def;
 }
 
-export default async function AdminEventosPage({
-  searchParams,
-}: {
-  // --- CAMBIO: 'searchParams' no es una promesa ---
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  // --- CAMBIO: No se usa 'await' ---
-  const sp = searchParams;
-  const q = (sp.q as string) || "";
-  const status = (sp.status as string) || "all";
-  const page = toInt(sp.page as string, 1);
-  const pageSize = Math.min(100, toInt(sp.pageSize as string, 20));
+type Props = {
+  searchParams?: Promise<{
+    q?: string;
+    page?: string;
+    pageSize?: string;
+    status?: "all" | "published" | "draft";
+  }>;
+};
+
+export default async function AdminEventosPage({ searchParams }: Props) {
+
+  const sp = await searchParams;
+
+  const q = sp?.q?.trim() || "";
+  const status = sp?.status || "all";
+  const page = toInt(sp?.page, 1);
+  const pageSize = Math.min(100, toInt(sp?.pageSize, 20));
   const skip = (page - 1) * pageSize;
 
   // --- CAMBIO: 'where' adaptado a los modelos relacionados ---

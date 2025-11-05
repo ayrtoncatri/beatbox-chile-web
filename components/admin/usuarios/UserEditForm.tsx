@@ -6,11 +6,6 @@ import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { editUser } from "@/app/admin/usuarios/actions";
 import { Prisma } from "@prisma/client";
 
-// --- CAMBIO: Importamos tipos de Prisma para el prop 'user' ---
-// Esto nos da autocompletado y seguridad de tipos basado en la consulta
-// que hicimos en el archivo page.tsx
-
-// 1. Creamos un validador con la misma consulta de la página anterior
 const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
   include: {
     profile: true,
@@ -24,9 +19,8 @@ const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
   },
 });
 
-// 2. Extraemos el tipo de dato (Payload) de ese validador
 type UserFormProps = Prisma.UserGetPayload<typeof userWithProfileAndRoles>;
-// --- Fin del cambio de tipos ---
+
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -43,15 +37,19 @@ function SubmitButton() {
   );
 }
 
-// --- CAMBIO: Usamos el nuevo tipo 'UserFormProps' ---
-export default function UserEditForm({ user }: { user: UserFormProps }) {
-  // --- CAMBIO: Leemos los datos desde 'user.profile' y 'user.roles' ---
+export default function UserEditForm({ 
+    user, 
+    isSelf,
+    isTargetAdmin, 
+  }: { 
+    user: UserFormProps 
+    isSelf: boolean;
+    isTargetAdmin: boolean; 
+  }) {
   const [nombres, setNombres] = useState(user.profile?.nombres ?? "");
   const [apellidoPaterno, setApellidoPaterno] = useState(user.profile?.apellidoPaterno ?? "");
   const [apellidoMaterno, setApellidoMaterno] = useState(user.profile?.apellidoMaterno ?? "");
   
-  // Asumimos un solo rol para este formulario.
-  // Si el usuario tiene roles, usa el nombre del primero. Si no, 'user' por defecto.
   const [role, setRole] = useState(user.roles[0]?.role.name ?? "user");
   
   const [image, setImage] = useState(user.image ?? "");
@@ -59,14 +57,15 @@ export default function UserEditForm({ user }: { user: UserFormProps }) {
   const initialState = { ok: false, error: null };
   const [state, formAction] = useActionState(editUser, initialState);
 
-  // --- CAMBIO: Sincronizamos los estados locales leyendo del prop anidado ---
   useEffect(() => {
     setNombres(user.profile?.nombres ?? "");
     setApellidoPaterno(user.profile?.apellidoPaterno ?? "");
     setApellidoMaterno(user.profile?.apellidoMaterno ?? "");
     setRole(user.roles[0]?.role.name ?? "user");
     setImage(user.image ?? "");
-  }, [user]); // El 'user' prop es la única dependencia
+  }, [user]);
+
+  const isRoleChangeDisabled = isSelf || isTargetAdmin;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -85,19 +84,25 @@ export default function UserEditForm({ user }: { user: UserFormProps }) {
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">Rol</label>
           <select
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+            className={`w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 ${
+              isRoleChangeDisabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             name="role"
-            value={role} // El 'value' viene del estado local
+            value={role}
             onChange={(e) => setRole(e.target.value)}
+            // 3. Aplicamos la restricción al <select>
+            disabled={isRoleChangeDisabled}
+            title={isRoleChangeDisabled ? "No puedes cambiar el rol de un administrador." : ""}
           >
-            {/* NOTA: Esto sigue hardcodeado. 
-              En el futuro, podrías hacer un fetch a la tabla 'Role'
-              para mostrar todos los roles disponibles.
-            */}
             <option value="user">user</option>
             <option value="admin">admin</option>
             <option value="judge">judge</option> {/* Añadí 'judge' como ejemplo */}
           </select>
+          {isRoleChangeDisabled && (
+            <p className="text-xs text-gray-500 mt-1">
+              No puedes cambiar el rol de un administrador.
+            </p>
+          )}
         </div>
 
         <div>

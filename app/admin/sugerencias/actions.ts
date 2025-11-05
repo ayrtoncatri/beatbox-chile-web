@@ -13,105 +13,11 @@ const SugerenciaUpdateSchema = z.object({
   notaPrivada: z.string().optional(),
 });
 
-/**
- * Obtiene todas las sugerencias con filtros opcionales
- */
-export async function getSugerencias(filters: {
-  search?: string;
-  userId?: string;
-  estado?: string;
-  from?: string;
-  to?: string;
-  page?: number;
-  pageSize?: number;
-}) {
-  const session = await ensureAdminPage();
-  
-  const { search, userId, estado, from, to, page = 1, pageSize = 20 } = filters;
-  
-  // Construir filtros de búsqueda
-  const where: Prisma.SugerenciaWhereInput = {};
-  
-  if (search) {
-    where.OR = [
-      { mensaje: { contains: search, mode: 'insensitive' } },
-      { nombre: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-      { asunto: { contains: search, mode: 'insensitive' } },
-      { user: { email: { contains: search, mode: 'insensitive' } } },
-      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
-      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
-      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
-    ];
-  }
-  
-  if (userId && userId !== "") {
-    where.userId = userId;
-  }
-  
-  if (estado && estado !== "") {
-    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
-      where.estado = estado as SuggestionStatus;
-    }
-  }
-  
-  if (from || to) {
-    where.createdAt = {};
-    if (from) {
-      where.createdAt.gte = new Date(from);
-    }
-    if (to) {
-      where.createdAt.lte = new Date(to);
-    }
-  }
-  
-  // Obtener total de sugerencias para paginación
-  const total = await prisma.sugerencia.count({ where });
-  
-  // Obtener sugerencias paginadas
-  const sugerencias = await prisma.sugerencia.findMany({
-    include: {
-      // CAMBIO: Incluir perfil anidado
-      user: {
-        select: {
-          id: true,
-          email: true,
-          profile: {
-            select: {
-              nombres: true,
-              apellidoPaterno: true,
-            },
-          },
-        },
-      },
-    },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  // Contar por estado
-  const countByEstado = await prisma.sugerencia.groupBy({
-    by: ['estado'],
-    _count: true,
-    where,
-  });
-
-  // Formatear conteo por estado
-  const countByEstadoObj = countByEstado.reduce((acc, item) => {
-    acc[item.estado] = item._count;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  return {
-    sugerencias,
-    total,
-    countByEstado: countByEstadoObj,
-    totalPages: Math.ceil(total / pageSize),
-  };
-}
+//
+// --- LA FUNCIÓN 'getSugerencias' SE HA ELIMINADO DE AQUÍ ---
+// La lógica ahora vive en 'page.tsx' para evitar el caché,
+// siguiendo el patrón de 'wildcards/page.tsx'.
+//
 
 /**
  * Obtiene una sugerencia por su ID
@@ -120,23 +26,22 @@ export async function getSugerenciaById(id: string) {
   await ensureAdminPage();
   
   return prisma.sugerencia.findUnique({
-    where: { id },
-    include: {
-      // CAMBIO: Incluir perfil anidado
-      user: {
-        select: {
-          id: true,
-          email: true,
-          profile: {
-            select: {
-              nombres: true,
-              apellidoPaterno: true,
-            },
-          },
-        },
-      },
-    },
-  });
+    where: { id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -160,12 +65,12 @@ export async function updateSugerencia(prevState: any, formData: FormData) {
   const { id, ...dataToUpdate } = validatedFields.data;
 
   try {
-    await prisma.sugerencia.update({
-      where: { id },
-      data: {
-        ...dataToUpdate,
-      },
-    });
+    await prisma.sugerencia.update({
+      where: { id },
+      data: {
+        ...dataToUpdate,
+      },
+    });
 
     revalidatePath("/admin/sugerencias");
     return { success: true, message: "Sugerencia actualizada exitosamente." };
@@ -207,64 +112,61 @@ export async function exportSugerenciasToCSV(filters: {
   
   const { search, userId, estado, from, to } = filters;
   
-  // Construir filtros de búsqueda (igual que en getSugerencias)
   const where: any = {};
   
   if (search) {
     where.OR = [
-      { mensaje: { contains: search, mode: 'insensitive' } },
-      { nombre: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-      { asunto: { contains: search, mode: 'insensitive' } },
-      { user: { email: { contains: search, mode: 'insensitive' } } },
-      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
-      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
-      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
-    ];
+      { mensaje: { contains: search, mode: 'insensitive' } },
+      { nombre: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { asunto: { contains: search, mode: 'insensitive' } },
+      { user: { email: { contains: search, mode: 'insensitive' } } },
+      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
+    ];
   }
   
   if (userId && userId !== "") {
     where.userId = userId;
   }
   
-  if (estado && estado !== "") {
-    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
-      where.estado = estado as SuggestionStatus;
-    }
+  if (estado && estado !== "all" && estado !== "") { 
+    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
+      where.estado = estado as SuggestionStatus;
+    }
   }
   
   if (from || to) {
-    where.createdAt = {};
-    if (from) {
-      where.createdAt.gte = new Date(from);
-    }
-    if (to) {
-      where.createdAt.lte = new Date(to);
-    }
-  }
+    where.createdAt = {};
+    if (from) {
+      where.createdAt.gte = new Date(from);
+    }
+    if (to) {
+      where.createdAt.lte = new Date(to);
+    }
+  }
   
-  // Obtener todas las sugerencias que coincidan con los filtros
   const sugerencias = await prisma.sugerencia.findMany({
     where,
-    include: {
-      user: {
-        select: {
-          email: true,
-            profile: {
-                select: {
-                nombres: true,
-                apellidoPaterno: true,
-              },
-            },
-          },
-        },
-      },
+    include: {
+      user: {
+        select: {
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: {
       createdAt: 'desc',
     },
   });
 
-  // Formatear datos para CSV
   const csvHeader = 'ID,Fecha,Usuario,Email,Estado,Mensaje,NotaPrivada\n';
   const csvRows = sugerencias.map(s => {
     const userName = s.user ? `${s.user.profile?.nombres || ''} ${s.user.profile?.apellidoPaterno || ''}`.trim() : s.nombre || '';

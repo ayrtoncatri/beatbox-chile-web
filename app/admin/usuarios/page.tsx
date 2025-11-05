@@ -3,61 +3,66 @@ import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import ToggleUserActiveButton from "@/components/admin/usuarios/ToggleUserActiveButton";
 import { EyeIcon, UserIcon } from "@heroicons/react/24/solid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-// --- CAMBIO: 'searchParams' no es una promesa en el App Router ---
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Props = {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
     page?: string;
     pageSize?: string;
     status?: "all" | "active" | "inactive";
-  };
+  }>;
 };
 
 export default async function UsuariosPage({ searchParams }: Props) {
-  // --- CAMBIO: No se usa 'await' ---
-  const sp = searchParams;
+  const session = await getServerSession(authOptions);
+  const currentUserId = (session?.user as any)?.id;
+  
+  const sp = await searchParams;
   const q = sp?.q?.trim() || "";
-  const status = (sp?.status as any) || "all";
+  const status = sp?.status || "all";
   const page = Math.max(1, parseInt(sp?.page || "1", 10));
   const pageSize = Math.min(100, Math.max(1, parseInt(sp?.pageSize || "20", 10)));
   const skip = (page - 1) * pageSize;
 
-  // --- CAMBIO: El 'where' ahora busca en 'User' (email) y en la relación 'profile' (nombres/apellidos) ---
   const where: Prisma.UserWhereInput = {
     ...(q
       ? {
           OR: [
             { email: { contains: q, mode: "insensitive" } },
-            // Buscamos dentro de la relación 'profile'
             { profile: { nombres: { contains: q, mode: "insensitive" } } },
             { profile: { apellidoPaterno: { contains: q, mode: "insensitive" } } },
             { profile: { apellidoMaterno: { contains: q, mode: "insensitive" } } },
           ],
         }
       : {}),
-    ...(status === "active" ? { isActive: true } : {}),
-    ...(status === "inactive" ? { isActive: false } : {}),
   };
+
+  if (status === "active") {
+    where.isActive = true;
+  } else if (status === "inactive") {
+    where.isActive = false;
+  }
 
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
-      // --- CAMBIO: Reemplazamos 'select' por 'include' para traer las relaciones ---
       include: {
-        profile: true, // Trae UserProfile (nombres, apellidos)
+        profile: true, 
         roles: {
-          // Trae UserRole
           include: {
             role: {
-              // Trae Role (nombre del rol)
               select: { name: true },
             },
           },
         },
       },
-      orderBy: { createdAt: "desc" }, // Cambiado a 'createdAt' (más común)
+      orderBy: { createdAt: "desc" },
       skip,
       take: pageSize,
     }),
@@ -78,13 +83,11 @@ export default async function UsuariosPage({ searchParams }: Props) {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">Usuarios</h2>
-          {/* El formulario de búsqueda no necesita cambios, solo la lógica del 'where' */}
           <form
             method="GET"
             action="/admin/usuarios"
             className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200"
           >
-            {/* ... (inputs del formulario sin cambios) ... */}
             <input
               type="text"
               name="q"
@@ -122,7 +125,6 @@ export default async function UsuariosPage({ searchParams }: Props) {
         {/* Tabla desktop */}
         <div className="hidden md:block rounded-2xl shadow bg-white border border-gray-200 overflow-x-auto">
           <table className="min-w-full text-sm">
-            {/* ... (thead sin cambios) ... */}
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <th className="text-left p-5 font-semibold">Usuario</th>
@@ -133,70 +135,82 @@ export default async function UsuariosPage({ searchParams }: Props) {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
-                  <td className="p-5">
-                    <div className="flex items-center gap-3">
-                      {u.image ? (
-                        <img
-                          src={u.image}
-                          alt={u.email ?? "avatar"}
-                          className="w-11 h-11 rounded-full object-cover border-2 border-indigo-200 shadow"
-                        />
-                      ) : (
-                        <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-xl border-2 border-indigo-200 shadow">
-                          <UserIcon className="w-6 h-6" />
-                        </div>
-                      )}
-                      <div>
-                        {/* --- CAMBIO: Leemos desde 'u.profile' (con optional chaining) --- */}
-                        <div className="font-semibold text-gray-900 text-base">
-                          {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
-                            .filter(Boolean)
-                            .join(" ") || "—"}
-                        </div>
-                        <div className="text-xs text-gray-400">ID: {u.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-5">{u.email}</td>
-                  {/* --- CAMBIO: Mapeamos el array 'u.roles' --- */}
-                  <td className="p-5 capitalize">
-                    {u.roles.length > 0
-                      ? u.roles.map((userRole) => userRole.role.name).join(", ")
-                      : "Sin rol"}
-                  </td>
-                  <td className="p-5">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        u.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {u.isActive ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td className="p-5 text-right">
-                    {/* ... (Acciones no necesitan cambios) ... */}
-                    <div className="flex items-center justify-end gap-3">
-                      <Link
-                        href={`/admin/usuarios/${u.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
-                        title="Ver usuario"
+              {users.map((u) => {
+                // 3. LÓGICA DE RESTRICCIÓN
+                const isSelf = u.id === currentUserId;
+                const isTargetAdmin = u.roles.some(r => r.role.name === 'admin');
+                
+                let disabledReason: string | undefined = undefined;
+                if (isSelf) {
+                  disabledReason = "No puedes desactivar tu propia cuenta.";
+                } else if (isTargetAdmin) {
+                  disabledReason = "No puedes desactivar a otro administrador.";
+                }
+
+                return (
+                  <tr key={u.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
+                    <td className="p-5">
+                      {/* ... (código de perfil de usuario) ... */}
+                       <div className="flex items-center gap-3">
+                         {u.image ? (
+                           <img
+                             src={u.image}
+                             alt={u.email ?? "avatar"}
+                             className="w-11 h-11 rounded-full object-cover border-2 border-indigo-200 shadow"
+                           />
+                         ) : (
+                           <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-xl border-2 border-indigo-200 shadow">
+                             <UserIcon className="w-6 h-6" />
+                           </div>
+                         )}
+                         <div>
+                           <div className="font-semibold text-gray-900 text-base">
+                             {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
+                               .filter(Boolean)
+                               .join(" ") || "—"}
+                           </div>
+                           <div className="text-xs text-gray-400">ID: {u.id}</div>
+                         </div>
+                       </div>
+                    </td>
+                    <td className="p-5">{u.email}</td>
+                    <td className="p-5 capitalize">
+                      {u.roles.length > 0
+                        ? u.roles.map((userRole) => userRole.role.name).join(", ")
+                        : "Sin rol"}
+                    </td>
+                    <td className="p-5">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                          u.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
-                        <EyeIcon className="w-4 h-4" />
-                        Ver
-                      </Link>
-                      <ToggleUserActiveButton
-                        id={u.id}
-                        isActive={u.isActive}
-                        disabledReason={undefined}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {u.isActive ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td className="p-5 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/admin/usuarios/${u.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                          title="Ver usuario"
+                        >
+                          <EyeIcon className="w-4 h-4" />
+                          Ver
+                        </Link>
+                        {/* 4. PASAR RESTRICCIÓN AL BOTÓN */}
+                        <ToggleUserActiveButton
+                          id={u.id}
+                          isActive={u.isActive}
+                          disabledReason={disabledReason}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {users.length === 0 && (
                 <tr>
                   <td className="p-6 text-center text-gray-500" colSpan={5}>
@@ -210,68 +224,80 @@ export default async function UsuariosPage({ searchParams }: Props) {
 
         {/* Lista mobile */}
         <div className="md:hidden space-y-4">
-          {users.map((u) => (
-            <div
-              key={u.id}
-              className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2"
-            >
-              <div className="flex items-center gap-3">
-                {u.image ? (
-                  <img
-                    src={u.image}
-                    alt={u.email ?? "avatar"}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 shadow"
+          {users.map((u) => {
+            // 5. APLICAR LÓGICA DE RESTRICCIÓN (MÓVIL)
+            const isSelf = u.id === currentUserId;
+            const isTargetAdmin = u.roles.some(r => r.role.name === 'admin');
+            
+            let disabledReason: string | undefined = undefined;
+            if (isSelf) {
+              disabledReason = "No puedes desactivar tu propia cuenta.";
+            } else if (isTargetAdmin) {
+              disabledReason = "No puedes desactivar a otro administrador.";
+            }
+                
+            return (
+              <div
+                key={u.id}
+                className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2"
+              >
+                {/* ... (código de perfil móvil) ... */}
+                <div className="flex items-center gap-3">
+                   {u.image ? (
+                     <img
+                       src={u.image}
+                       alt={u.email ?? "avatar"}
+                       className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 shadow"
+                     />
+                   ) : (
+                     <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg border-2 border-indigo-200 shadow">
+                       <UserIcon className="w-5 h-5" />
+                     </div>
+                   )}
+                   <div>
+                     <div className="font-semibold text-gray-900">
+                       {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
+                         .filter(Boolean)
+                         .join(" ") || "—"}
+                     </div>
+                     <div className="text-xs text-gray-400">ID: {u.id}</div>
+                   </div>
+                 </div>
+                 <div className="text-xs text-gray-500">{u.email}</div>
+                 <div className="flex items-center gap-2 text-xs">
+                   <span className="capitalize">
+                     {u.roles.length > 0
+                       ? u.roles.map((userRole) => userRole.role.name).join(", ")
+                       : "Sin rol"}
+                   </span>
+                   <span
+                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                       u.isActive
+                         ? "bg-green-100 text-green-700"
+                         : "bg-red-100 text-red-700"
+                     }`}
+                   >
+                     {u.isActive ? "Activo" : "Inactivo"}
+                   </span>
+                 </div>
+                <div className="flex gap-2 mt-2">
+                  <Link
+                    href={`/admin/usuarios/${u.id}`}
+                    className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
+                  >
+                    <EyeIcon className="w-4 h-4" />
+                    Ver
+                  </Link>
+                  {/* 6. PASAR RESTRICCIÓN AL BOTÓN (MÓVIL) */}
+                  <ToggleUserActiveButton
+                    id={u.id}
+                    isActive={u.isActive}
+                    disabledReason={disabledReason}
                   />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg border-2 border-indigo-200 shadow">
-                    <UserIcon className="w-5 h-5" />
-                  </div>
-                )}
-                <div>
-                  {/* --- CAMBIO: Leemos desde 'u.profile' (con optional chaining) --- */}
-                  <div className="font-semibold text-gray-900">
-                    {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
-                      .filter(Boolean)
-                      .join(" ") || "—"}
-                  </div>
-                  <div className="text-xs text-gray-400">ID: {u.id}</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-500">{u.email}</div>
-              <div className="flex items-center gap-2 text-xs">
-                {/* --- CAMBIO: Mapeamos el array 'u.roles' --- */}
-                <span className="capitalize">
-                  {u.roles.length > 0
-                    ? u.roles.map((userRole) => userRole.role.name).join(", ")
-                    : "Sin rol"}
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    u.isActive
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {u.isActive ? "Activo" : "Inactivo"}
-                </span>
-              </div>
-              <div className="flex gap-2 mt-2">
-                {/* ... (Acciones no necesitan cambios) ... */}
-                <Link
-                  href={`/admin/usuarios/${u.id}`}
-                  className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
-                >
-                  <EyeIcon className="w-4 h-4" />
-                  Ver
-                </Link>
-                <ToggleUserActiveButton
-                  id={u.id}
-                  isActive={u.isActive}
-                  disabledReason={undefined}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {users.length === 0 && (
             <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
               No se encontraron usuarios.

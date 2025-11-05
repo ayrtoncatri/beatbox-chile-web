@@ -4,21 +4,21 @@ import { prisma } from "@/lib/prisma";
 import UserEditForm from "@/components/admin/usuarios/UserEditForm";
 import ToggleUserActiveButton from "@/components/admin/usuarios/ToggleUserActiveButton";
 import { UserIcon } from "@heroicons/react/24/solid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-// <-- CAMBIO: Los params no son una promesa, se reciben directamente.
 export default async function UsuarioDetallePage({ params }: { params: { id: string } }) {
-  const { id } = params; // <-- CAMBIO: No se usa 'await'
+  const session = await getServerSession(authOptions);
+  const currentUserId = (session?.user as any)?.id;
+  const { id } = params; 
 
   const user = await prisma.user.findUnique({
     where: { id },
-    // <-- CAMBIO: Usamos 'include' en lugar de 'select' para traer las relaciones.
     include: {
-      profile: true, // Traemos el perfil (nombres, apellidos)
+      profile: true, 
       roles: {
-        // Traemos los roles del usuario
         include: {
           role: {
-            // Incluimos el modelo 'Role' para saber el nombre
             select: { name: true },
           },
         },
@@ -28,19 +28,25 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
 
   if (!user) notFound();
 
-  // <-- CAMBIO: Leemos los datos desde 'user.profile'
-  // Usamos optional chaining (?.) por si el perfil aún no ha sido creado.
   const nombreCompleto =
     [user.profile?.nombres, user.profile?.apellidoPaterno, user.profile?.apellidoMaterno]
       .filter(Boolean)
       .join(" ") || "Sin nombre";
 
-  // <-- CAMBIO: Un usuario ahora puede tener múltiples roles.
-  // Los unimos con comas para mostrarlos.
   const roles =
     user.roles.length > 0
       ? user.roles.map((userRole) => userRole.role.name).join(", ")
       : "Sin rol";
+
+  const isSelf = user.id === currentUserId;
+  const isTargetAdmin = user.roles.some(r => r.role.name === 'admin');
+  
+  let disabledReason: string | undefined = undefined;
+  if (isSelf) {
+    disabledReason = "No puedes desactivar tu propia cuenta.";
+  } else if (isTargetAdmin) {
+    disabledReason = "No puedes desactivar a otro administrador.";
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
@@ -72,12 +78,11 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-8 shadow space-y-6">
             <h3 className="font-semibold mb-2 text-lg text-gray-800">Editar usuario</h3>
-            {/* NOTA: 'UserEditForm' ahora recibe el objeto 'user' completo
-              con 'profile' y 'roles' anidados.
-              Este componente ES EL SIGUIENTE que debes enviarme,
-              ya que necesitará una gran adaptación.
-            */}
-            <UserEditForm user={user} />
+            <UserEditForm 
+              user={user} 
+              isSelf={isSelf} 
+              isTargetAdmin={isTargetAdmin}
+            />
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow flex flex-col gap-4">
@@ -88,12 +93,10 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
               </div>
               <div>
                 <span className="text-gray-500">Rol:</span>{" "}
-                {/* <-- CAMBIO: Mostramos la nueva variable 'roles' */}
                 <span className="capitalize">{roles}</span>
               </div>
               <div>
                 <span className="text-gray-500">Estado:</span>{" "}
-                {/* Esto sigue igual, 'isActive' sigue en 'User' */}
                 <span
                   className={
                     user.isActive
@@ -106,8 +109,11 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
               </div>
             </div>
             <div className="pt-2">
-              {/* Esto sigue igual, 'id' e 'isActive' siguen en 'User' */}
-              <ToggleUserActiveButton id={user.id} isActive={user.isActive} />
+              <ToggleUserActiveButton 
+                id={user.id} 
+                isActive={user.isActive} 
+                disabledReason={disabledReason}
+              />
             </div>
           </div>
         </div>

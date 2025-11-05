@@ -1,7 +1,9 @@
 import SugerenciasPageWrapper from "@/components/admin/sugerencias/SugerenciasPageWrapper";
-import { getSugerencias } from "./actions";
 import { prisma } from "@/lib/prisma"; 
-import { Sugerencia, User } from "@prisma/client";
+import { Sugerencia, User, Prisma, SuggestionStatus } from "@prisma/client";
+
+// Forzamos a que la página sea dinámica, igual que en 'wildcards'
+export const dynamic = "force-dynamic";
 
 type SugerenciaConPerfil = Sugerencia & {
   user: {
@@ -14,37 +16,123 @@ type SugerenciaConPerfil = Sugerencia & {
   } | null;
 };
 
+// 1. Tipado explícito de 'searchParams', IGUAL QUE EN WILDCARDS
+type Props = {
+  searchParams?: Promise<{
+    q?: string;
+    userId?: string;
+    estado?: string;
+    from?: string;
+    to?: string;
+    page?: string;
+    pageSize?: string;
+  }>;
+};
+
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Props["searchParams"];
 }) {
-  const paramsObj = await searchParams;
+  
+  // 2. Usamos 'await' y leemos 'sp', IGUAL QUE EN WILDCARDS
+  const sp = await searchParams;
 
-  const params = {
-    q: typeof paramsObj.q === "string" ? paramsObj.q : undefined,
-    userId: typeof paramsObj.userId === "string" ? paramsObj.userId : undefined,
-    estado: typeof paramsObj.estado === "string" ? paramsObj.estado : undefined,
-    from: typeof paramsObj.from === "string" ? paramsObj.from : undefined,
-    to: typeof paramsObj.to === "string" ? paramsObj.to : undefined,
-    page: typeof paramsObj.page === "string" ? paramsObj.page : undefined,
-    pageSize: typeof paramsObj.pageSize === "string" ? paramsObj.pageSize : undefined,
-  };
+  const search = sp?.q?.trim() || "";
+  const userId = sp?.userId || "";
+  const estado = sp?.estado || "all";
+  const from = sp?.from || "";
+  const to = sp?.to || "";
+  const page = sp?.page ? parseInt(sp.page, 10) : 1;
+  const pageSize = sp?.pageSize ? parseInt(sp.pageSize, 10) : 20;
+  
+  // 3. Construir filtros 'where'
+  const where: Prisma.SugerenciaWhereInput = {};
+  
+  if (search) {
+    where.OR = [
+      { mensaje: { contains: search, mode: 'insensitive' } },
+      { nombre: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { asunto: { contains: search, mode: 'insensitive' } },
+      { user: { email: { contains: search, mode: 'insensitive' } } },
+      { user: { profile: { nombres: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoPaterno: { contains: search, mode: 'insensitive' } } } },
+      { user: { profile: { apellidoMaterno: { contains: search, mode: 'insensitive' } } } },
+    ];
+  }
+  
+  if (userId && userId !== "") {
+    where.userId = userId;
+  }
+  
+  if (estado && estado !== "all" && estado !== "") { 
+    if (Object.values(SuggestionStatus).includes(estado as SuggestionStatus)) {
+      where.estado = estado as SuggestionStatus;
+    }
+  }
+  
+  if (from || to) {
+    where.createdAt = {};
+    if (from) {
+      where.createdAt.gte = new Date(from);
+    }
+    if (to) {
+      where.createdAt.lte = new Date(to);
+    }
+  }
 
-  const page = params.page ? parseInt(params.page) : 1;
-  const pageSize = params.pageSize ? parseInt(params.pageSize) : 20;
+  // --- INICIO DE LA CORRECCIÓN ---
+  // 4. Creamos un 'where' separado para el conteo (groupBy)
+  //    Hacemos una copia superficial del objeto 'where'
+  const groupByWhere: Prisma.SugerenciaWhereInput = { ...where };
+  
+  //    Eliminamos la propiedad 'estado' de la copia.
+  //    El 'where' original (para la lista y el conteo total) aún la tiene.
+  delete groupByWhere.estado; 
+  // --- FIN DE LA CORRECCIÓN ---
 
-  const { sugerencias, total, countByEstado, totalPages } = await getSugerencias({
-    search: params.q,
-    userId: params.userId,
-    estado: params.estado,
-    from: params.from,
-    to: params.to,
-    page,
-    pageSize,
-  });
+  // 5. Llamar a Prisma directamente (igual que en 'wildcards')
+  const [total, sugerencias, countByEstadoRaw] = await Promise.all([
+    prisma.sugerencia.count({ where }), // La cuenta total SÍ usa el 'where' completo
+    prisma.sugerencia.findMany({
+      where, // El listado SÍ usa el 'where' completo
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                nombres: true,
+                apellidoPaterno: true,
+              },
+            },
+          },
+        },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    // El conteo por pestañas usa el 'groupByWhere' (la copia sin 'estado')
+    prisma.sugerencia.groupBy({
+      by: ['estado'],
+      _count: true,
+      where: groupByWhere, 
+    }),
+  ]);
+  
+  const totalPages = Math.ceil(total / pageSize);
 
-  // Mapeo para la tabla
+  const countByEstado = countByEstadoRaw.reduce((acc, item) => {
+    acc[item.estado] = item._count;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // (El resto del código es idéntico y correcto)
   const sugerenciasRows = (sugerencias as SugerenciaConPerfil[]).map((s) => {
     const userName = s.user?.profile
       ? [s.user.profile.nombres, s.user.profile.apellidoPaterno].filter(Boolean).join(" ")
@@ -52,7 +140,7 @@ export default async function Page({
 
     return {
       id: s.id,
-      createdAt: s.createdAt,
+      createdAt: s.createdAt.toISOString(),
       user: s.user
         ? { id: s.user.id, nombres: userName || s.user.email, email: s.user.email }
         : { id: null, nombres: s.nombre, email: s.email },
@@ -63,12 +151,22 @@ export default async function Page({
     };
   });
 
+  const params = {
+    q: search,
+    userId: userId,
+    estado: estado,
+    from: from,
+    to: to,
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  };
+
   const filterDefaults = {
-    q: params.q,
-    userId: params.userId,
-    estado: params.estado,
-    from: params.from,
-    to: params.to,
+    q: search,
+    userId: userId,
+    estado: estado,
+    from: from,
+    to: to,
     page,
     pageSize,
   };
@@ -76,7 +174,7 @@ export default async function Page({
   const pagination = { page, pageSize, total, totalPages };
 
   const usersWithProfile = await prisma.user.findMany({
-    where: { 
+    where: { 
       isActive: true,
       profile: {
         nombres: { not: null }
@@ -91,12 +189,12 @@ export default async function Page({
         }
       } 
     },
-    orderBy: { 
+    orderBy: { 
       profile: {
         nombres: "asc" 
       }
     },
-  });
+  });
   
   const users = usersWithProfile.map(u => ({
     id: u.id,
