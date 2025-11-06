@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import { Criterio, ScoreStatus, RoundPhase, User, UserProfile, Score, ScoreDetail, Battle } from '@prisma/client';
-import { SingleRoundForm } from './SingleRoundForm'; // (¡Crearemos este en el Paso 4!)
+import { SingleRoundForm } from './SingleRoundForm';
+import { useTransition } from 'react';
+import { declareBattleWinner } from '@/app/actions/judge/winner';
+import { TrophyIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+import { useActionState} from 'react';
+import { useFormStatus } from 'react-dom';
 
 // --- Tipos de Props ---
 type FullBattle = Battle & {
@@ -22,6 +27,57 @@ interface BattleScoreFormProps {
   assignment: FullJudgeAssignment;
   criterios: Criterio[];
   initialScores: FullScore[]; // Todos los scores (R1 y R2) de este juez para esta batalla
+}
+
+function DeclareWinnerButton({ battleId, totalScoreA, totalScoreB, totalSubmittedRounds }: { battleId: string, totalScoreA: number, totalScoreB: number, totalSubmittedRounds: number }) {
+  
+  const initialState = { error: undefined, success: undefined, winnerName: undefined };
+  const [state, dispatch] = useActionState(declareBattleWinner, initialState);
+  const { pending } = useFormStatus();
+
+  // Regla: Solo si los 4 formularios (2 rounds x 2 participantes) han sido enviados
+  const canDeclare = totalSubmittedRounds === 4 && totalScoreA !== totalScoreB; 
+  
+  // (Asumo que el puntaje total del juez debe estar completo para declarar)
+
+  // Feedback visual del ganador (solo si el juez actual no está pendiente)
+  let winnerFeedback = '';
+  if (state.winnerName) {
+      winnerFeedback = `${state.winnerName} AVANZA`;
+  } else if (totalScoreA > totalScoreB) {
+      winnerFeedback = 'Ganador: Participante A';
+  } else if (totalScoreB > totalScoreA) {
+      winnerFeedback = 'Ganador: Participante B';
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <form action={dispatch} className="flex gap-2">
+        <input type="hidden" name="battleId" value={battleId} />
+        
+        {/* Muestra el mensaje de bloqueo */}
+        {!canDeclare && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg bg-yellow-100 text-yellow-800">
+                <LockClosedIcon className="w-4 h-4" /> Enviar ambos Rounds primero.
+            </span>
+        )}
+
+        <button
+          type="submit"
+          disabled={!canDeclare || pending}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white
+                     shadow-sm transition-all hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <TrophyIcon className="w-5 h-5" />
+          {pending ? 'Declarando...' : 'Declarar Ganador Final'}
+        </button>
+      </form>
+      
+      {/* Mensaje de Resultado */}
+      {state.success && <p className="text-sm font-semibold text-green-600">{state.success} ({winnerFeedback})</p>}
+      {state.error && <p className="text-sm font-semibold text-red-600">{state.error}</p>}
+    </div>
+  );
 }
 
 // --- (1) Componente "Contenedor" de Batalla ---
@@ -53,6 +109,12 @@ export function BattleScoreForm({
 
   const totalA = totalR1A + totalR2A;
   const totalB = totalR1B + totalR2B;
+
+  let totalSubmittedRounds = 0;
+  if (scoresR1A?.status === 'SUBMITTED') totalSubmittedRounds++;
+  if (scoresR1B?.status === 'SUBMITTED') totalSubmittedRounds++;
+  if (scoresR2A?.status === 'SUBMITTED') totalSubmittedRounds++;
+  if (scoresR2B?.status === 'SUBMITTED') totalSubmittedRounds++;
 
   return (
     <div className="rounded-lg border bg-white shadow-md overflow-hidden">
@@ -157,6 +219,14 @@ export function BattleScoreForm({
       </div>
 
       {/* TODO (Fase 10.7): Botón de "Declarar Ganador" */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+        <DeclareWinnerButton 
+          battleId={battle.id}
+          totalScoreA={totalA}
+          totalScoreB={totalB}
+          totalSubmittedRounds={totalSubmittedRounds}
+        />
+      </div>
     </div>
   );
 }
