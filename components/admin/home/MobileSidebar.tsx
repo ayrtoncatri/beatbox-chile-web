@@ -10,6 +10,7 @@ import {
   ShoppingCartIcon,
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
 
 import { usePathname } from "next/navigation";
@@ -24,6 +25,12 @@ const navLinks = [
     href: "/admin/inscripciones", 
     label: "Inscripciones", 
     icon: <ClipboardDocumentListIcon className="w-5 h-5" /> 
+  },
+
+  { 
+    href: "/admin/clasificacion", 
+    label: "Clasificación CN", 
+    icon: <TrophyIcon className="w-5 h-5" /> 
   },
   
   { href: "/admin/eventos", label: "Eventos", icon: <CalendarDaysIcon className="w-5 h-5" /> },
