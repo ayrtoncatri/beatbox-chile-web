@@ -8,6 +8,7 @@ import { WildcardRankingTable } from "@/components/admin/eventos/WildcardRanking
 import { CompetitionCategoryForm } from "@/components/admin/eventos/CompetitionCategoryForm";
 import { getInscritosForEvent } from "@/app/admin/eventos/actions";
 import { InscritosTable } from "@/components/admin/eventos/InscritosTable";
+import { BracketGenerator } from "@/components/admin/eventos/BracketGenerator";
 
 // Igual que antes
 const serializeData = (data: any) => {
@@ -101,6 +102,13 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
             eventoId={id}
             allJudges={judgesList}
             allCategories={serializedAllCategories}
+          />
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <BracketGenerator 
+            eventoId={id} 
+            activeCategories={activeCategories} 
           />
         </div>
 

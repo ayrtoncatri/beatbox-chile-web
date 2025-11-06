@@ -1,6 +1,4 @@
-// lib/schemas/judging.ts
 import { z } from 'zod'
-// Importa los enums generados por Prisma
 import { RoundPhase, ScoreStatus } from '@prisma/client' 
 
 // Valida cada criterio individual (ej: { criterioId: '...', value: 30 })
@@ -15,10 +13,13 @@ export const submitScoreSchema = z.object({
   categoriaId: z.string().cuid('ID de categoría inválido'),
   phase: z.nativeEnum(RoundPhase),
   participantId: z.string().cuid('ID de participante inválido'),
+
+  battleId: z.string().cuid().optional().nullable(),
+
+  roundNumber: z.number().int().min(1).max(10),
   
   // Esperamos un array de puntajes por criterio
   scores: z.array(scoreDetailSchema).min(1, 'Se requiere al menos un criterio'),
-  
   notes: z.string().max(500, 'Las notas no pueden exceder 500 caracteres').optional(),
   status: z.nativeEnum(ScoreStatus), // Para el autosave
 });

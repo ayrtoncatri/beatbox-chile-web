@@ -5,9 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
 import { submitScoreSchema, SubmitScorePayload } from '@/lib/schemas/judging'
-
-// Importa tus authOptions (¡Ajusta la ruta si es necesario!)
 import { authOptions } from '@/lib/auth'
+import { RoundPhase } from '@prisma/client'
 
 // Esta es la función que llamará nuestro formulario
 export async function submitScore(
@@ -22,8 +21,17 @@ export async function submitScore(
   }
 
   // Desestructuramos los datos validados
-  const { eventoId, categoriaId, phase, participantId, scores, notes, status } =
-    validation.data
+  const { 
+    eventoId, 
+    categoriaId, 
+    phase, 
+    participantId, 
+    scores, 
+    notes, 
+    status,
+    battleId,       
+    roundNumber
+  } = validation.data
 
   try {
     // 2. AUTENTICACIÓN (Next-Auth v4)
@@ -49,6 +57,11 @@ export async function submitScore(
       return { success: false, error: 'No estás asignado para evaluar esta categoría/fase.' }
     }
 
+    const isBattlePhase = phase !== RoundPhase.WILDCARD && phase !== RoundPhase.PRELIMINAR;
+    if (isBattlePhase && !battleId) {
+      return { success: false, error: 'Esta evaluación es de una batalla pero no se proporcionó un ID de batalla.' }
+    }
+
     // 4. VALIDACIÓN DE CRITERIOS (Regla de Negocio)
     const criterios = await prisma.criterio.findMany({
       where: { categoriaId },
@@ -71,12 +84,13 @@ export async function submitScore(
     const savedScore = await prisma.score.upsert({
       where: {
         // La llave única que definimos en el schema
-        eventoId_categoriaId_phase_judgeId_participantId: {
+        eventoId_categoriaId_phase_judgeId_participantId_roundNumber: {
           eventoId,
           categoriaId,
           phase,
           judgeId,
           participantId,
+          roundNumber: roundNumber || 1,
         },
       },
       create: {
@@ -88,6 +102,8 @@ export async function submitScore(
         totalScore,
         notes,
         status,
+        battleId: battleId,
+        roundNumber: roundNumber,
         details: {
           create: scores.map((s) => ({
             criterioId: s.criterioId,
@@ -99,6 +115,8 @@ export async function submitScore(
         totalScore,
         notes,
         status,
+        battleId: battleId,
+        roundNumber: roundNumber,
         details: {
           deleteMany: {},
           create: scores.map((s) => ({

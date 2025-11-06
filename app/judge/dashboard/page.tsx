@@ -1,15 +1,17 @@
-// app/judge/dashboard/page.tsx
 import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { JudgePanel } from '@/components/judge/dashboard/JudgePanel' // Crearemos este archivo a continuación
+import { JudgePanel } from '@/components/judge/dashboard/JudgePanel'
+import { RoundPhase, ScoreStatus } from '@prisma/client'
+import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
 
 /**
  * Esta es la página principal del dashboard del Juez.
  * Es un Server Component, por lo que podemos fetchear datos directamente.
  */
 export default async function JudgeDashboardPage() {
+  
   // 1. AUTENTICACIÓN: Obtener la sesión
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
@@ -21,12 +23,11 @@ export default async function JudgeDashboardPage() {
     where: {
       userId: session.user.id,
       role: {
-        name: 'judge', // Usamos 'judge' (en minúsculas) como definimos en el seed
+        name: 'judge',
       },
     },
   })
 
-  // Si no tiene el rol 'judge', lo redirigimos
   if (!userRole) {
     return (
       <div className="container mx-auto p-4">
@@ -36,7 +37,7 @@ export default async function JudgeDashboardPage() {
     )
   }
 
-  // 3. OBTENER DATOS: Cargar todas las asignaciones de este juez
+  // 3. OBTENER DATOS (Asignaciones): Cargar todas las asignaciones de este juez
   const assignments = await prisma.judgeAssignment.findMany({
     where: { judgeId: session.user.id },
     include: {
@@ -55,57 +56,89 @@ export default async function JudgeDashboardPage() {
     )
   }
 
-  // 4. OBTENER DATOS ADICIONALES (Criterios, Wildcards, Puntajes)
-
-  // IDs de las tareas asignadas
+  // IDs de las tareas asignadas (NECESARIOS para el Promise.all)
   const assignedEventoIds = assignments.map((a) => a.eventoId)
   const assignedCategoriaIds = assignments.map((a) => a.categoriaId)
 
-  // Cargar todos los Criterios de las categorías asignadas
-  const allCriterios = await prisma.criterio.findMany({
-    where: {
-      categoriaId: { in: assignedCategoriaIds },
-    },
-  })
-
-  // Cargar todos los Wildcards de los eventos y categorías asignados
-  // (Aquí asumimos que evaluamos Wildcards, luego adaptamos para presencial)
-  const wildcards = await prisma.wildcard.findMany({
-    where: {
-      eventoId: { in: assignedEventoIds },
-      categoriaId: { in: assignedCategoriaIds },
-      status: 'APPROVED', // Solo evaluamos Wildcards aprobados por el admin
-    },
-    include: {
-      user: {
-        include: { 
-          profile: true, 
-        },
+  // 4. OBTENER DATOS ADICIONALES (Criterios, Participantes, Batallas, Puntajes)
+  const [allCriterios, participants, battles, existingScores] = await Promise.all([
+    
+    // Cargar todos los Criterios
+    prisma.criterio.findMany({
+      where: {
+        categoriaId: { in: assignedCategoriaIds },
       },
-    },
-  })
+    }),
 
-  // Cargar los puntajes que este juez YA ha emitido (para pre-llenar)
-  const existingScores = await prisma.score.findMany({
-    where: {
-      judgeId: session.user.id,
-      eventoId: { in: assignedEventoIds },
-      categoriaId: { in: assignedCategoriaIds },
-    },
-    include: {
-      details: true, // Cargar los detalles de cada criterio
-    },
-  })
+    // Cargar todos los PARTICIPANTES (Inscripciones)
+    prisma.inscripcion.findMany({
+      where: {
+        eventoId: { in: assignedEventoIds },
+        categoriaId: { in: assignedCategoriaIds },
+      },
+      include: {
+        user: {
+          include: { 
+            profile: true, 
+          },
+        },
+        wildcard: {
+          select: { youtubeUrl: true }
+        }
+      },
+    }),
 
-  // 5. RENDERIZAR EL PANEL (Componente Cliente)
-  // Pasamos todos los datos al componente cliente que manejará la interacción.
+    // Cargar todas las BATALLAS
+    prisma.battle.findMany({
+      where: {
+        eventoId: { in: assignedEventoIds },
+        categoriaId: { in: assignedCategoriaIds },
+      },
+      include: {
+        participantA: { include: { profile: true, inscripciones: { select: { nombreArtistico: true }, take: 1, orderBy: {createdAt: 'desc'} } } },
+        participantB: { include: { profile: true, inscripciones: { select: { nombreArtistico: true }, take: 1, orderBy: {createdAt: 'desc'} } } },
+      }
+    }),
+
+    // Cargar los puntajes existentes
+    prisma.score.findMany({
+      where: {
+        judgeId: session.user.id,
+        eventoId: { in: assignedEventoIds },
+        categoriaId: { in: assignedCategoriaIds },
+      },
+      include: {
+        details: true,
+      },
+    }),
+  ]);
+
+  // 5. RENDERIZAR EL PANEL
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="mb-6 text-3xl font-bold">Panel de Evaluación</h1>
+    // --- (1) Contenedor principal con max-width ---
+    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8">
+      
+      {/* --- (2) Cabecero Estilizado (Fase 10.7) --- */}
+      <div className="flex justify-center items-center gap-4">
+        <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600">
+          <ClipboardDocumentCheckIcon className="h-7 w-7" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-white text-center text-gray900">
+            Panel de Evaluación
+          </h1>
+          <p className="mt-1 text-base text-white text-center text-gray600">
+            Selecciona una tarea para comenzar a evaluar participantes.
+          </p>
+        </div>
+      </div>
+      
+      {/* --- (3) El Panel de Juez (Ahora se renderiza con el estilo de tarjeta claro) --- */}
       <JudgePanel
         assignments={assignments}
         allCriterios={allCriterios}
-        wildcards={wildcards}
+        participants={participants}
+        battles={battles}
         initialScores={existingScores}
       />
     </div>

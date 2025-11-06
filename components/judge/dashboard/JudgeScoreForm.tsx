@@ -4,7 +4,6 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-// ===== CORRECCIÓN 1: Importar RoundPhase =====
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client' 
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import { debounce } from 'lodash'
@@ -71,9 +70,10 @@ export function JudgeScoreForm({
       categoriaId: assignment.categoriaId,
       phase: assignment.phase,
       participantId: wildcard.userId,
-      notes: existingScore?.notes ?? undefined, // <-- CORREGIDO
+      roundNumber: 1,
+      notes: existingScore?.notes || undefined, // <-- CORREGIDO
       status: existingScore?.status ?? ScoreStatus.DRAFT, // <-- CORREGIDO
-      
+    
       scores: criterios.map((c) => {
         const existingDetail = existingScore?.details.find( // <-- CORREGIDO
           (d) => d.criterioId === c.id
