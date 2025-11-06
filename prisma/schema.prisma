@@ -45,6 +45,8 @@ model Categoria {
   scores        Score[]
   wildcards     Wildcard[]
   eventCategories CompetitionCategory[]
+
+  battles       Battle[]
 }
 
 // === NUEVO: Criterios de Evaluación (Dinámico por Categoría) ===
@@ -164,6 +166,9 @@ model User {
   judgeAssignments  JudgeAssignment[] @relation("JudgeAssignments")
   judgeScores       Score[]           @relation("JudgeScores")
   participantScores Score[]           @relation("ParticipantScores")
+  battlesAsParticipantA Battle[] @relation("ParticipantA")
+  battlesAsParticipantB Battle[] @relation("ParticipantB")
+  battlesWon            Battle[] @relation("Winner")
 }
 
 model UserProfile {
@@ -230,6 +235,8 @@ model Evento {
   assignments   JudgeAssignment[]     // Qué jueces están asignados
   scores        Score[]               // Qué puntajes se han emitido
   
+  battles       Battle[]
+
   // (Opcional pero recomendado para historial)
   premios       String?
   sponsors      String?
@@ -467,6 +474,13 @@ model Score {
   totalScore    Int      @default(0) // Suma de los criterios (Cálculo Regla 1)
   notes         String?  // Comentarios privados del juez
   status        ScoreStatus @default(DRAFT) // Para autosave
+
+  // Enlace opcional a la batalla
+  battleId      String?
+  battle        Battle?  @relation(fields: [battleId], references: [id], onDelete: SetNull)
+  
+  // Para manejar los 2 rounds de 1:30
+  roundNumber   Int      @default(1)
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -474,11 +488,13 @@ model Score {
   details       ScoreDetail[] // Detalle de cada criterio
 
   // Un juez solo puede evaluar una vez a un participante en una ronda/categoría/evento
-  @@unique([eventoId, categoriaId, phase, judgeId, participantId])
+  @@unique([eventoId, categoriaId, phase, judgeId, participantId, roundNumber])
   @@index([eventoId, categoriaId, phase])
   @@index([judgeId])
   @@index([participantId])
+  @@index([battleId])
 }
+
 
 // === NUEVO: El detalle de CADA criterio para un Score ===
 model ScoreDetail {
@@ -539,4 +555,52 @@ model Inscripcion {
   @@index([userId])
   @@index([eventoId])
   @@index([categoriaId])
+}
+
+/* =========================
+   NUEVO: Módulo de Batallas (Fase 10)
+   ========================= */
+
+model Battle {
+  id          String   @id @default(cuid())
+
+  // --- Contexto ---
+  eventoId    String
+  evento      Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  
+  phase       RoundPhase // OCTAVOS, CUARTOS, SEMIFINAL, FINAL, etc.
+  
+  // Orden de la batalla en la llave (ej. 1 para 1/8, 2 para 2/8)
+  orderInRound Int       @default(1)
+
+  // --- Participantes ---
+  participantAId String
+  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  
+  participantBId String? // Puede ser nulo si el oponente aún no se define (ej. ganador de otra batalla)
+  participantB   User?   @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: SetNull)
+
+  // --- Resultado ---
+  winnerId    String? // El User.id del ganador
+  winner      User?   @relation("Winner", fields: [winnerId], references: [id], onDelete: SetNull)
+  
+  // (Opcional) Enlace para la siguiente batalla (ej. ganador de Octavos 1 va a Cuartos 1)
+  nextBattleId String?  @unique
+  nextBattle   Battle?  @relation("NextBattle", fields: [nextBattleId], references: [id], onDelete: SetNull)
+  prevBattle   Battle?  @relation("NextBattle") // Batalla anterior que alimenta esta
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // --- Relación inversa con Score ---
+  // Una batalla tendrá múltiples scores (ej. 3 jueces x 2 rounds x 2 participantes = 12 scores)
+  scores      Score[]
+
+  @@index([eventoId])
+  @@index([participantAId])
+  @@index([participantBId])
+  @@index([winnerId])
 }
