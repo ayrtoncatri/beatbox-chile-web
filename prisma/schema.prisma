@@ -37,6 +37,8 @@ model Categoria {
   description String?
   createdAt   DateTime @default(now())
 
+  inscripciones   Inscripcion[]
+
   // Relaciones
   criterios     Criterio[]
   assignments   JudgeAssignment[]
@@ -157,6 +159,8 @@ model User {
   sugerencias       Sugerencia[]
   mensajes          Mensaje[]
 
+  inscripciones     Inscripcion[]
+
   judgeAssignments  JudgeAssignment[] @relation("JudgeAssignments")
   judgeScores       Score[]           @relation("JudgeScores")
   participantScores Score[]           @relation("ParticipantScores")
@@ -217,6 +221,8 @@ model Evento {
   ticketTypes TicketType[]
   compras     Compra[]   @relation("EventoCompras")
 
+  inscripciones   Inscripcion[]
+
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -262,6 +268,8 @@ model Wildcard {
   reviewedBy      User?          @relation("WildcardReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   isClassified    Boolean        @default(false)
+
+  inscripcion   Inscripcion?
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -486,4 +494,49 @@ model ScoreDetail {
   
   @@unique([scoreId, criterioId])
   @@index([criterioId])
+}
+
+enum InscripcionSource {
+  WILDCARD             // Clasificado por Wildcard (creado al aprobar)
+  LIGA_ADMIN           // Inscrito a una Liga por un admin
+  CN_ADMIN             // Inscrito a un CN por un admin (ej. reemplazo)
+  CN_HISTORICO_TOP3    // Cupo automático por Top 3 año anterior
+  LIGA_PRESENCIAL_TOP3 // Cupo automático por Top 3 Liga
+  LIGA_ONLINE_TOP3     // Cupo automático por Top 3 Liga
+}
+
+
+/* =========================
+   NUEVO: Inscripción Centralizada
+   ========================= */
+
+// La "fuente de verdad" de quién compite en qué
+model Inscripcion {
+  id              String   @id @default(cuid())
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventoId        String
+  evento          Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId     String
+  categoria       Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+
+  // Contexto de la inscripción
+  source          InscripcionSource // Cómo llegó aquí
+  nombreArtistico String?           // Snapshot del nombre al momento de inscribirse
+  
+  // Vínculo opcional al wildcard si esa fue la fuente
+  wildcardId      String?  @unique // @unique asegura que un wildcard solo genere 1 inscripción
+  wildcard        Wildcard? @relation(fields: [wildcardId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Un usuario solo puede estar inscrito una vez por categoría/evento
+  @@unique([userId, eventoId, categoriaId])
+  @@index([userId])
+  @@index([eventoId])
+  @@index([categoriaId])
 }
