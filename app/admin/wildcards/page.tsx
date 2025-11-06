@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import ReviewButtons from "@/components/admin/wildcards/ReviewButtons";
-import { UserIcon, FunnelIcon, EyeIcon } from "@heroicons/react/24/solid";
+import { UserIcon, FunnelIcon, EyeIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +40,9 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
     prisma.wildcard.findMany({
       where,
       include: {
+        inscripcion: {
+          select: { id: true } // Solo necesitamos saber si existe
+        },
         user: {
           select: {
             id: true,
@@ -131,9 +134,16 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                       .join(" ") || w.reviewedBy.email // Fallback al email
                   : null;
 
+                const isInscrito = w.inscripcion !== null;
+
                 return (
                   <tr key={w.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
-                    <td className="p-5">{w.nombreArtistico || "—"}</td>
+                    <td className="p-5">
+                      {w.nombreArtistico || "—"}
+                      {isInscrito && (
+                        <CheckBadgeIcon className="w-4 h-4 inline-block ml-1 text-blue-600" title="Inscripción creada" />
+                      )}
+                    </td>
                     <td className="p-5">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg border-2 border-indigo-200 shadow">
@@ -166,15 +176,17 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                       )}
                     </td>
                     <td className="p-5 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
-                          href={`/admin/wildcards/${w.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
-                          title="Ver wildcard"
-                        >
-                          <EyeIcon className="w-4 h-4" /> Ver
-                        </Link>
-                        <ReviewButtons id={w.id} status={w.status as any} />
+                          href={`/admin/wildcards/${w.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                          title="Ver wildcard"
+                        >
+                          <EyeIcon className="w-4 h-4" /> Ver
+                        </Link>
+                        {/* 'ReviewButtons' ahora devuelve 1 o 2 elementos
+                            que 'flex' y 'gap-2' alinearán perfectamente */}
+                        <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
                       </div>
                     </td>
                   </tr>
@@ -203,6 +215,8 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   .join(" ") || w.reviewedBy.email // Fallback al email
               : null;
 
+            const isInscrito = w.inscripcion !== null;
+
             return (
               <div key={w.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
@@ -214,7 +228,12 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                     <div className="text-xs text-gray-500">{w.user?.email || "—"}</div>
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">Alias: {w.nombreArtistico || "—"}</div>
+                <div className="text-xs text-gray-500">
+                  Alias: {w.nombreArtistico || "—"}
+                  {isInscrito && (
+                    <CheckBadgeIcon className="w-4 h-4 inline-block ml-1 text-blue-600" title="Inscripción creada" />
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
@@ -239,7 +258,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
                   </Link>
-                  <ReviewButtons id={w.id} status={w.status as any} />
+                  <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
                 </div>
               </div>
             );

@@ -31,11 +31,63 @@ model EventType {
   updatedAt DateTime @updatedAt
 }
 
+model Categoria {
+  id          String   @id @default(cuid())
+  name        String   @unique // "SOLO", "LOOPSTATION", "TAG_TEAM"
+  description String?
+  createdAt   DateTime @default(now())
+
+  inscripciones   Inscripcion[]
+
+  // Relaciones
+  criterios     Criterio[]
+  assignments   JudgeAssignment[]
+  scores        Score[]
+  wildcards     Wildcard[]
+  eventCategories CompetitionCategory[]
+
+  battles       Battle[]
+}
+
+// === NUEVO: Criterios de Evaluación (Dinámico por Categoría) ===
+// (Originalidad, Musicalidad, etc., con sus rangos)
+model Criterio {
+  id          String    @id @default(cuid())
+  name        String // "Originalidad", "Musicalidad", "Composition", etc.
+  description String? // El texto del tooltip para el juez
+  minScore    Int       @default(0)
+  maxScore    Int // 40, 20, 5 (según la rúbrica)
+  
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  scoreDetails ScoreDetail[]
+
+  @@unique([name, categoriaId])
+  @@index([categoriaId])
+}
+
 enum SuggestionStatus {
   nuevo
   en_progreso
   resuelta
   descartada
+}
+
+enum RoundPhase {
+  WILDCARD
+  PRELIMINAR
+  OCTAVOS
+  CUARTOS
+  SEMIFINAL
+  TERCER_LUGAR
+  FINAL
+}
+
+// === NUEVO: Estado del puntaje (para autosave) ===
+enum ScoreStatus {
+  DRAFT     // Guardado automático (autosave)
+  SUBMITTED // Envío final del juez
 }
 
 /* =========================
@@ -108,6 +160,15 @@ model User {
   compras           Compra[]
   sugerencias       Sugerencia[]
   mensajes          Mensaje[]
+
+  inscripciones     Inscripcion[]
+
+  judgeAssignments  JudgeAssignment[] @relation("JudgeAssignments")
+  judgeScores       Score[]           @relation("JudgeScores")
+  participantScores Score[]           @relation("ParticipantScores")
+  battlesAsParticipantA Battle[] @relation("ParticipantA")
+  battlesAsParticipantB Battle[] @relation("ParticipantB")
+  battlesWon            Battle[] @relation("Winner")
 }
 
 model UserProfile {
@@ -165,8 +226,21 @@ model Evento {
   ticketTypes TicketType[]
   compras     Compra[]   @relation("EventoCompras")
 
+  inscripciones   Inscripcion[]
+
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  categories    CompetitionCategory[] // Qué categorías tiene este evento
+  assignments   JudgeAssignment[]     // Qué jueces están asignados
+  scores        Score[]               // Qué puntajes se han emitido
+  
+  battles       Battle[]
+
+  // (Opcional pero recomendado para historial)
+  premios       String?
+  sponsors      String?
+  asistencia    Int?       @default(0)
 
   @@index([fecha])
   @@index([tipoId])
@@ -190,7 +264,9 @@ model Wildcard {
   eventoId        String
   evento          Evento         @relation(fields: [eventoId], references: [id], onDelete: Cascade)
 
-  categoria       String?
+  //categoria       String?
+  categoriaId     String         // <-- Añade esta
+  categoria       Categoria      @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
 
   status          WildcardStatus @default(PENDING)
   notes           String?
@@ -198,12 +274,19 @@ model Wildcard {
   reviewedById    String?
   reviewedBy      User?          @relation("WildcardReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
 
+  isClassified    Boolean        @default(false)
+
+  inscripcion   Inscripcion?
+
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  @@unique([userId, eventoId])   // 1 wildcard por usuario por evento
+  //@@unique([userId, eventoId])   // 1 wildcard por usuario por evento
+  @@unique([userId, eventoId, categoriaId])
+
   @@index([eventoId])
   @@index([reviewedById])
+  @@index([categoriaId])
 }
 
 model Puntaje {
@@ -324,4 +407,200 @@ model Mensaje {
   email     String
   mensaje   String
   createdAt DateTime @default(now())
+}
+
+/* =========================
+   NUEVO: Módulo de Evaluación
+   ========================= */
+
+// === NUEVO: Define qué categorías y cupos tiene un Evento ===
+model CompetitionCategory {
+  id            String  @id @default(cuid())
+  eventoId      String
+  evento        Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId   String
+  categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  
+  wildcardSlots Int     @default(0) // Cupos de clasificados desde Wildcard
+  
+  @@unique([eventoId, categoriaId]) // Un evento solo puede tener una vez la categoría "SOLO"
+  @@index([categoriaId])
+}
+
+// === NUEVO: Asignación de un Juez (User) a una tarea de evaluación ===
+model JudgeAssignment {
+  id          String   @id @default(cuid())
+  
+  judgeId     String // FK a User.id (debe tener Rol "judge")
+  judge       User     @relation("JudgeAssignments", fields: [judgeId], references: [id], onDelete: Cascade)
+  
+  eventoId    String
+  evento      Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  
+  phase       RoundPhase // A qué ronda está asignado (e.g., WILDCARD, CUARTOS)
+
+  @@unique([judgeId, eventoId, categoriaId, phase])
+  @@index([eventoId])
+  @@index([judgeId])
+}
+
+// === NUEVO: La evaluación general de UN juez a UN participante en UNA ronda ===
+// Esta es la "Nota total del juez" del Excel
+model Score {
+  id            String   @id @default(cuid())
+  
+  // Contexto
+  eventoId      String
+  evento        Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId   String
+  categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  
+  phase         RoundPhase // WILDCARD, CUARTOS, etc.
+  
+  // Quién evalúa
+  judgeId       String
+  judge         User     @relation("JudgeScores", fields: [judgeId], references: [id], onDelete: Cascade)
+  
+  // A quién evalúan (el competidor)
+  participantId String
+  participant   User     @relation("ParticipantScores", fields: [participantId], references: [id], onDelete: Cascade)
+  
+  // Resultado
+  totalScore    Int      @default(0) // Suma de los criterios (Cálculo Regla 1)
+  notes         String?  // Comentarios privados del juez
+  status        ScoreStatus @default(DRAFT) // Para autosave
+
+  // Enlace opcional a la batalla
+  battleId      String?
+  battle        Battle?  @relation(fields: [battleId], references: [id], onDelete: SetNull)
+  
+  // Para manejar los 2 rounds de 1:30
+  roundNumber   Int      @default(1)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  details       ScoreDetail[] // Detalle de cada criterio
+
+  // Un juez solo puede evaluar una vez a un participante en una ronda/categoría/evento
+  @@unique([eventoId, categoriaId, phase, judgeId, participantId, roundNumber])
+  @@index([eventoId, categoriaId, phase])
+  @@index([judgeId])
+  @@index([participantId])
+  @@index([battleId])
+}
+
+
+// === NUEVO: El detalle de CADA criterio para un Score ===
+model ScoreDetail {
+  id         String   @id @default(cuid())
+  
+  scoreId    String
+  score      Score    @relation(fields: [scoreId], references: [id], onDelete: Cascade)
+  
+  criterioId String
+  criterio   Criterio @relation(fields: [criterioId], references: [id], onDelete: Restrict)
+  
+  value      Int      // El puntaje (e.g., 35 de 40)
+  
+  @@unique([scoreId, criterioId])
+  @@index([criterioId])
+}
+
+enum InscripcionSource {
+  WILDCARD             // Clasificado por Wildcard (creado al aprobar)
+  LIGA_ADMIN           // Inscrito a una Liga por un admin
+  CN_ADMIN             // Inscrito a un CN por un admin (ej. reemplazo)
+  CN_HISTORICO_TOP3    // Cupo automático por Top 3 año anterior
+  LIGA_PRESENCIAL_TOP3 // Cupo automático por Top 3 Liga
+  LIGA_ONLINE_TOP3     // Cupo automático por Top 3 Liga
+}
+
+
+/* =========================
+   NUEVO: Inscripción Centralizada
+   ========================= */
+
+// La "fuente de verdad" de quién compite en qué
+model Inscripcion {
+  id              String   @id @default(cuid())
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventoId        String
+  evento          Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId     String
+  categoria       Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+
+  // Contexto de la inscripción
+  source          InscripcionSource // Cómo llegó aquí
+  nombreArtistico String?           // Snapshot del nombre al momento de inscribirse
+  
+  // Vínculo opcional al wildcard si esa fue la fuente
+  wildcardId      String?  @unique // @unique asegura que un wildcard solo genere 1 inscripción
+  wildcard        Wildcard? @relation(fields: [wildcardId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Un usuario solo puede estar inscrito una vez por categoría/evento
+  @@unique([userId, eventoId, categoriaId])
+  @@index([userId])
+  @@index([eventoId])
+  @@index([categoriaId])
+}
+
+/* =========================
+   NUEVO: Módulo de Batallas (Fase 10)
+   ========================= */
+
+model Battle {
+  id          String   @id @default(cuid())
+
+  // --- Contexto ---
+  eventoId    String
+  evento      Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  
+  phase       RoundPhase // OCTAVOS, CUARTOS, SEMIFINAL, FINAL, etc.
+  
+  // Orden de la batalla en la llave (ej. 1 para 1/8, 2 para 2/8)
+  orderInRound Int       @default(1)
+
+  // --- Participantes ---
+  participantAId String
+  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  
+  participantBId String? // Puede ser nulo si el oponente aún no se define (ej. ganador de otra batalla)
+  participantB   User?   @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: SetNull)
+
+  // --- Resultado ---
+  winnerId    String? // El User.id del ganador
+  winner      User?   @relation("Winner", fields: [winnerId], references: [id], onDelete: SetNull)
+  
+  // (Opcional) Enlace para la siguiente batalla (ej. ganador de Octavos 1 va a Cuartos 1)
+  nextBattleId String?  @unique
+  nextBattle   Battle?  @relation("NextBattle", fields: [nextBattleId], references: [id], onDelete: SetNull)
+  prevBattle   Battle?  @relation("NextBattle") // Batalla anterior que alimenta esta
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // --- Relación inversa con Score ---
+  // Una batalla tendrá múltiples scores (ej. 3 jueces x 2 rounds x 2 participantes = 12 scores)
+  scores      Score[]
+
+  @@index([eventoId])
+  @@index([participantAId])
+  @@index([participantBId])
+  @@index([winnerId])
 }
