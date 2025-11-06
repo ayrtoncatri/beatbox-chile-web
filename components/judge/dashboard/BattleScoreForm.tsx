@@ -96,10 +96,19 @@ export function BattleScoreForm({
   const nameB = battle.participantB?.inscripciones[0]?.nombreArtistico || battle.participantB?.profile?.nombres || 'Participante B';
   
   // Scores de este juez para esta batalla
-  const scoresR1A = initialScores.find(s => s.participantId === battle.participantAId && s.roundNumber === 1) || null;
-  const scoresR1B = initialScores.find(s => s.participantId === battle.participantBId && s.roundNumber === 1) || null;
-  const scoresR2A = initialScores.find(s => s.participantId === battle.participantAId && s.roundNumber === 2) || null;
-  const scoresR2B = initialScores.find(s => s.participantId === battle.participantBId && s.roundNumber === 2) || null;
+  const scoresR1A = initialScores.find
+    (s => s.participantId === battle.participantAId && s.roundNumber === 1
+    ) || null;
+
+  const scoresR1B = initialScores.find
+    (s => s.participantId === battle.participantBId && s.roundNumber === 1
+    ) || null;
+  const scoresR2A = initialScores.find
+    (s => s.participantId === battle.participantAId && s.roundNumber === 2
+    ) || null;
+  const scoresR2B = initialScores.find
+    (s => s.participantId === battle.participantBId && s.roundNumber === 2
+    ) || null;
 
   // Totales
   const totalR1A = scoresR1A?.totalScore || 0;
@@ -110,11 +119,34 @@ export function BattleScoreForm({
   const totalA = totalR1A + totalR2A;
   const totalB = totalR1B + totalR2B;
 
-  let totalSubmittedRounds = 0;
-  if (scoresR1A?.status === 'SUBMITTED') totalSubmittedRounds++;
-  if (scoresR1B?.status === 'SUBMITTED') totalSubmittedRounds++;
-  if (scoresR2A?.status === 'SUBMITTED') totalSubmittedRounds++;
-  if (scoresR2B?.status === 'SUBMITTED') totalSubmittedRounds++;
+  const [submissionStatus, setSubmissionStatus] = useState({
+    R1A: scoresR1A?.status === ScoreStatus.SUBMITTED,
+    R1B: scoresR1B?.status === ScoreStatus.SUBMITTED,
+    R2A: scoresR2A?.status === ScoreStatus.SUBMITTED,
+    R2B: scoresR2B?.status === ScoreStatus.SUBMITTED,
+  });
+
+  // --- (SOLUCIÓN: Parte 3) ---
+  // Creamos el handler del callback
+  const handleScoreSubmitted = (participantId: string, roundNumber: 1 | 2) => {
+    let key: keyof typeof submissionStatus;
+
+    if (participantId === battle.participantAId && roundNumber === 1) key = 'R1A';
+    else if (participantId === battle.participantBId && roundNumber === 1) key = 'R1B';
+    else if (participantId === battle.participantAId && roundNumber === 2) key = 'R2A';
+    else if (participantId === battle.participantBId && roundNumber === 2) key = 'R2B';
+    else return; // Caso imposible
+
+    // Actualizamos el estado, provocando un re-render
+    setSubmissionStatus((prev) => ({
+      ...prev,
+      [key]: true, // Marcamos este round como enviado
+    }));
+  };
+
+  // --- (SOLUCIÓN: Parte 4) ---
+  // Recalculamos el total de envíos USANDO EL ESTADO, no las props.
+  const totalSubmittedRounds = Object.values(submissionStatus).filter(Boolean).length;
 
   return (
     <div className="rounded-lg border bg-white shadow-md overflow-hidden">
@@ -176,6 +208,7 @@ export function BattleScoreForm({
               criterios={criterios}
               roundNumber={1}
               existingScore={scoresR1A}
+              onScoreSubmitted={handleScoreSubmitted}
             />
             {battle.participantBId && (
               <SingleRoundForm
@@ -186,6 +219,7 @@ export function BattleScoreForm({
                 criterios={criterios}
                 roundNumber={1}
                 existingScore={scoresR1B}
+                onScoreSubmitted={handleScoreSubmitted}
               />
             )}
           </div>
@@ -202,6 +236,7 @@ export function BattleScoreForm({
               criterios={criterios}
               roundNumber={2}
               existingScore={scoresR2A}
+              onScoreSubmitted={handleScoreSubmitted}
             />
             {battle.participantBId && (
               <SingleRoundForm
@@ -212,6 +247,7 @@ export function BattleScoreForm({
                 criterios={criterios}
                 roundNumber={2}
                 existingScore={scoresR2B}
+                onScoreSubmitted={handleScoreSubmitted}
               />
             )}
           </div>

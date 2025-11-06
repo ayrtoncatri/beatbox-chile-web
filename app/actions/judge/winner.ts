@@ -46,10 +46,15 @@ export async function declareBattleWinner(
       where: { id: battleId },
       include: {
         participantA: { 
-          select: { id: true, inscripciones: { select: { nombreArtistico: true }, take: 1 } } 
+          select: { 
+            id: true, 
+            inscripciones: { select: { nombreArtistico: true }, take: 1 } 
+          }, 
         },
         participantB: { 
-          select: { id: true, inscripciones: { select: { nombreArtistico: true }, take: 1 } } 
+          select: { 
+            id: true, inscripciones: { select: { nombreArtistico: true }, take: 1 } 
+          },
         },
       },
     });
@@ -58,50 +63,78 @@ export async function declareBattleWinner(
       return { error: 'Batalla incompleta o no encontrada.' };
     }
     
-    // 3. Calcular el puntaje TOTAL (R1 + R2 de TODOS los jueces)
-    const totalScores = await prisma.score.groupBy({
-      by: ['participantId'],
+    const judgeScores = await prisma.score.groupBy({
+      by: ['judgeId', 'participantId'], // <--- CAMBIO CLAVE
       where: {
         battleId: battleId,
         status: ScoreStatus.SUBMITTED, // Solo puntajes finales
       },
       _sum: {
-        totalScore: true,
+        totalScore: true, // Suma R1 + R2 para ese juez/participante
       },
     });
 
-    
-    const distinctJudges = await prisma.score.groupBy({
-        by: ['judgeId'],
-        where: { battleId: battleId, status: ScoreStatus.SUBMITTED },
-        // No necesitamos _count aquí, solo los IDs distintos
-    });
-    const totalJudges = distinctJudges.length;
+    // 4. Mapear puntajes y contar VOTOS
+    const judgeIds = [...new Set(judgeScores.map((s) => s.judgeId))];
+    const totalJudges = judgeIds.length;
 
-    // 4. Mapear puntajes a participantes A y B
-    const scoreA = totalScores.find(s => s.participantId === battle.participantAId)?._sum.totalScore || 0;
-    const scoreB = totalScores.find(s => s.participantId === battle.participantBId)?._sum.totalScore || 0;
-
-
-    if (totalJudges < 2) { // Regla: Mínimo 2 jueces para declarar ganador
-        return { error: `Solo ${totalJudges} juez(es) han enviado puntajes finales.` };
+    if (totalJudges < 2) {
+      // Regla: Mínimo 2 jueces para declarar ganador
+      return {
+        error: `Solo ${totalJudges} juez(es) han enviado puntajes finales.`,
+      };
     }
 
+    let votosA = 0;
+    let votosB = 0;
+
+    // Iteramos por cada juez que haya votado
+    for (const judgeId of judgeIds) {
+      // Obtenemos el puntaje total de este juez para el Participante A
+      const scoreA =
+        judgeScores.find(
+          (s) =>
+            s.judgeId === judgeId && s.participantId === battle.participantAId
+        )?._sum.totalScore || 0;
+
+      // Obtenemos el puntaje total de este juez para el Participante B
+      const scoreB =
+        judgeScores.find(
+          (s) =>
+            s.judgeId === judgeId && s.participantId === battle.participantBId
+        )?._sum.totalScore || 0;
+
+      // Comparamos y asignamos el voto
+      if (scoreA > scoreB) {
+        votosA++;
+      } else if (scoreB > scoreA) {
+        votosB++;
+      }
+      // Si (scoreA === scoreB), es un empate para ese juez. No se suma voto.
+    }
+
+    // 5. Decidir ganador por VOTOS
     let winnerId: string;
     let winnerName: string;
 
-    if (scoreA > scoreB) {
+    if (votosA > votosB) {
+      // <--- Lógica de victoria actualizada
       winnerId = battle.participantAId;
-      winnerName = battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
-    } else if (scoreB > scoreA) {
+      winnerName =
+        battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
+    } else if (votosB > votosA) {
+      // <--- Lógica de victoria actualizada
       winnerId = battle.participantBId;
-      winnerName = battle.participantB?.inscripciones[0]?.nombreArtistico || 'Participante B';
+      winnerName =
+        battle.participantB?.inscripciones[0]?.nombreArtistico || 'Participante B';
     } else {
-      // Regla de Desempate (Replica): Por ahora, bloqueamos
-      return { error: '¡Empate! Se requiere un sistema de réplica (Replica).' };
+      // Empate en VOTOS (ej. 1-1, o 0-0 si todos empataron)
+      return {
+        error: `¡Empate en votos! (${votosA} a ${votosB}). Se requiere un sistema de réplica (Replica).`,
+      };
     }
 
-    // 5. Actualizar la Batalla con el Ganador
+    // 6. Actualizar la Batalla con el Ganador
     await prisma.battle.update({
       where: { id: battleId },
       data: {

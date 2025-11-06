@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client';
@@ -29,6 +29,7 @@ interface SingleRoundFormProps {
   criterios: Criterio[];
   roundNumber: 1 | 2;
   existingScore: FullScore;
+  onScoreSubmitted: (participantId: string, roundNumber: 1 | 2) => void;
 }
 
 // Helper para generar <option>
@@ -45,6 +46,7 @@ export function SingleRoundForm({
   criterios,
   roundNumber,
   existingScore,
+  onScoreSubmitted,
 }: SingleRoundFormProps) {
   
   const [isPending, startTransition] = useTransition();
@@ -62,13 +64,7 @@ export function SingleRoundForm({
       participantId: participantId,
       battleId: battleId,
       roundNumber: roundNumber,
-      
-      // --- (AQUÍ ESTÁ LA CORRECCIÓN) ---
-      // Cambiamos '??' por '||' para convertir 'null' en 'undefined',
-      // lo que satisface el tipo 'string | undefined' del schema.
-      notes: existingScore?.notes || undefined, 
-      // ---------------------------------
-      
+      notes: existingScore?.notes || undefined,       
       status: existingScore?.status ?? ScoreStatus.DRAFT,
       scores: criterios.map((c) => {
         const existingDetail = existingScore?.details.find(
@@ -91,35 +87,61 @@ export function SingleRoundForm({
     setTotal(newTotal);
   }, [watchedScores]);
 
-  // 3. Lógica de Autosave (DRAFT)
-  useEffect(() => {
-    const debouncedSave = debounce(async (payload: SubmitScorePayload) => {
-      if (formStatus === ScoreStatus.SUBMITTED) return;
+  
+  // 3. Lógica de Autosave (DRAFT) - REFACTORIZADA
+  // <-- (SOLUCIÓN BUG 2: Parte 1) Usamos useRef para mantener una referencia estable a la función
+  const debouncedSaveRef = useRef(
+    debounce(async (payload: SubmitScorePayload) => {
+      // El estado del form ya está en DRAFT, solo llamamos a la acción
       startTransition(async () => {
         await submitScore({ ...payload, status: ScoreStatus.DRAFT });
       });
-    }, 2000); 
+    }, 2000)
+  );
+
+  useEffect(() => {
+    // No suscribir al autosave si el formulario ya se envió final
+    if (formStatus === ScoreStatus.SUBMITTED) {
+      return;
+    }
 
     const subscription = form.watch((data) => {
       const result = submitScoreSchema.safeParse(data);
       if (result.success) {
-        debouncedSave(result.data);
+        // Llamamos a la función de debounce a través de la referencia
+        debouncedSaveRef.current(result.data);
       }
     });
-    
-    return () => subscription.unsubscribe();
-  }, [form, formStatus, startTransition]);
 
-  // 4. Envío Final (SUBMITTED)
+    return () => {
+      subscription.unsubscribe();
+      // Cancelamos cualquier debounce pendiente si el componente se desmonta o el efecto re-ejecuta
+      debouncedSaveRef.current.cancel();
+    };
+  }, [form, formStatus]); // <-- Dependencias limpias
+
+  // 4. Envío Final (SUBMITTED) - REFACTORIZADO
   const onSubmit = (data: SubmitScorePayload) => {
     if (formStatus === ScoreStatus.SUBMITTED) return;
+
+    // --- ¡LA SOLUCIÓN CLAVE (Bug 2: Parte 2)! ---
+    // Cancelamos cualquier autosave DRAFT pendiente ANTES de enviar el SUBMITTED.
+    debouncedSaveRef.current.cancel();
+    // ---------------------------------------------
+
     startTransition(async () => {
       const result = await submitScore({ ...data, status: ScoreStatus.SUBMITTED });
       if (result.success) {
         setFormStatus(ScoreStatus.SUBMITTED);
+
+        // --- ¡LA SOLUCIÓN (Bug 1: Parte 3)! ---
+        // Notificar al componente padre que este round específico
+        // ha sido enviado exitosamente.
+        onScoreSubmitted(participantId, roundNumber);
+        // ------------------------------------------
       } else {
-        console.error("Error al enviar el puntaje final:", result.error);
-        alert("Error al enviar: " + JSON.stringify(result.error));
+        console.error('Error al enviar el puntaje final:', result.error);
+        alert('Error al enviar: ' + JSON.stringify(result.error));
       }
     });
   };
