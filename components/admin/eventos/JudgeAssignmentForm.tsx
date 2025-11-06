@@ -1,8 +1,7 @@
-// components/admin/eventos/JudgeAssignmentForm.tsx
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
-import { useEffect, useRef } from 'react'
+import { useFormStatus } from 'react-dom'
+import { useEffect, useRef, useActionState } from 'react'
 import { Categoria, User, Role, RoundPhase , UserRole } from '@prisma/client'
 import { assignJudgeAction, type AssignJudgeState } from '@/app/admin/eventos/actions'
 
@@ -42,7 +41,7 @@ export function JudgeAssignmentForm({
         error: undefined,
         message: undefined
     }
-    const [state, dispatch] = useFormState(assignJudgeAction, initialState)
+    const [state, dispatch] = useActionState(assignJudgeAction, initialState)
 
     // Ref para resetear el formulario después de un éxito
     const formRef = useRef<HTMLFormElement>(null)

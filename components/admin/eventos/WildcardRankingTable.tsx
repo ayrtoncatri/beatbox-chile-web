@@ -1,14 +1,13 @@
-// components/admin/eventos/WildcardRankingTable.tsx
 'use client'
 
-import { useFormState } from 'react-dom'
+import {  useFormStatus } from 'react-dom'
 import { RoundPhase } from '@prisma/client'
 import {
     getWildcardRanking,
     classifyWildcardsAction,
     RankingResult,
 } from '@/app/admin/eventos/actions'
-import { useEffect, useState } from 'react'
+import { useEffect, useState , useActionState } from 'react'
 
 interface WildcardRankingTableProps {
     eventoId: string
@@ -18,7 +17,7 @@ interface WildcardRankingTableProps {
 
 // Componente para manejar el estado del botón de clasificación
 function ClassifyButton() {
-    const { pending } = useFormState(classifyWildcardsAction, { ok: true }) as any // Simplemente para obtener el estado
+    const { pending } = useFormStatus() 
     return (
         <button
             type="submit"
@@ -45,7 +44,7 @@ export function WildcardRankingTable({
 
     // Estado para el formulario de Server Action
     const initialState = { ok: false, error: undefined, message: undefined } // <-- CORREGIDO
-    const [state, dispatch] = useFormState(classifyWildcardsAction, initialState as any)
+    const [state, dispatch] = useActionState(classifyWildcardsAction, initialState as any)
 
     // 1. FETCH ASÍNCRONO del Ranking (Hook para el cliente)
     useEffect(() => {

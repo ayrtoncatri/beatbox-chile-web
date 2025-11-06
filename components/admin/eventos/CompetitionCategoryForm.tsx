@@ -1,8 +1,8 @@
 // components/admin/eventos/CompetitionCategoryForm.tsx
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
-import { useRef } from 'react'
+import { useFormStatus } from 'react-dom'
+import { useRef , useActionState } from 'react'
 import { Categoria } from '@prisma/client'
 import { upsertCompetitionCategoryAction } from '@/app/admin/eventos/actions'
 
@@ -26,7 +26,7 @@ function SubmitButton() {
 
 export function CompetitionCategoryForm({ eventoId, allCategories }: CompetitionCategoryFormProps) {
   const initialState = { ok: false, error: undefined, message: undefined }
-  const [state, dispatch] = useFormState(upsertCompetitionCategoryAction, initialState as any)
+  const [state, dispatch] = useActionState(upsertCompetitionCategoryAction, initialState as any)
 
   return (
     <div className="rounded-lg border border-purple-300 bg-white p-4 shadow">
