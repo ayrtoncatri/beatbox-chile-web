@@ -11,6 +11,7 @@ const RegistrationSchema = z.object({
   userId: z.string().cuid('Usuario no válido'),
   eventoId: z.string().cuid('Evento no válido'),
   categoriaId: z.string().cuid('Categoría no válida'),
+  nombreArtistico: z.string().min(2, 'Nombre artístico requerido').max(100),
 });
 
 // Estado de la acción (sin cambios)
@@ -29,35 +30,17 @@ export async function registerParticipantForLeague(
     userId: formData.get('userId'),
     eventoId: formData.get('eventoId'),
     categoriaId: formData.get('categoriaId'),
+    nombreArtistico: formData.get('nombreArtistico'),
   });
 
   if (!validatedFields.success) {
     return { error: 'Datos inválidos. Por favor, revise el formulario.' };
   }
 
-  const { userId, eventoId, categoriaId } = validatedFields.data;
+  const { userId, eventoId, categoriaId, nombreArtistico } = validatedFields.data;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        inscripciones: {
-          select: { nombreArtistico: true },
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        },
-        wildcards: {
-          select: { nombreArtistico: true },
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      }
-    });
-    
-    const artisticName = user?.inscripciones[0]?.nombreArtistico || 
-                         user?.wildcards[0]?.nombreArtistico || 
-                         'Participante';
-
+  
     const existingRegistration = await prisma.inscripcion.findUnique({
       where: {
         userId_eventoId_categoriaId: {
@@ -77,7 +60,7 @@ export async function registerParticipantForLeague(
         userId,
         eventoId,
         categoriaId,
-        nombreArtistico: artisticName,
+        nombreArtistico: nombreArtistico,
         source: InscripcionSource.LIGA_ADMIN,
         wildcardId: null,
       },
@@ -85,6 +68,7 @@ export async function registerParticipantForLeague(
 
     revalidatePath('/admin/inscripciones');
     revalidatePath(`/historial-competitivo/eventos/${eventoId}`);
+    revalidatePath(`/admin/eventos/${eventoId}`);
     return { success: '¡Participante inscrito exitosamente!' };
 
   } catch (error) {

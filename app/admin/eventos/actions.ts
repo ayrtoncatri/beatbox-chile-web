@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, RoundPhase , ScoreStatus } from "@prisma/client";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export type AssignJudgeState = {
   ok: boolean;
@@ -613,5 +615,70 @@ export async function upsertCompetitionCategoryAction(prevState: any, formData: 
     return { ok: true, message: `Categoría ${categoriaId} actualizada con ${wildcardSlots} cupos.` };
   } catch (e) {
     return { ok: false, error: 'Error al gestionar la categoría del evento.' };
+  }
+}
+
+export type InscritosResult = Prisma.InscripcionGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        email: true;
+        profile: {
+          select: { nombres: true; apellidoPaterno: true };
+        };
+      };
+    };
+    categoria: {
+      select: { name: true };
+    };
+  };
+}>;
+
+/**
+ * Obtiene la lista de todos los participantes inscritos en un evento.
+ */
+export async function getInscritosForEvent(
+  eventoId: string
+): Promise<InscritosResult[]> {
+  // (2) Verificación de seguridad (opcional pero recomendada)
+  // (Asumimos que esta es una función solo para admins,
+  // por lo que verificamos la sesión como en las otras acciones)
+  const session = await getServerSession(authOptions); // Usamos authOptions de lib/auth
+  const userRoles = (session?.user as any)?.roles || [];
+  if (!session?.user?.id || !userRoles.includes('admin')) {
+    throw new Error('No autorizado');
+  }
+
+  try {
+    // (3) La consulta a la base de datos
+    const inscritos = await prisma.inscripcion.findMany({
+      where: { eventoId: eventoId },
+      include: {
+        // Incluimos los datos del usuario
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true },
+            },
+          },
+        },
+        // Incluimos la categoría
+        categoria: {
+          select: { name: true },
+        },
+      },
+      orderBy: [
+        { categoria: { name: 'asc' } }, // Ordenar por categoría
+        { nombreArtistico: 'asc' }, // Luego por nombre artístico
+      ],
+    });
+
+    return inscritos;
+  } catch (error) {
+    console.error('Error al obtener inscritos:', error);
+    return []; // Devolver array vacío en caso de error
   }
 }

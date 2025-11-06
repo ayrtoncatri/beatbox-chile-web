@@ -23,7 +23,34 @@ async function main() {
     create: { name: 'user' },
   })
 
-  // 2. Crear Categorías
+  // 2. Crear Tipos de Evento (EventType)
+  // ---------------------------------
+  console.log('Creando Tipos de Evento...')
+  
+  // Esta es nuestra "lista dorada" de tipos de evento
+  const eventTypes = [
+    // --- Tipos de Clasificación ---
+    { name: 'Liga Presencial' },
+    { name: 'Liga Online' },
+    { name: 'Campeonato Nacional' },
+    { name: 'Wildcard' },
+    
+    // --- Tipos Generales ---
+    { name: 'Batalla' }, // (Tu BD ya lo tiene, 'upsert' lo ignorará)
+    { name: 'Exhibición' }, // (Tu BD ya lo tiene)
+    { name: 'Taller' }, // (Tu BD ya lo tiene)
+  ];
+
+  for (const tipo of eventTypes) {
+    const eventType = await prisma.eventType.upsert({
+      where: { name: tipo.name }, // Busca por nombre
+      update: {}, // Si existe, no hagas nada
+      create: { name: tipo.name }, // Si no existe, créalo
+    });
+    console.log(`Tipo de evento asegurado: ${eventType.name}`);
+  }
+
+  // 3. Crear Categorías
   // ---------------------------------
   console.log('Creando Categorías...')
   const catSolo = await prisma.categoria.upsert({
@@ -44,7 +71,7 @@ async function main() {
     create: { name: 'TAG_TEAM', description: 'Competencia en parejas' },
   })
 
-  // 3. Crear Criterios (Basado en Rúbricas Excel)
+  // 4. Crear Criterios (Basado en Rúbricas Excel)
   // ---------------------------------
   
   // == CRITERIOS "SOLO" (Rangos 0-40, 0-20, 0-5) ==

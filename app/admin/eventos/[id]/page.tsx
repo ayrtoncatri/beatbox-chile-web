@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { JudgeAssignmentForm } from "@/components/admin/eventos/JudgeAssignmentForm";
 import { WildcardRankingTable } from "@/components/admin/eventos/WildcardRankingTable";
 import { CompetitionCategoryForm } from "@/components/admin/eventos/CompetitionCategoryForm";
+import { getInscritosForEvent } from "@/app/admin/eventos/actions";
+import { InscritosTable } from "@/components/admin/eventos/InscritosTable";
 
 // Igual que antes
 const serializeData = (data: any) => {
@@ -29,7 +31,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   // ➜ Ahora sí: esperar params antes de usar sus propiedades
   const { id } = await params;
 
-  const [evento, regiones, comunas, eventTypes, allJudges, allCategories] = await Promise.all([
+  const [evento, regiones, comunas, eventTypes, allJudges, allCategories, inscritos] = await Promise.all([
     prisma.evento.findUnique({
       where: { id },
       include: {
@@ -55,6 +57,8 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
       include: { roles: { include: { role: true } } },
     }),
     prisma.categoria.findMany({ orderBy: { name: "asc" } }),
+
+    getInscritosForEvent(id)
   ]);
 
   if (!evento) notFound();
@@ -65,6 +69,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   const serializedEventTypes = serializeData(eventTypes);
   const serializedAllCategories = serializeData(allCategories);
   const serializedAllJudges = serializeData(allJudges);
+  const serializedInscritos = serializeData(inscritos);
 
   const judgesList = serializedAllJudges || [];
   const activeCategories = serializedEvento.categories.map((c: any) => c.categoria) || [];
@@ -103,6 +108,11 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6">Ranking de Wildcards</h2>
           <WildcardRankingTable eventoId={id} allCategories={activeCategories} />
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6">Participantes Inscritos</h2>
+          <InscritosTable inscritos={serializedInscritos} />
         </div>
       </div>
     </main>
