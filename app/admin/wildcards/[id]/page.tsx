@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ReviewButtons from "@/components/admin/wildcards/ReviewButtons";
 import WildcardEditForm from "@/components/admin/wildcards/WildcardEditForm";
 import Link from "next/link";
-import { UserIcon } from "@heroicons/react/24/solid";
+import { UserIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 
 function toYouTubeEmbed(url?: string | null) {
   if (!url) return null;
@@ -26,8 +26,10 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
   const w = await prisma.wildcard.findUnique({
     where: { id },
     include: {
+      inscripcion: {
+        select: { id: true }
+      },
       user: {
-        // CAMBIO: Seleccionamos el perfil anidado
         select: {
           id: true,
           email: true,
@@ -68,6 +70,8 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
     .join(" ");
 
   const embed = toYouTubeEmbed(w.youtubeUrl);
+
+  const isInscrito = w.inscripcion !== null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
@@ -152,11 +156,27 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                     {w.status}
                   </span>
                 </div>
+
+                {w.status === "APPROVED" && (
+                  <div>
+                    <span className="text-gray-500">Inscripción:</span>{" "}
+                    {isInscrito ? (
+                      <span className="inline-flex items-center gap-1 text-green-700 font-semibold text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                        <CheckBadgeIcon className="w-4 h-4" />
+                        Creada
+                      </span>
+                    ) : (
+                      <span className="text-yellow-700 font-semibold text-xs px-2 py-0.5 bg-yellow-100 rounded-full">
+                        Procesando...
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div><span className="text-gray-500">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
                 <div><span className="text-gray-500">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">
-                <ReviewButtons id={w.id} status={w.status as any} />
+                <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
               </div>
             </div>
 

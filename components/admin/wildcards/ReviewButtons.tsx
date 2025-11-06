@@ -1,74 +1,106 @@
-"use client";
+'use client';
 
-import { useTransition, useState } from "react";
-import { useRouter } from "next/navigation";
-import { CheckCircleIcon, XCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { approveWildcard, rejectWildcard } from '@/app/admin/wildcards/actions';
+import { WildcardStatus } from '@prisma/client';
+import { useActionState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { CheckCircleIcon, XCircleIcon, ClockIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
+import React from 'react';
 
-type Status = "PENDING" | "APPROVED" | "REJECTED";
+type Status = WildcardStatus;
 
-export default function ReviewButtons({ id, status }: { id: string; status: Status }) {
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+export default function ReviewButtons({ id, status, isInscrito }: { id: string; status: Status; isInscrito: boolean }) {
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  function updateStatus(next: Status) {
-    setError(null);
-    start(async () => {
-      try {
-        const res = await fetch(`/api/admin/wildcards/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: next }),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || "Error al actualizar");
-        }
-        router.refresh();
-      } catch (e: any) {
-        setError(e.message || "Error al actualizar");
+  const handleApprove = () => {
+    if (!confirm('¿Estás seguro de que quieres APROBAR este wildcard? Esto creará una inscripción.')) return;
+
+    startTransition(async () => {
+      const result = await approveWildcard(id);
+      if (result.error) {
+        alert(`Error: ${result.error}`);
+      } else {
+        router.refresh(); 
       }
     });
+  };
+
+  const handleReject = () => {
+    if (!confirm('¿Estás seguro de que quieres RECHAZAR este wildcard?')) return;
+
+    startTransition(async () => {
+      // --- (3) Llamada a la acción sin ID de admin ---
+      const result = await rejectWildcard(id);
+      if (result.error) {
+        alert(`Error: ${result.error}`); // (O usa un toast)
+      } else {
+        router.refresh();
+      }
+    });
+  };
+
+  // --- (4) LÓGICA DE RENDERIZADO CON NUEVOS ESTILOS TAILWIND ---
+
+  // Estado: PENDIENTE (Mostrar botones de acción)
+  if (status === WildcardStatus.PENDING) {
+    return (
+      <React.Fragment>
+        <div className="flex flex-col gap-0.5">
+          <button
+          type="button"
+          disabled={isPending}
+          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold text-white
+                     bg-green-600 shadow-sm hover:bg-green-700 transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleApprove}
+        >
+          <CheckCircleIcon className="w-4 h-4" />
+          {isPending ? '...' : 'Aprobar'}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold text-white
+                     bg-red-600 shadow-sm hover:bg-red-700 transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleReject}
+        >
+          <XCircleIcon className="w-4 h-4" />
+          {isPending ? '...' : 'Rechazar'}
+        </button>
+        </div>
+      </React.Fragment>
+    );
   }
 
+  // Estado: APROBADO (Mostrar estado de inscripción)
+  if (status === WildcardStatus.APPROVED) {
+    if (isInscrito) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
+                         bg-green-100 text-green-800">
+          <CheckBadgeIcon className="w-4 h-4" />
+          Inscrito
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
+                         bg-yellow-100 text-yellow-800">
+          <ClockIcon className="w-4 h-4" />
+          Inscripción Pendiente
+        </span>
+      );
+    }
+  }
+
+  // Estado: RECHAZADO (Mostrar badge de rechazo)
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex flex-wrap gap-2 w-full mt-2">
-        <button
-          type="button"
-          disabled={pending || status === "APPROVED"}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-semibold transition
-            ${status === "APPROVED" ? "bg-green-600 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}
-            `}
-          onClick={() => updateStatus("APPROVED")}
-          style={{ minWidth: 0 }}
-        >
-          <CheckCircleIcon className="w-4 h-4" /> Aprobar
-        </button>
-        <button
-          type="button"
-          disabled={pending || status === "REJECTED"}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-semibold transition
-            ${status === "REJECTED" ? "bg-red-600 text-white" : "bg-red-100 text-red-700 hover:bg-red-200"}
-            `}
-          onClick={() => updateStatus("REJECTED")}
-          style={{ minWidth: 0 }}
-        >
-          <XCircleIcon className="w-4 h-4" /> Rechazar
-        </button>
-        <button
-          type="button"
-          disabled={pending || status === "PENDING"}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-semibold transition
-            ${status === "PENDING" ? "bg-yellow-500 text-white" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"}
-            `}
-          onClick={() => updateStatus("PENDING")}
-          style={{ minWidth: 0 }}
-        >
-          <ClockIcon className="w-4 h-4" /> Pendiente
-        </button>
-      </div>
-      {error && <div className="text-xs text-red-600">{error}</div>}
-    </div>
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
+                     bg-red-100 text-red-800">
+      <XCircleIcon className="w-4 h-4" />
+      Rechazado
+    </span>
   );
 }

@@ -5,7 +5,9 @@ import { UserIcon,
   CalendarDaysIcon, 
   ShoppingCartIcon, 
   ChatBubbleLeftRightIcon, 
-  ClipboardDocumentListIcon}
+  ClipboardDocumentListIcon,
+  TrophyIcon,
+}
 from "@heroicons/react/24/outline";
 import {
   UsuariosPorEstadoChart,
@@ -71,6 +73,15 @@ export default async function AdminDashboardPage() {
       text: "text-blue-700",
     },
     {
+      label: "Clasificación CN",
+      icon: <TrophyIcon className="w-7 h-7 text-red-500" />,
+      color: "from-red-100 to-red-50",
+      href: "/admin/clasificacion",
+      value: "►", // Un ícono de "Play" o "Ejecutar"
+      bgIcon: "bg-red-50",
+      text: "text-red-700",
+    },
+    {
       label: "Wildcards",
       icon: <TicketIcon className="w-7 h-7 text-pink-500" />,
       color: "from-pink-100 to-pink-50",
@@ -129,7 +140,7 @@ export default async function AdminDashboardPage() {
           Bienvenido al panel de administración. Usa la navegación para gestionar usuarios, wildcards, eventos, compras y sugerencias.
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <Link
             key={stat.label}
@@ -141,7 +152,11 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <div className={`text-xs font-semibold uppercase tracking-wide ${stat.text}`}>{stat.label}</div>
-              <div className="mt-1 text-3xl font-extrabold text-gray-900">{stat.value}</div>
+              <div className={`mt-1 font-extrabold text-gray-900 ${
+                typeof stat.value === 'number' ? 'text-3xl' : 'text-2xl' // Letras más pequeñas si es texto
+              }`}>
+                {stat.value}
+              </div>
               {stat.label === "Compras" && (
                 <div className="text-xs text-gray-500 mt-1">Ingresos: <span className="font-bold">{stat.extra}</span></div>
               )}
