@@ -8,12 +8,20 @@ import {
   CalendarDaysIcon,
   ShoppingCartIcon,
   ChatBubbleLeftRightIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
 
 const navLinks = [
   { href: "/admin", label: "Dashboard", icon: <HomeIcon className="w-5 h-5" /> },
   { href: "/admin/usuarios", label: "Usuarios", icon: <UserIcon className="w-5 h-5" /> },
   { href: "/admin/wildcards", label: "Wildcards", icon: <TicketIcon className="w-5 h-5" /> },
+  
+  { 
+    href: "/admin/inscripciones", 
+    label: "Inscripciones", 
+    icon: <ClipboardDocumentListIcon className="w-5 h-5" /> 
+  },
+  
   { href: "/admin/eventos", label: "Eventos", icon: <CalendarDaysIcon className="w-5 h-5" /> },
   { href: "/admin/compras", label: "Compras", icon: <ShoppingCartIcon className="w-5 h-5" /> },
   { href: "/admin/sugerencias", label: "Sugerencias", icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> },

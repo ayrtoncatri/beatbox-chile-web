@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { UserIcon, TicketIcon, CalendarDaysIcon, ShoppingCartIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { UserIcon, 
+  TicketIcon, 
+  CalendarDaysIcon, 
+  ShoppingCartIcon, 
+  ChatBubbleLeftRightIcon, 
+  ClipboardDocumentListIcon}
+from "@heroicons/react/24/outline";
 import {
   UsuariosPorEstadoChart,
   WildcardsPorEstadoChart,
@@ -20,6 +26,7 @@ export default async function AdminDashboardPage() {
     eventos,
     comprasAgg,
     sugerencias,
+    inscripciones,
     comprasPorMes,
   ] = await Promise.all([
     prisma.user.count(),
@@ -32,6 +39,7 @@ export default async function AdminDashboardPage() {
     prisma.evento.count(), // Si Prisma genera Evento con mayúscula, usa prisma.Evento.count()
     prisma.compra.aggregate({ _sum: { total: true }, _count: { _all: true } }),
     prisma.sugerencia.count(),
+    prisma.inscripcion.count(),
     // Compras por mes (últimos 6 meses)
     prisma.$queryRawUnsafe<{ mes: string; total: number }[]>(`
       SELECT TO_CHAR("createdAt", 'YYYY-MM') as mes, SUM(total)::int as total
@@ -52,6 +60,15 @@ export default async function AdminDashboardPage() {
       value: usuarios,
       bgIcon: "bg-indigo-50",
       text: "text-indigo-700",
+    },
+    {
+      label: "Inscripciones",
+      icon: <ClipboardDocumentListIcon className="w-7 h-7 text-blue-500" />,
+      color: "from-blue-100 to-blue-50",
+      href: "/admin/inscripciones",
+      value: inscripciones,
+      bgIcon: "bg-blue-50",
+      text: "text-blue-700",
     },
     {
       label: "Wildcards",
@@ -112,7 +129,7 @@ export default async function AdminDashboardPage() {
           Bienvenido al panel de administración. Usa la navegación para gestionar usuarios, wildcards, eventos, compras y sugerencias.
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {stats.map((stat) => (
           <Link
             key={stat.label}
