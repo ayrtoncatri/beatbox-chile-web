@@ -80,7 +80,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
       <div className="max-w-2xl mx-auto space-y-12">
         {/* EventForm */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold mb-6">Editar evento</h1>
+          <h1 className="text-2xl font-bold mb-6 text-gray-700">Editar evento</h1>
           <EventForm
             evento={serializedEvento}
             regiones={serializedRegiones}
@@ -91,13 +91,13 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
         {/* CompetitionCategoryForm */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6">Configuración de Competición</h2>
+          <h2 className="text-2xl font-bold mb-6 text-purple-800">Configuración de Competición</h2>
           <CompetitionCategoryForm eventoId={id} allCategories={serializedAllCategories} />
         </div>
 
         {/* JudgeAssignmentForm */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6">Asignar Jueces</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-600">Asignar Jueces</h2>
           <JudgeAssignmentForm
             eventoId={id}
             allJudges={judgesList}
@@ -114,12 +114,12 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
         {/* WildcardRankingTable */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6">Ranking de Wildcards</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-700">Ranking de Wildcards</h2>
           <WildcardRankingTable eventoId={id} allCategories={activeCategories} />
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6">Participantes Inscritos</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Participantes Inscritos</h2>
           <InscritosTable inscritos={serializedInscritos} />
         </div>
       </div>

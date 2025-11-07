@@ -552,7 +552,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
       {/* --- SECCIÓN: Gestión de Tipos de Entrada --- */}
       {actuallyEditing && (
         <div className="space-y-6 bg-white p-6 rounded-lg shadow mt-8">
-          <h2 className="text-xl font-semibold border-b pb-2 mb-6">
+          <h2 className="text-xl font-semibold border-b pb-2 mb-6 text-gray-700">
             Tipos de Entrada
           </h2>
 
@@ -619,11 +619,11 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
            )}
 
           {/* Lista de tipos existentes */}
-          <h3 className="text-lg font-semibold mb-4">Entradas Actuales</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-600">Entradas Actuales</h3>
           {evento.ticketTypes && evento.ticketTypes.length > 0 ? (
             <ul className="space-y-3">
               {evento.ticketTypes.map((ticket) => (
-                <li key={ticket.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                <li key={ticket.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border text-gray-500">
                   <div className="flex items-center gap-3">
                     <TicketIcon className="w-5 h-5 text-blue-600" />
                     <div>

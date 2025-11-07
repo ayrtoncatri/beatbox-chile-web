@@ -81,7 +81,7 @@ export default function SugerenciaDetailPopup({
 
   return (
     <PopupModal open={open} onClose={onClose}>
-      <div className="p-6 min-w-[350px] animate-fade-in">
+      <div className="p-6 min-w-[350px] animate-fade-in text-gray-700">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold text-lg">Detalle de sugerencia</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-sm">Cerrar</button>
