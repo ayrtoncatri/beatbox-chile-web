@@ -66,11 +66,11 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
             )}
             <div>
               {/* 'nombreCompleto' ya usa la nueva lógica */}
-              <h2 className="text-2xl font-bold">{nombreCompleto}</h2>
-              <div className="text-xs text-gray-400">ID: {user.id}</div>
+              <h2 className="text-2xl font-bold text-gray-900 placeholder:text-gray-400">{nombreCompleto}</h2>
+              <div className="text-xs text-gray-500">ID: {user.id}</div>
             </div>
           </div>
-          <Link href="/admin/usuarios" className="btn btn-outline btn-sm">
+          <Link href="/admin/usuarios" className="btn btn-outline btn-sm text-gray-900 placeholder:text-gray-400">
             ← Volver
           </Link>
         </div>
@@ -89,11 +89,12 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
             <h3 className="font-semibold mb-2 text-lg text-gray-800">Resumen</h3>
             <div className="text-sm space-y-2">
               <div>
-                <span className="text-gray-500">Email:</span> {user.email}
+                <span className="text-gray-500 ">Email:</span> 
+                <span className="capitalize text-gray-900">{user.email}</span>
               </div>
               <div>
                 <span className="text-gray-500">Rol:</span>{" "}
-                <span className="capitalize">{roles}</span>
+                <span className="capitalize text-gray-900">{roles}</span>
               </div>
               <div>
                 <span className="text-gray-500">Estado:</span>{" "}

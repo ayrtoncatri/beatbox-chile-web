@@ -27,7 +27,7 @@ function CompraDetailPopup({ compra }: { compra: CompraDetail }) {
     : "";
 
   return (
-    <div>
+    <div className="text-gray-700">
       <h2 className="text-lg font-bold mb-4">Detalle de compra</h2>
       <div className="mb-2 text-sm">
         <b>ID:</b> {compra.id}
@@ -123,22 +123,22 @@ export default function ComprasPageWrapper({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-gray-700">Ingresos brutos</h3>
-          <p className="text-2xl font-bold">
+          <h3 className="font-semibold text-indigo-600">Ingresos brutos</h3>
+          <p className="text-2xl font-bold text-gray-700">
             ${stats?.ingresosBrutos?.toLocaleString("es-CL") ?? "0"}
           </p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-gray-700">Entradas vendidas</h3>
-          <p className="text-2xl font-bold">{stats?.entradasVendidas ?? "0"}</p>
+          <h3 className="font-semibold text-indigo-600">Entradas vendidas</h3>
+          <p className="text-2xl font-bold text-gray-600">{stats?.entradasVendidas ?? "0"}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-gray-700">Por tipo</h3>
+          <h3 className="font-semibold text-indigo-600">Por tipo</h3>
           {stats &&
             Object.entries(stats.porTipo).map(([tipo, data]) => {
               const tipoData = data as { cantidad: number; total: number };
               return (
-                <div key={tipo} className="flex justify-between">
+                <div key={tipo} className="flex justify-between text-gray-600">
                   <span>
                     {tipo}: {tipoData.cantidad}
                   </span>

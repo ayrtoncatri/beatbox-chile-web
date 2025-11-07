@@ -143,7 +143,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                     <span className="text-gray-400"> ({w.user?.email || "—"})</span>
                   </span>
                 </div>
-                <div><span className="text-gray-500">Alias:</span> {w.nombreArtistico || "—"}</div>
+                <div className="text-gray-900"><span className="text-gray-500">Alias:</span> {w.nombreArtistico || "—"}</div>
                 <div>
                   <span className="text-gray-500">Estado:</span>{" "}
                   <span className={
@@ -172,8 +172,8 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                     )}
                   </div>
                 )}
-                <div><span className="text-gray-500">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
-                <div><span className="text-gray-500">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
+                <div className="text-gray-900"><span className="text-gray-500">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
+                <div className="text-gray-900"><span className="text-gray-500">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">
                 <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />

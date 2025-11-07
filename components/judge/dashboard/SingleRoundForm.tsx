@@ -174,7 +174,7 @@ export function SingleRoundForm({
               id={`scores.${index}.value`}
               {...form.register(`scores.${index}.value`, { valueAsNumber: true })}
               disabled={formStatus === ScoreStatus.SUBMITTED}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-900 placeholder:text-gray-400"
             >
               {generateOptions(criterio.maxScore).map((val) => (
                 <option key={val} value={val}>
@@ -205,7 +205,7 @@ export function SingleRoundForm({
           {...form.register('notes')}
           rows={2}
           disabled={formStatus === ScoreStatus.SUBMITTED}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-900 placeholder:text-gray-400"
           placeholder="Comentarios sobre este round..."
         />
       </div>

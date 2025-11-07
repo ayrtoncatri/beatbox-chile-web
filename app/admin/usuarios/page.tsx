@@ -86,7 +86,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
           <form
             method="GET"
             action="/admin/usuarios"
-            className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200"
+            className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200 text-gray-900 placeholder:text-gray-400"
           >
             <input
               type="text"
@@ -173,8 +173,8 @@ export default async function UsuariosPage({ searchParams }: Props) {
                          </div>
                        </div>
                     </td>
-                    <td className="p-5">{u.email}</td>
-                    <td className="p-5 capitalize">
+                    <td className="p-5 text-gray-900 placeholder:text-gray-400 ">{u.email}</td>
+                    <td className="p-5 capitalize text-gray-900 placeholder:text-gray-400">
                       {u.roles.length > 0
                         ? u.roles.map((userRole) => userRole.role.name).join(", ")
                         : "Sin rol"}

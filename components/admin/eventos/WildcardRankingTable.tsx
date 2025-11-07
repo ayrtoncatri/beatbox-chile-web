@@ -96,7 +96,7 @@ export function WildcardRankingTable({
     return (
         <div className="space-y-6">
             {/* Selector de Categoría */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 text-gray-600">
                 <label htmlFor="category" className="font-medium">
                     Categoría:
                 </label>
