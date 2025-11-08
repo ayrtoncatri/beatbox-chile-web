@@ -54,39 +54,39 @@ export default function ComprasFilters(props: {
 
   return (
     <form
-      className="flex flex-col md:flex-row md:items-end gap-4 bg-white p-6 rounded-2xl shadow border border-gray-200 mb-4"
+      className="flex flex-col md:flex-row md:items-end gap-4 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-2xl shadow-lg mb-4"
       method="GET"
     >
       <div className="flex-1">
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Búsqueda</label>
-        <input name="q" defaultValue={defaults.q} className="input input-bordered w-full bg-gray-50 border-gray-200" placeholder="Nombre, email, evento..." />
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Búsqueda</label>
+        <input name="q" defaultValue={defaults.q} className="input input-bordered w-full bg-blue-950/50 border-blue-700/50 text-white placeholder:text-blue-300/70" placeholder="Nombre, email, evento..." />
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Evento</label>
-        <select name="eventId" defaultValue={defaults.eventId || ""} className="select select-bordered w-full bg-gray-50 border-gray-200">
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Evento</label>
+        <select name="eventId" defaultValue={defaults.eventId || ""} className="select select-bordered w-full bg-blue-950/50 border-blue-700/50 text-white">
           <option value="">Todos</option>
           {events.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
         </select>
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Tipo</label>
-        <select name="tipo" defaultValue={defaults.tipo || ""} className="select select-bordered w-full bg-gray-50 border-gray-200">
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Tipo</label>
+        <select name="tipo" defaultValue={defaults.tipo || ""} className="select select-bordered w-full bg-blue-950/50 border-blue-700/50 text-white">
           <option value="">Todos</option>
           <option value="General">General</option>
           <option value="VIP">VIP</option>
         </select>
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Desde</label>
-        <input type="datetime-local" name="from" defaultValue={defaults.from} className="input input-bordered w-full bg-gray-50 border-gray-200" />
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Desde</label>
+        <input type="datetime-local" name="from" defaultValue={defaults.from} className="input input-bordered w-full bg-blue-950/50 border-blue-700/50 text-white" />
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Hasta</label>
-        <input type="datetime-local" name="to" defaultValue={defaults.to} className="input input-bordered w-full bg-gray-50 border-gray-200" />
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Hasta</label>
+        <input type="datetime-local" name="to" defaultValue={defaults.to} className="input input-bordered w-full bg-blue-950/50 border-blue-700/50 text-white" />
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Orden</label>
-        <select name="sort" defaultValue={sort} className="select select-bordered w-full bg-gray-50 border-gray-200">
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Orden</label>
+        <select name="sort" defaultValue={sort} className="select select-bordered w-full bg-blue-950/50 border-blue-700/50 text-white">
           <option value="fecha_desc">Fecha desc</option>
           <option value="fecha_asc">Fecha asc</option>
           <option value="total_desc">Total desc</option>
@@ -94,15 +94,15 @@ export default function ComprasFilters(props: {
         </select>
       </div>
       <div>
-        <label className="block text-xs font-semibold mb-1 text-gray-600">Por página</label>
-        <select name="pageSize" defaultValue={String(defaults.pageSize)} className="select select-bordered w-full bg-gray-50 border-gray-200">
+        <label className="block text-xs font-semibold mb-1 text-blue-300">Por página</label>
+        <select name="pageSize" defaultValue={String(defaults.pageSize)} className="select select-bordered w-full bg-blue-950/50 border-blue-700/50 text-white">
           {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
       <div className="flex gap-2 mt-2 md:mt-0">
         <button
           type="submit"
-          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition"
+          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-600 transition"
         >
           <FunnelIcon className="w-5 h-5" /> Filtrar
         </button>
@@ -110,7 +110,7 @@ export default function ComprasFilters(props: {
           type="button"
           onClick={handleExport}
           disabled={isExporting}
-          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition disabled:opacity-70"
+          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold shadow-lg hover:from-green-700 hover:to-green-600 transition disabled:opacity-70"
         >
           <ArrowDownTrayIcon className="w-5 h-5" />
           {isExporting ? 'Exportando...' : 'Exportar CSV'}

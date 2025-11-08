@@ -30,9 +30,9 @@ export default function PopupModal({ open, onClose, children }: PopupModalProps)
             exit={{ opacity: 0, scale: 0.95, y: 40 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
+            <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 font-bold"
+                className="absolute top-3 right-3 text-blue-300 hover:text-blue-100 font-bold text-xl"
                 onClick={onClose}
                 aria-label="Cerrar"
                 type="button"

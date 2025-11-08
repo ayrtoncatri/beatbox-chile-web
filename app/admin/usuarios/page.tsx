@@ -79,26 +79,25 @@ export default async function UsuariosPage({ searchParams }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Usuarios</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Usuarios</h2>
           <form
             method="GET"
             action="/admin/usuarios"
-            className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200 text-gray-900 placeholder:text-gray-400"
+            className="flex flex-wrap items-center gap-2 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-xl shadow-lg px-4 py-2 text-blue-100 placeholder:text-blue-400/50"
           >
             <input
               type="text"
               name="q"
               defaultValue={q}
               placeholder="Buscar por nombre o email"
-              className="input input-bordered w-40 sm:w-64 bg-gray-50 border-gray-200 focus:border-indigo-400"
+              className="input input-bordered w-40 sm:w-64 bg-blue-950/50 border-blue-700/50 text-white placeholder:text-blue-300/70 focus:border-blue-500"
             />
             <select
               name="status"
               defaultValue={status}
-              className="select select-bordered bg-gray-50 border-gray-200 focus:border-indigo-400"
+              className="select select-bordered bg-blue-950/50 border-blue-700/50 text-white focus:border-blue-500"
             >
               <option value="all">Todos</option>
               <option value="active">Activos</option>
@@ -107,14 +106,14 @@ export default async function UsuariosPage({ searchParams }: Props) {
             <select
               name="pageSize"
               defaultValue={String(pageSize)}
-              className="select select-bordered bg-gray-50 border-gray-200 focus:border-indigo-400"
+              className="select select-bordered bg-blue-950/50 border-blue-700/50 text-white focus:border-blue-500"
             >
               <option value="10">10</option>
               <option value="20">20</option>
               <option value="50">50</option>
             </select>
             <button
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition"
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-600 transition"
               type="submit"
             >
               Buscar
@@ -123,9 +122,9 @@ export default async function UsuariosPage({ searchParams }: Props) {
         </div>
 
         {/* Tabla desktop */}
-        <div className="hidden md:block rounded-2xl shadow bg-white border border-gray-200 overflow-x-auto">
+        <div className="hidden md:block rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-blue-900/50 text-blue-200 border-b border-blue-700/30">
               <tr>
                 <th className="text-left p-5 font-semibold">Usuario</th>
                 <th className="text-left p-5 font-semibold">Email</th>
@@ -148,7 +147,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
                 }
 
                 return (
-                  <tr key={u.id} className="border-b last:border-b-0 hover:bg-indigo-50/30 transition">
+                  <tr key={u.id} className="border-b border-blue-700/20 last:border-b-0 hover:bg-blue-800/30 transition">
                     <td className="p-5">
                       {/* ... (código de perfil de usuario) ... */}
                        <div className="flex items-center gap-3">
@@ -156,35 +155,35 @@ export default async function UsuariosPage({ searchParams }: Props) {
                            <img
                              src={u.image}
                              alt={u.email ?? "avatar"}
-                             className="w-11 h-11 rounded-full object-cover border-2 border-indigo-200 shadow"
+                             className="w-11 h-11 rounded-full object-cover border-2 border-blue-500/50 shadow"
                            />
                          ) : (
-                           <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-xl border-2 border-indigo-200 shadow">
+                           <div className="w-11 h-11 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-300 font-bold text-xl border-2 border-blue-500/50 shadow">
                              <UserIcon className="w-6 h-6" />
                            </div>
                          )}
                          <div>
-                           <div className="font-semibold text-gray-900 text-base">
+                           <div className="font-semibold text-white text-base">
                              {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
                                .filter(Boolean)
                                .join(" ") || "—"}
                            </div>
-                           <div className="text-xs text-gray-400">ID: {u.id}</div>
+                           <div className="text-xs text-blue-300/70">ID: {u.id}</div>
                          </div>
                        </div>
                     </td>
-                    <td className="p-5 text-gray-900 placeholder:text-gray-400 ">{u.email}</td>
-                    <td className="p-5 capitalize text-gray-900 placeholder:text-gray-400">
+                    <td className="p-5 text-white">{u.email}</td>
+                    <td className="p-5 capitalize text-white">
                       {u.roles.length > 0
                         ? u.roles.map((userRole) => userRole.role.name).join(", ")
                         : "Sin rol"}
                     </td>
                     <td className="p-5">
                       <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${
                           u.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-green-900/50 text-green-300 border-green-700/30"
+                            : "bg-red-900/50 text-red-300 border-red-700/30"
                         }`}
                       >
                         {u.isActive ? "Activo" : "Inactivo"}
@@ -194,7 +193,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
                       <div className="flex items-center justify-end gap-3">
                         <Link
                           href={`/admin/usuarios/${u.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
                           title="Ver usuario"
                         >
                           <EyeIcon className="w-4 h-4" />
@@ -213,7 +212,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
               })}
               {users.length === 0 && (
                 <tr>
-                  <td className="p-6 text-center text-gray-500" colSpan={5}>
+                  <td className="p-6 text-center text-blue-300/70" colSpan={5}>
                     No se encontraron usuarios.
                   </td>
                 </tr>
@@ -239,7 +238,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
             return (
               <div
                 key={u.id}
-                className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2"
+                className="rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 flex flex-col gap-2"
               >
                 {/* ... (código de perfil móvil) ... */}
                 <div className="flex items-center gap-3">
@@ -247,34 +246,34 @@ export default async function UsuariosPage({ searchParams }: Props) {
                      <img
                        src={u.image}
                        alt={u.email ?? "avatar"}
-                       className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 shadow"
+                       className="w-10 h-10 rounded-full object-cover border-2 border-blue-500/50 shadow"
                      />
                    ) : (
-                     <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg border-2 border-indigo-200 shadow">
+                     <div className="w-10 h-10 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-300 font-bold text-lg border-2 border-blue-500/50 shadow">
                        <UserIcon className="w-5 h-5" />
                      </div>
                    )}
                    <div>
-                     <div className="font-semibold text-gray-900">
+                     <div className="font-semibold text-white">
                        {[u.profile?.nombres, u.profile?.apellidoPaterno, u.profile?.apellidoMaterno]
                          .filter(Boolean)
                          .join(" ") || "—"}
                      </div>
-                     <div className="text-xs text-gray-400">ID: {u.id}</div>
+                     <div className="text-xs text-blue-300/70">ID: {u.id}</div>
                    </div>
                  </div>
-                 <div className="text-xs text-gray-500">{u.email}</div>
+                 <div className="text-xs text-white">{u.email}</div>
                  <div className="flex items-center gap-2 text-xs">
-                   <span className="capitalize">
+                   <span className="capitalize text-white">
                      {u.roles.length > 0
                        ? u.roles.map((userRole) => userRole.role.name).join(", ")
                        : "Sin rol"}
                    </span>
                    <span
-                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${
                        u.isActive
-                         ? "bg-green-100 text-green-700"
-                         : "bg-red-100 text-red-700"
+                         ? "bg-green-900/50 text-green-300 border-green-700/30"
+                         : "bg-red-900/50 text-red-300 border-red-700/30"
                      }`}
                    >
                      {u.isActive ? "Activo" : "Inactivo"}
@@ -283,7 +282,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
                 <div className="flex gap-2 mt-2">
                   <Link
                     href={`/admin/usuarios/${u.id}`}
-                    className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition flex-1"
                   >
                     <EyeIcon className="w-4 h-4" />
                     Ver
@@ -299,7 +298,7 @@ export default async function UsuariosPage({ searchParams }: Props) {
             );
           })}
           {users.length === 0 && (
-            <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
+            <div className="p-6 text-center text-blue-300/70 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-xl shadow-lg">
               No se encontraron usuarios.
             </div>
           )}
@@ -307,28 +306,27 @@ export default async function UsuariosPage({ searchParams }: Props) {
 
         {/* ... (Paginación no necesita cambios) ... */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-blue-200">
             Mostrando {users.length} de {total} usuarios
           </div>
           <div className="flex items-center gap-2">
             <Link
               href={buildPageUrl(Math.max(1, page - 1))}
-              className={`btn btn-sm ${page === 1 ? "btn-disabled" : "btn-outline"}`}
+              className={`btn btn-sm ${page === 1 ? "btn-disabled opacity-50" : "bg-blue-600/50 text-blue-200 border-blue-500/30 hover:bg-blue-600/70"}`}
             >
               Anterior
             </Link>
-            <span className="text-sm">
+            <span className="text-sm text-blue-200">
               Página {page} de {totalPages}
             </span>
             <Link
               href={buildPageUrl(Math.min(totalPages, page + 1))}
-              className={`btn btn-sm ${page >= totalPages ? "btn-disabled" : "btn-outline"}`}
+              className={`btn btn-sm ${page >= totalPages ? "btn-disabled opacity-50" : "bg-blue-600/50 text-blue-200 border-blue-500/30 hover:bg-blue-600/70"}`}
             >
               Siguiente
             </Link>
           </div>
         </div>
-      </div>
     </div>
   );
 }

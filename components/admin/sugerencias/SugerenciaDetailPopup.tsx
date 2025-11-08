@@ -81,49 +81,49 @@ export default function SugerenciaDetailPopup({
 
   return (
     <PopupModal open={open} onClose={onClose}>
-      <div className="p-6 min-w-[350px] animate-fade-in text-gray-700">
+      <div className="min-w-[350px] animate-fade-in text-blue-100">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-bold text-lg">Detalle de sugerencia</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-sm">Cerrar</button>
+          <h2 className="font-bold text-lg text-white">Detalle de sugerencia</h2>
+          <button onClick={onClose} className="text-blue-300 hover:text-blue-100 text-sm">Cerrar</button>
         </div>
         {!sugerencia || isPending ? (
-          <div className="p-8 text-center">Cargando...</div>
+          <div className="p-8 text-center text-blue-200">Cargando...</div>
         ) : (
           <>
-            <div className="text-xs text-gray-500 mb-2">ID: {sugerencia.id}</div>
-            <div className="mb-2">Fecha: {new Date(sugerencia.createdAt).toLocaleString("es-CL")}</div>
-            <div className="mb-2">
+            <div className="text-xs text-blue-300/70 mb-2">ID: {sugerencia.id}</div>
+            <div className="mb-2 text-blue-200">Fecha: {new Date(sugerencia.createdAt).toLocaleString("es-CL")}</div>
+            <div className="mb-2 text-blue-200">
               Usuario: {sugerencia.user
-                ? `${sugerencia.user.profile?.nombres || ""} ${sugerencia.user.profile?.apellidoPaterno || ""}`.trim()
-                : sugerencia.nombre || "(Sin nombre)"} — {sugerencia.user ? sugerencia.user.email : sugerencia.email}
+                ? `${sugerencia.user.profile?.nombres || ""} ${sugerencia.user.profile?.apellidoPaterno || ""}`.trim()
+                : sugerencia.nombre || "(Sin nombre)"} — {sugerencia.user ? sugerencia.user.email : sugerencia.email}
             </div>
-            <div className="mb-2">Asunto: {sugerencia.asunto || <span className="text-gray-400">(Sin asunto)</span>}</div>
+            <div className="mb-2 text-blue-200">Asunto: {sugerencia.asunto || <span className="text-blue-300/70">(Sin asunto)</span>}</div>
             <div className="mb-2 flex items-center gap-2">
-              Estado:
+              <span className="text-blue-200">Estado:</span>
               {ESTADOS.map((e) => (
-                <button
-                  key={e.value}
-                  className={`px-2 py-1 rounded text-xs font-semibold border transition ${
-                    estado === e.value
-                      ? `${e.color} border-gray-300`
-                      : "bg-gray-100 text-gray-500 border-transparent hover:border-gray-300"
-                  }`}
-                  onClick={() => handleEstadoChange(e.value)}
-                  disabled={estado === e.value || isPending}
-                  type="button"
-                >
-                  {e.label}
-                </button>
-              ))}
+                <button
+                  key={e.value}
+                  className={`px-2 py-1 rounded text-xs font-semibold border transition ${
+                    estado === e.value
+                      ? `${e.color.includes('yellow') ? 'bg-yellow-900/50 text-yellow-300 border-yellow-700/30' : e.color.includes('green') ? 'bg-green-900/50 text-green-300 border-green-700/30' : e.color.includes('blue') ? 'bg-blue-900/50 text-blue-300 border-blue-700/30' : 'bg-red-900/50 text-red-300 border-red-700/30'} border-blue-500/30`
+                      : "bg-blue-900/50 text-blue-300 border-blue-700/30 hover:border-blue-500/50"
+                  }`}
+                  onClick={() => handleEstadoChange(e.value)}
+                  disabled={estado === e.value || isPending}
+                  type="button"
+                >
+                  {e.label}
+                </button>
+              ))}
             </div>
             <div className="mb-2">
-              <div className="font-semibold">Mensaje:</div>
-              <div className="whitespace-pre-line">{sugerencia.mensaje}</div>
+              <div className="font-semibold text-blue-200">Mensaje:</div>
+              <div className="whitespace-pre-line text-blue-100">{sugerencia.mensaje}</div>
             </div>
             <div className="mb-2">
-              <div className="font-semibold">Nota privada:</div>
+              <div className="font-semibold text-blue-200">Nota privada:</div>
               <textarea
-                className="w-full border rounded p-1 text-sm"
+                className="w-full border border-blue-700/50 rounded p-1 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
                 rows={2}
                 value={notaPrivada}
                 onChange={e => setNotaPrivada(e.target.value)}
@@ -131,7 +131,7 @@ export default function SugerenciaDetailPopup({
                 disabled={isPending}
               />
             </div>
-            {msg && <div className="text-xs text-green-600 mt-2">{msg}</div>}
+            {msg && <div className="text-xs text-green-300 mt-2">{msg}</div>}
           </>
         )}
       </div>

@@ -21,7 +21,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-white
-                 bg-red-600 shadow-sm hover:bg-red-700 transition-colors
+                 bg-gradient-to-r from-red-600 to-red-500 shadow-lg hover:from-red-700 hover:to-red-600 transition-colors
                  disabled:opacity-50 disabled:cursor-wait"
     >
       <ShieldCheckIcon className="w-5 h-5" />
@@ -53,17 +53,17 @@ export function ClassificationForm({ cnEventos }: { cnEventos: CNEvento[] }) {
       {/* --- Inputs del Formulario --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="cnEventoId" className="block text-sm font-semibold leading-6 text-gray-900">
+          <label htmlFor="cnEventoId" className="block text-sm font-semibold leading-6 text-blue-200">
             Campeonato Nacional (Destino)
           </label>
-          <p className="text-xs text-gray-500 mb-2">Selecciona el evento al cual se inscribirán los clasificados.</p>
+          <p className="text-xs text-blue-300/70 mb-2">Selecciona el evento al cual se inscribirán los clasificados.</p>
           <select
             id="cnEventoId"
             name="cnEventoId"
             required
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm
-                       ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                       focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-0 py-2 px-3 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                       ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                       focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
           >
             {cnEventos.length === 0 && <option value="">No hay eventos de CN creados</option>}
             {cnEventos.map((evento) => (
@@ -74,42 +74,42 @@ export function ClassificationForm({ cnEventos }: { cnEventos: CNEvento[] }) {
           </select>
         </div>
         <div>
-          <label htmlFor="year" className="block text-sm font-semibold leading-6 text-gray-900">
+          <label htmlFor="year" className="block text-sm font-semibold leading-6 text-blue-200">
             Año del Ciclo de Clasificación
           </label>
-           <p className="text-xs text-gray-500 mb-2">Ingresa el año del cual se obtendrán los ganadores (ej. 2025).</p>
+           <p className="text-xs text-blue-300/70 mb-2">Ingresa el año del cual se obtendrán los ganadores (ej. 2025).</p>
           <input
             type="number"
             id="year"
             name="year"
             required
             defaultValue={currentYear}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm
-                       ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                       focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-0 py-2 px-3 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                       ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                       focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
           />
         </div>
       </div>
 
       {/* --- Botón de Envío --- */}
-      <div className="border-t border-gray-200 pt-6">
+      <div className="border-t border-blue-700/30 pt-6">
         <SubmitButton />
       </div>
 
       {/* --- (4) Área de Resultados y Log --- */}
       {(state.success || state.error || (state.log && state.log.length > 0)) && (
-        <div className="mt-6 border-t border-gray-200 pt-6 space-y-4">
+        <div className="mt-6 border-t border-blue-700/30 pt-6 space-y-4">
           
           {/* Mensaje de Éxito */}
           {state.success && (
-            <div className="rounded-md bg-green-50 p-4 shadow-sm border border-green-200">
+            <div className="rounded-md bg-green-900/50 p-4 shadow-sm border border-green-700/30">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">Clasificación Exitosa</h3>
-                  <div className="mt-2 text-sm text-green-700">
+                  <h3 className="text-sm font-medium text-green-300">Clasificación Exitosa</h3>
+                  <div className="mt-2 text-sm text-green-200">
                     <p>{state.success}</p>
                   </div>
                 </div>
@@ -119,14 +119,14 @@ export function ClassificationForm({ cnEventos }: { cnEventos: CNEvento[] }) {
 
           {/* Mensaje de Error */}
           {state.error && (
-            <div className="rounded-md bg-red-50 p-4 shadow-sm border border-red-200">
+            <div className="rounded-md bg-red-900/50 p-4 shadow-sm border border-red-700/30">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error en la Clasificación</h3>
-                  <div className="mt-2 text-sm text-red-700">
+                  <h3 className="text-sm font-medium text-red-300">Error en la Clasificación</h3>
+                  <div className="mt-2 text-sm text-red-200">
                     <p>{state.error}</p>
                   </div>
                 </div>
@@ -136,18 +136,18 @@ export function ClassificationForm({ cnEventos }: { cnEventos: CNEvento[] }) {
           
           {/* Log de Proceso */}
           {state.log && state.log.length > 0 && (
-            <div className="rounded-md bg-gray-900 p-6 shadow-lg">
+            <div className="rounded-md bg-blue-950/80 p-6 shadow-lg border border-blue-700/30">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <InformationCircleIcon className="h-5 w-5 text-indigo-400" aria-hidden="true" />
+                  <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
                 </div>
                 <div className="ml-3 flex-1">
-                  <h3 className="text-sm font-medium text-indigo-300 mb-2">Log del Proceso</h3>
-                  <div className="mt-2 text-sm text-gray-300 font-mono">
+                  <h3 className="text-sm font-medium text-blue-300 mb-2">Log del Proceso</h3>
+                  <div className="mt-2 text-sm text-blue-200 font-mono">
                     <ul role="list" className="space-y-1">
                       {state.log.map((entry, index) => (
                         <li key={index} className="flex gap-2">
-                          <span className="text-gray-500">&gt;</span>
+                          <span className="text-blue-400">&gt;</span>
                           <span>{entry}</span>
                         </li>
                       ))}

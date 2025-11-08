@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { FaBars, FaTimes, FaUserCircle, FaSignOutAlt, FaCog } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButtons from "@/components/home/AuthButtons";
@@ -25,6 +26,7 @@ const navItems = [
 ];
 
 export default function Header() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -43,6 +45,11 @@ export default function Header() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // No renderizar el Header en rutas de admin (después de todos los hooks)
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const user = session?.user;
 

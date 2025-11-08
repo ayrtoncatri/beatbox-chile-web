@@ -202,13 +202,16 @@ export default async function Page({
   }));
 
   return (
-    <SugerenciasPageWrapper
-      rows={sugerenciasRows}
-      pagination={pagination}
-      filterDefaults={filterDefaults}
-      stats={countByEstado}
-      searchParams={params}
-      users={users}
-    />
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold tracking-tight text-white">Sugerencias</h1>
+      <SugerenciasPageWrapper
+        rows={sugerenciasRows}
+        pagination={pagination}
+        filterDefaults={filterDefaults}
+        stats={countByEstado}
+        searchParams={params}
+        users={users}
+      />
+    </div>
   );
 }

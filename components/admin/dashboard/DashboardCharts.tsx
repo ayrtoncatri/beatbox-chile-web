@@ -22,14 +22,24 @@ export function UsuariosPorEstadoChart({ data }: { data: { activos: number; inac
         datasets: [
           {
             data: [data.activos, data.inactivos],
-            backgroundColor: ["#6366f1", "#e5e7eb"],
-            borderWidth: 1,
+            backgroundColor: ["#3b82f6", "#64748b"],
+            borderWidth: 2,
+            borderColor: "#1e293b",
           },
         ],
       }}
       options={{
         plugins: {
-          legend: { display: true, position: "bottom" },
+          legend: { 
+            display: true, 
+            position: "bottom",
+            labels: {
+              color: "#cbd5e1",
+              font: {
+                size: 12
+              }
+            }
+          },
         },
         cutout: "70%",
       }}
@@ -46,8 +56,10 @@ export function WildcardsPorEstadoChart({ data }: { data: { aprobados: number; r
           {
             label: "Cantidad",
             data: [data.aprobados, data.rechazados, data.pendientes],
-            backgroundColor: ["#22c55e", "#ef4444", "#facc15"],
+            backgroundColor: ["#3b82f6", "#ef4444", "#fbbf24"],
             borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "#1e293b",
           },
         ],
       }}
@@ -56,7 +68,24 @@ export function WildcardsPorEstadoChart({ data }: { data: { aprobados: number; r
           legend: { display: false },
         },
         scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { 
+            beginAtZero: true, 
+            ticks: { 
+              stepSize: 1,
+              color: "#cbd5e1"
+            },
+            grid: {
+              color: "#334155"
+            }
+          },
+          x: {
+            ticks: {
+              color: "#cbd5e1"
+            },
+            grid: {
+              color: "#334155"
+            }
+          }
         },
       }}
     />
@@ -72,8 +101,10 @@ export function ComprasPorMesChart({ data }: { data: { labels: string[]; values:
           {
             label: "Ingresos CLP",
             data: data.values,
-            backgroundColor: "#f97316",
+            backgroundColor: "#3b82f6",
             borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "#1e293b",
           },
         ],
       }}
@@ -82,7 +113,23 @@ export function ComprasPorMesChart({ data }: { data: { labels: string[]; values:
           legend: { display: false },
         },
         scales: {
-          y: { beginAtZero: true },
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              color: "#cbd5e1"
+            },
+            grid: {
+              color: "#334155"
+            }
+          },
+          x: {
+            ticks: {
+              color: "#cbd5e1"
+            },
+            grid: {
+              color: "#334155"
+            }
+          }
         },
       }}
     />

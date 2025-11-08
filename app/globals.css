@@ -68,10 +68,48 @@ button {
 }
 
 input::placeholder,
-textarea::placeholder,
-select {
+textarea::placeholder {
   color: #6b7280; /* Tailwind gray-500 */
 }
-textarea, select, td {
-  color: #111827; /* Tailwind gray-900 */
+
+/* Estilos específicos para el admin panel - sobrescriben los estilos globales */
+.admin-panel input,
+.admin-panel select,
+.admin-panel textarea,
+.admin-panel td {
+  color: inherit; /* Hereda el color del contenedor */
+}
+
+/* Inputs y selects en admin panel - texto blanco */
+.admin-panel input[type="text"],
+.admin-panel input[type="datetime-local"],
+.admin-panel input[type="date"],
+.admin-panel input[type="number"],
+.admin-panel input[type="email"],
+.admin-panel input[type="search"],
+.admin-panel select {
+  color: white !important;
+}
+
+/* Placeholders visibles */
+.admin-panel input::placeholder,
+.admin-panel textarea::placeholder {
+  color: rgba(147, 197, 253, 0.7) !important; /* blue-300/70 */
+}
+
+/* Opciones del select - texto oscuro sobre fondo claro cuando se abre el dropdown */
+.admin-panel option {
+  color: #111827 !important; /* Texto oscuro para legibilidad en el dropdown */
+  background-color: #f8fafc !important; /* Fondo claro para el dropdown */
+}
+
+/* Celdas de tabla - texto blanco */
+.admin-panel td {
+  color: white !important;
+}
+
+/* Asegurar que los valores seleccionados en selects sean visibles */
+.admin-panel select option:checked {
+  color: #111827 !important;
+  background-color: #e2e8f0 !important;
 }

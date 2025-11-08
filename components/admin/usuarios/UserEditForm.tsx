@@ -29,7 +29,7 @@ function SubmitButton() {
   return (
     <button
       type="submit"
-      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-600 transition"
       disabled={pending}
     >
       <PencilSquareIcon className="w-5 h-5" />
@@ -82,7 +82,7 @@ export default function UserEditForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Email</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Email</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800"
             value={user.email || ""} // 'email' sigue estando en 'user'
@@ -91,9 +91,9 @@ export default function UserEditForm({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Rol</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Rol</label>
           <select
-            className={`w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 ${
+            className={`w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 ${
               isRoleChangeDisabled ? "opacity-50 cursor-not-allowed" : ""
             }`}
             name="role"
@@ -108,14 +108,14 @@ export default function UserEditForm({
             <option value="judge">judge</option> {/* Añadí 'judge' como ejemplo */}
           </select>
           {isRoleChangeDisabled && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-blue-300/70 mt-1">
               No puedes cambiar el rol de un administrador.
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Nombres</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Nombres</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="nombres"
@@ -126,7 +126,7 @@ export default function UserEditForm({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Apellido paterno</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido paterno</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="apellidoPaterno"
@@ -137,7 +137,7 @@ export default function UserEditForm({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Apellido materno</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido materno</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="apellidoMaterno"
@@ -148,7 +148,7 @@ export default function UserEditForm({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Imagen (URL)</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Imagen (URL)</label>
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="image"

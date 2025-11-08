@@ -76,11 +76,11 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   const activeCategories = serializedEvento.categories.map((c: any) => c.categoria) || [];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
+    <main className="min-h-screen py-8 px-2 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-12">
         {/* EventForm */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold mb-6 text-gray-700">Editar evento</h1>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold mb-6 text-white">Editar evento</h1>
           <EventForm
             evento={serializedEvento}
             regiones={serializedRegiones}
@@ -90,14 +90,14 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         </div>
 
         {/* CompetitionCategoryForm */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-purple-800">Configuración de Competición</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-white">Configuración de Competición</h2>
           <CompetitionCategoryForm eventoId={id} allCategories={serializedAllCategories} />
         </div>
 
         {/* JudgeAssignmentForm */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-gray-600">Asignar Jueces</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-white">Asignar Jueces</h2>
           <JudgeAssignmentForm
             eventoId={id}
             allJudges={judgesList}
@@ -105,7 +105,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
           />
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
           <BracketGenerator 
             eventoId={id} 
             activeCategories={activeCategories} 
@@ -113,13 +113,13 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         </div>
 
         {/* WildcardRankingTable */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-gray-700">Ranking de Wildcards</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-white">Ranking de Wildcards</h2>
           <WildcardRankingTable eventoId={id} allCategories={activeCategories} />
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Participantes Inscritos</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-white">Participantes Inscritos</h2>
           <InscritosTable inscritos={serializedInscritos} />
         </div>
       </div>

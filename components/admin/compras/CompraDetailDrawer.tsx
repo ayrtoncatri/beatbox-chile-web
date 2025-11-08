@@ -63,45 +63,45 @@ export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
       <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
       
       {/* Drawer */}
-      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-lg">
-        <div className="p-4 flex justify-between items-center border-b">
-          <h2 className="text-xl font-bold">Detalle de compra</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border-l border-blue-700/30 shadow-lg">
+        <div className="p-4 flex justify-between items-center border-b border-blue-700/30">
+          <h2 className="text-xl font-bold text-white">Detalle de compra</h2>
+          <button onClick={onClose} className="text-blue-300 hover:text-blue-100">
             Cerrar
           </button>
         </div>
         
         {loading ? (
-          <div className="p-4">Cargando...</div>
+          <div className="p-4 text-blue-200">Cargando...</div>
         ) : compra ? (
-          <div className="p-4">
+          <div className="p-4 text-blue-100">
             {/* Información de la compra */}
             <div className="mb-4">
-              <p><strong>ID:</strong> {compra.id}</p>
-              <p><strong>Fecha compra:</strong> {new Date(compra.createdAt).toLocaleString()}</p>
+              <p><strong className="text-blue-200">ID:</strong> {compra.id}</p>
+              <p><strong className="text-blue-200">Fecha compra:</strong> {new Date(compra.createdAt).toLocaleString()}</p>
             </div>
             
             {/* Información del comprador */}
             <div className="mb-4">
-              <h3 className="font-semibold mb-1">Comprador:</h3>
-              <p><strong>Nombre:</strong> {compra.userNombre}</p>
-              <p><strong>Email:</strong> {compra.userEmail}</p>
+              <h3 className="font-semibold mb-1 text-blue-200">Comprador:</h3>
+              <p><strong className="text-blue-200">Nombre:</strong> {compra.userNombre}</p>
+              <p><strong className="text-blue-200">Email:</strong> {compra.userEmail}</p>
             </div>
             
             {/* Información del evento */}
             <div className="mb-4">
-              <h3 className="font-semibold mb-1">Evento:</h3>
-              <p><strong>Nombre:</strong> {compra.eventoNombre}</p>
-              <p><strong>Fecha:</strong> {new Date(compra.eventoFecha).toLocaleString()}</p>
+              <h3 className="font-semibold mb-1 text-blue-200">Evento:</h3>
+              <p><strong className="text-blue-200">Nombre:</strong> {compra.eventoNombre}</p>
+              <p><strong className="text-blue-200">Fecha:</strong> {new Date(compra.eventoFecha).toLocaleString()}</p>
             </div>
             
             {/* Información de la entrada */}
             <div className="mb-4">
-              <h3 className="font-semibold mb-1">Entrada:</h3>
-              <p><strong>Tipo:</strong> {compra.tipoEntrada}</p>
-              <p><strong>Cantidad:</strong> {compra.cantidad}</p>
-              <p><strong>Precio unitario:</strong> ${compra.precioUnitario}</p>
-              <p><strong>Total:</strong> ${compra.total}</p>
+              <h3 className="font-semibold mb-1 text-blue-200">Entrada:</h3>
+              <p><strong className="text-blue-200">Tipo:</strong> {compra.tipoEntrada}</p>
+              <p><strong className="text-blue-200">Cantidad:</strong> {compra.cantidad}</p>
+              <p><strong className="text-blue-200">Precio unitario:</strong> ${compra.precioUnitario}</p>
+              <p><strong className="text-blue-200">Total:</strong> ${compra.total}</p>
             </div>
             
             {/* Botones de acción */}
@@ -109,21 +109,21 @@ export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
               <button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
+                className="bg-gradient-to-r from-red-600 to-red-500 text-white px-4 py-2 rounded-lg shadow-lg hover:from-red-700 hover:to-red-600 disabled:opacity-50"
               >
                 {deleteLoading ? 'Eliminando...' : 'Eliminar'}
               </button>
               
               <button
                 onClick={() => router.push(`/admin/eventos/${compra.eventoId}`)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-600"
               >
                 Ver evento
               </button>
             </div>
           </div>
         ) : (
-          <div className="p-4">No se encontró la compra</div>
+          <div className="p-4 text-blue-200">No se encontró la compra</div>
         )}
       </div>
     </div>
