@@ -49,7 +49,7 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
+    <div className="min-h-screen py-8 px-2 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -66,18 +66,18 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
             )}
             <div>
               {/* 'nombreCompleto' ya usa la nueva lógica */}
-              <h2 className="text-2xl font-bold text-gray-900 placeholder:text-gray-400">{nombreCompleto}</h2>
-              <div className="text-xs text-gray-500">ID: {user.id}</div>
+              <h2 className="text-2xl font-bold text-white">{nombreCompleto}</h2>
+              <div className="text-xs text-blue-300/70">ID: {user.id}</div>
             </div>
           </div>
-          <Link href="/admin/usuarios" className="btn btn-outline btn-sm text-gray-900 placeholder:text-gray-400">
+          <Link href="/admin/usuarios" className="btn btn-outline btn-sm text-blue-200 border-blue-700/50 hover:bg-blue-800/50">
             ← Volver
           </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-8 shadow space-y-6">
-            <h3 className="font-semibold mb-2 text-lg text-gray-800">Editar usuario</h3>
+          <div className="lg:col-span-2 rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg space-y-6">
+            <h3 className="font-semibold mb-2 text-lg text-white">Editar usuario</h3>
             <UserEditForm 
               user={user} 
               isSelf={isSelf} 
@@ -85,24 +85,24 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
             />
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow flex flex-col gap-4">
-            <h3 className="font-semibold mb-2 text-lg text-gray-800">Resumen</h3>
+          <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg flex flex-col gap-4">
+            <h3 className="font-semibold mb-2 text-lg text-white">Resumen</h3>
             <div className="text-sm space-y-2">
               <div>
-                <span className="text-gray-500 ">Email:</span> 
-                <span className="capitalize text-gray-900">{user.email}</span>
+                <span className="text-blue-300/70 ">Email:</span> 
+                <span className="capitalize text-blue-100">{user.email}</span>
               </div>
               <div>
-                <span className="text-gray-500">Rol:</span>{" "}
-                <span className="capitalize text-gray-900">{roles}</span>
+                <span className="text-blue-300/70">Rol:</span>{" "}
+                <span className="capitalize text-blue-100">{roles}</span>
               </div>
               <div>
-                <span className="text-gray-500">Estado:</span>{" "}
+                <span className="text-blue-300/70">Estado:</span>{" "}
                 <span
                   className={
                     user.isActive
-                      ? "bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold"
-                      : "bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      ? "bg-green-900/50 text-green-300 border border-green-700/30 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      : "bg-red-900/50 text-red-300 border border-red-700/30 px-2 py-0.5 rounded-full text-xs font-semibold"
                   }
                 >
                   {user.isActive ? "Activo" : "Inactivo"}

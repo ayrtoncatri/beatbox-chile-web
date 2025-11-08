@@ -59,10 +59,10 @@ export default function SugerenciasTable(props: {
   // --- DESKTOP TABLE ---
   return (
     <>
-      <div className="hidden md:block overflow-auto rounded-2xl shadow bg-white border border-gray-200">
+      <div className="hidden md:block overflow-auto rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="bg-gray-100 text-gray-700 text-sm">
+            <tr className="bg-blue-900/50 text-blue-200 text-sm border-b border-blue-700/30">
               <th className="px-4 py-3 font-semibold">Fecha</th>
               <th className="px-4 py-3 font-semibold">Usuario</th>
               <th className="px-4 py-3 font-semibold">Email</th>
@@ -73,28 +73,34 @@ export default function SugerenciasTable(props: {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="hover:bg-indigo-50/30 transition">
-                <td className="px-4 py-3">{new Date(r.createdAt).toLocaleString("es-CL")}</td>
-                <td className="px-4 py-3">{r.user?.nombres ?? "(Sin nombre)"}</td>
-                <td className="px-4 py-3">{r.user?.email ?? "(Sin email)"}</td>
+              <tr key={r.id} className="hover:bg-blue-800/30 transition border-b border-blue-700/20">
+                <td className="px-4 py-3 text-white">{new Date(r.createdAt).toLocaleString("es-CL")}</td>
+                <td className="px-4 py-3 text-white">{r.user?.nombres ?? "(Sin nombre)"}</td>
+                <td className="px-4 py-3 text-white">{r.user?.email ?? "(Sin email)"}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    statusConfig[r.estado]?.color ?? "bg-gray-100 text-gray-700"
-                  }`}>
-                    {statusConfig[r.estado]?.label ?? r.estado}
-                  </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${
+                    statusConfig[r.estado]?.color?.includes('green') 
+                      ? "bg-green-900/50 text-green-300 border-green-700/30"
+                      : statusConfig[r.estado]?.color?.includes('red')
+                      ? "bg-red-900/50 text-red-300 border-red-700/30"
+                      : statusConfig[r.estado]?.color?.includes('yellow')
+                      ? "bg-yellow-900/50 text-yellow-300 border-yellow-700/30"
+                      : "bg-blue-900/50 text-blue-300 border-blue-700/30"
+                  }`}>
+                    {statusConfig[r.estado]?.label ?? r.estado}
+                  </span>
                 </td>
-                <td className="px-4 py-3 max-w-xs truncate">{r.mensaje}</td>
+                <td className="px-4 py-3 max-w-xs truncate text-white">{r.mensaje}</td>
                 <td className="px-4 py-3 flex flex-wrap gap-2">
                   <button
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
                     onClick={() => openDetail(r.id)}
                     title="Ver detalle"
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
                   </button>
                   <button
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition ${loadingId === r.id ? "opacity-60" : ""}`}
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-600/50 text-red-200 hover:bg-red-600/70 border border-red-500/30 font-semibold transition ${loadingId === r.id ? "opacity-60" : ""}`}
                     onClick={() => handleDelete(r.id)}
                     title="Eliminar"
                   >
@@ -105,7 +111,7 @@ export default function SugerenciasTable(props: {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-sm text-gray-500 py-6">Sin resultados</td>
+                <td colSpan={6} className="text-center text-sm text-blue-300/70 py-6">Sin resultados</td>
               </tr>
             )}
           </tbody>
@@ -115,28 +121,34 @@ export default function SugerenciasTable(props: {
       {/* --- MOBILE CARDS --- */}
       <div className="md:hidden space-y-4">
         {rows.map((r) => (
-          <div key={r.id} className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2">
+          <div key={r.id} className="rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <div className="font-semibold">{r.user?.nombres ?? "(Sin nombre)"}</div>
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                statusConfig[r.estado]?.color ?? "bg-gray-100 text-gray-700"
-              }`}>
-                {statusConfig[r.estado]?.label ?? r.estado}
-              </span>
+              <div className="font-semibold text-white">{r.user?.nombres ?? "(Sin nombre)"}</div>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${
+                statusConfig[r.estado]?.color?.includes('green') 
+                  ? "bg-green-900/50 text-green-300 border-green-700/30"
+                  : statusConfig[r.estado]?.color?.includes('red')
+                  ? "bg-red-900/50 text-red-300 border-red-700/30"
+                  : statusConfig[r.estado]?.color?.includes('yellow')
+                  ? "bg-yellow-900/50 text-yellow-300 border-yellow-700/30"
+                  : "bg-blue-900/50 text-blue-300 border-blue-700/30"
+              }`}>
+                {statusConfig[r.estado]?.label ?? r.estado}
+              </span>
             </div>
-            <div className="text-xs text-gray-500">{r.user?.email ?? "(Sin email)"}</div>
-            <div className="text-xs text-gray-500">Fecha: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
-            <div className="text-sm text-gray-700 whitespace-pre-line">{r.mensaje}</div>
+            <div className="text-xs text-blue-300/70">{r.user?.email ?? "(Sin email)"}</div>
+            <div className="text-xs text-blue-300/70">Fecha: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
+            <div className="text-sm text-white whitespace-pre-line">{r.mensaje}</div>
             <div className="flex gap-2 mt-2">
               <button
-                className="btn btn-xs btn-info flex-1 flex items-center gap-1"
+                className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition flex-1"
                 onClick={() => openDetail(r.id)}
                 title="Ver detalle"
               >
                 <EyeIcon className="w-4 h-4" /> Ver
               </button>
               <button
-                className={`btn btn-xs btn-error flex-1 flex items-center gap-1 ${loadingId === r.id ? "loading" : ""}`}
+                className={`inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full bg-red-600/50 text-red-200 hover:bg-red-600/70 border border-red-500/30 font-semibold transition flex-1 ${loadingId === r.id ? "opacity-60" : ""}`}
                 onClick={() => handleDelete(r.id)}
                 title="Eliminar"
               >
@@ -146,7 +158,7 @@ export default function SugerenciasTable(props: {
           </div>
         ))}
         {rows.length === 0 && (
-          <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
+          <div className="p-6 text-center text-blue-300/70 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-xl shadow-lg">
             Sin resultados
           </div>
         )}

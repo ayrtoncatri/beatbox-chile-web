@@ -42,11 +42,11 @@ export default function SidebarNav() {
         <Link
           key={link.href}
           href={link.href}
-          className={`flex items-center gap-3 px-4 py-2 rounded transition-colors font-medium
+          className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all font-medium
             ${
               pathname === link.href
-                ? "bg-indigo-100 text-indigo-700 shadow"
-                : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/50"
+                : "text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
             }
           `}
           prefetch={link.href === "/admin"}

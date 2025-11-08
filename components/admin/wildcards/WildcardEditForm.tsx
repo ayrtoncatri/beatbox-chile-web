@@ -19,7 +19,7 @@ function SubmitButton() {
   return (
     <button
       type="submit"
-      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-600 transition"
       disabled={pending}
     >
       <PencilSquareIcon className="w-5 h-5" />
@@ -51,9 +51,9 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
       <input type="hidden" name="id" value={item.id} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Alias (nombre artístico)</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Alias (nombre artístico)</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
             name="nombreArtistico"
             value={nombreArtistico}
             onChange={(e) => setNombreArtistico(e.target.value)}
@@ -62,9 +62,9 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1 font-medium">YouTube URL</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">YouTube URL</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
             name="youtubeUrl"
             value={youtubeUrl}
             onChange={(e) => setYoutubeUrl(e.target.value)}
@@ -72,9 +72,9 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm text-gray-600 mb-1 font-medium">Notas internas</label>
+          <label className="block text-sm text-blue-200 mb-1 font-medium">Notas internas</label>
           <textarea
-            className="w-full border rounded-lg px-3 py-2 text-sm min-h-[100px] bg-gray-50"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm min-h-[100px] bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
             name="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

@@ -96,16 +96,15 @@ export default async function AdminEventosPage({ searchParams }: Props) {
     }).toString()}`;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8">
         {/* ... (Botón "Nuevo evento" y Formulario de búsqueda no cambian) ... */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             Eventos
           </h1>
           <Link
             href="/admin/eventos/nuevo"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold shadow-lg hover:from-green-700 hover:to-green-600 transition"
           >
             <CalendarDaysIcon className="w-5 h-5" />
             Nuevo evento
@@ -113,26 +112,26 @@ export default async function AdminEventosPage({ searchParams }: Props) {
         </div>
 
         <form
-          className="flex flex-wrap items-center gap-2 bg-white rounded-xl shadow px-4 py-2 border border-gray-200 mb-4"
+          className="flex flex-wrap items-center gap-2 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-xl shadow-lg px-4 py-2 mb-4"
           action="/admin/eventos"
         >
           <input
             name="q"
             placeholder="Buscar por nombre, ciudad o lugar"
-            className="input input-bordered w-40 sm:w-64 bg-gray-50 border-gray-200 focus:border-indigo-400"
+            className="input input-bordered w-40 sm:w-64 bg-blue-950/50 border-blue-700/50 text-white placeholder:text-blue-300/70 focus:border-blue-500"
             defaultValue={q}
           />
           <select
             name="status"
             defaultValue={status}
-            className="select select-bordered bg-gray-50 border-gray-200 focus:border-indigo-400"
+            className="select select-bordered bg-blue-950/50 border-blue-700/50 text-white focus:border-blue-500"
           >
             <option value="all">Todos</option>
             <option value="published">Publicados</option>
             <option value="draft">Borradores</option>
           </select>
           <button
-            className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition"
+            className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-600 transition"
             type="submit"
           >
             Filtrar
@@ -140,10 +139,10 @@ export default async function AdminEventosPage({ searchParams }: Props) {
         </form>
 
         {/* Tabla desktop */}
-        <div className="hidden md:block rounded-2xl shadow bg-white border border-gray-200 overflow-x-auto">
+        <div className="hidden md:block rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 overflow-x-auto">
           <table className="w-full text-sm">
             {/* ... (thead no cambia) ... */}
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-blue-900/50 text-blue-200 border-b border-blue-700/30">
               <tr>
                 <th className="text-left p-5 font-semibold">Nombre</th>
                 <th className="text-left p-5 font-semibold">Fecha</th>
@@ -158,17 +157,17 @@ export default async function AdminEventosPage({ searchParams }: Props) {
               {data.map((ev) => (
                 <tr
                   key={ev.id}
-                  className="border-b last:border-b-0 hover:bg-indigo-50/30 transition"
+                  className="border-b border-blue-700/20 last:border-b-0 hover:bg-blue-800/30 transition"
                 >
-                  <td className="p-5 font-medium">{ev.nombre}</td>
-                  <td className="p-5">
+                  <td className="p-5 font-medium text-white">{ev.nombre}</td>
+                  <td className="p-5 text-white">
                     {new Date(ev.fecha).toLocaleString("es-CL", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
                   </td>
-                  <td className="p-5 flex items-center gap-2">
-                    <MapPinIcon className="w-4 h-4 text-indigo-400" />
+                  <td className="p-5 flex items-center gap-2 text-white">
+                    <MapPinIcon className="w-4 h-4 text-blue-400" />
                     {/* --- CAMBIO: Leer desde 'venue' y 'comuna' --- */}
                     {[
                       ev.venue?.name,
@@ -180,11 +179,11 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                   <td className="p-5">
                     {/* ... (Lógica de isPublished no cambia) ... */}
                     {ev.isPublished ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/50 text-green-300 border border-green-700/30 text-xs font-semibold">
                         <CheckCircleIcon className="w-4 h-4" /> Publicado
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-900/50 text-yellow-300 border border-yellow-700/30 text-xs font-semibold">
                         <XCircleIcon className="w-4 h-4" /> Borrador
                       </span>
                     )}
@@ -192,11 +191,11 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                   <td className="p-5">
                     {/* ... (Lógica de isTicketed no cambia) ... */}
                     {ev.isTicketed ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-900/50 text-blue-300 border border-blue-700/30 text-xs font-semibold">
                         <TicketIcon className="w-4 h-4" /> Sí
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-800/50 text-blue-200 border border-blue-700/30 text-xs font-semibold">
                         No
                       </span>
                     )}
@@ -205,7 +204,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                     {/* ... (Link de Editar no cambia) ... */}
                     <Link
                       href={`/admin/eventos/${ev.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
                     >
                       <PencilSquareIcon className="w-4 h-4" />
                       Editar
@@ -217,7 +216,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                 <tr>
                   <td
                     colSpan={6}
-                    className="p-6 text-center text-gray-500"
+                    className="p-6 text-center text-blue-300/70"
                   >
                     No hay eventos
                   </td>
@@ -233,18 +232,18 @@ export default async function AdminEventosPage({ searchParams }: Props) {
           {data.map((ev) => (
             <div
               key={ev.id}
-              className="rounded-2xl shadow bg-white border border-gray-200 p-4 flex flex-col gap-2"
+              className="rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 flex flex-col gap-2"
             >
-              <div className="font-semibold text-lg">{ev.nombre}</div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CalendarDaysIcon className="w-4 h-4" />
+              <div className="font-semibold text-lg text-white">{ev.nombre}</div>
+              <div className="flex items-center gap-2 text-sm text-white">
+                <CalendarDaysIcon className="w-4 h-4 text-blue-400" />
                 {new Date(ev.fecha).toLocaleString("es-CL", {
                   dateStyle: "medium",
                   timeStyle: "short",
                 })}
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPinIcon className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-sm text-white">
+                <MapPinIcon className="w-4 h-4 text-blue-400" />
                 {/* --- CAMBIO: Leer desde 'venue' y 'comuna' --- */}
                 {[
                   ev.venue?.name,
@@ -256,21 +255,21 @@ export default async function AdminEventosPage({ searchParams }: Props) {
               <div className="flex items-center gap-2 text-xs">
                 {/* ... (Lógica de isPublished/isTicketed no cambia) ... */}
                 {ev.isPublished ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/50 text-green-300 border border-green-700/30 font-semibold">
                     <CheckCircleIcon className="w-4 h-4" /> Publicado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-900/50 text-yellow-300 border border-yellow-700/30 font-semibold">
                     <XCircleIcon className="w-4 h-4" /> Borrador
                   </span>
                 )}
-                <span className="text-gray-400">|</span>
+                <span className="text-blue-400">|</span>
                 {ev.isTicketed ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-900/50 text-blue-300 border border-blue-700/30 font-semibold">
                     <TicketIcon className="w-4 h-4" /> Sí
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-800/50 text-blue-200 border border-blue-700/30 font-semibold">
                     No
                   </span>
                 )}
@@ -279,7 +278,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                 {/* ... (Link de Editar no cambia) ... */}
                 <Link
                   href={`/admin/eventos/${ev.id}`}
-                  className="flex justify-center items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition flex-1"
+                  className="flex justify-center items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition flex-1"
                 >
                   <PencilSquareIcon className="w-4 h-4" />
                   Editar
@@ -288,7 +287,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
             </div>
           ))}
           {!data.length && (
-            <div className="p-6 text-center text-gray-500 bg-white rounded-xl shadow border border-gray-200">
+            <div className="p-6 text-center text-blue-300/70 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-xl shadow-lg">
               No hay eventos
             </div>
           )}
@@ -296,7 +295,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
 
         {/* ... (Paginación no cambia) ... */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
-          <span>
+          <span className="text-blue-200">
             Mostrando página {pagination.page} de {pagination.totalPages} —
             Total: {pagination.total}
           </span>
@@ -304,7 +303,7 @@ export default async function AdminEventosPage({ searchParams }: Props) {
             <Link
               href={buildPageUrl(Math.max(1, page - 1))}
               className={`btn btn-sm ${
-                page === 1 ? "btn-disabled" : "btn-outline"
+                page === 1 ? "btn-disabled opacity-50" : "bg-blue-600/50 text-blue-200 border-blue-500/30 hover:bg-blue-600/70"
               }`}
             >
               Anterior
@@ -314,14 +313,13 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                 Math.min(pagination.totalPages || 1, page + 1)
               )}
               className={`btn btn-sm ${
-                page >= pagination.totalPages ? "btn-disabled" : "btn-outline"
+                page >= pagination.totalPages ? "btn-disabled opacity-50" : "bg-blue-600/50 text-blue-200 border-blue-500/30 hover:bg-blue-600/70"
               }`}
             >
               Siguiente
             </Link>
           </div>
         </div>
-      </div>
-    </main>
+    </div>
   );
 }

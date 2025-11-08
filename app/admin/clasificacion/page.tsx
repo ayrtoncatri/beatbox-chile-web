@@ -38,23 +38,23 @@ export default async function ClasificacionPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       
       {/* --- Cabecera Estilizada --- */}
-      <div className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow border border-gray-200">
-        <div className="flex-shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-100 text-red-600">
+      <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-lg">
+        <div className="flex-shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-600/30 text-red-300 border border-red-500/30">
           <ShieldCheckIcon className="h-9 w-9" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-white">
             Clasificación al Campeonato Nacional
           </h1>
-          <p className="mt-1 text-base text-gray-600">
+          <p className="mt-1 text-base text-blue-100">
             Ejecuta el proceso para buscar a los 16 clasificados del ciclo y crear sus inscripciones para el CN.
           </p>
         </div>
       </div>
 
       {/* --- Contenedor del Formulario --- */}
-      <div className="bg-white p-8 rounded-2xl shadow border border-gray-200">
-        <Suspense fallback={<p className="text-gray-500">Cargando formulario...</p>}>
+      <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-8 rounded-2xl shadow-lg">
+        <Suspense fallback={<p className="text-blue-300/70">Cargando formulario...</p>}>
           <ClassificationForm cnEventos={cnEventos} />
         </Suspense>
       </div>
