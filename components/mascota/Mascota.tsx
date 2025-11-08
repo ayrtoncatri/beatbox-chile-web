@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { User as CustomUser } from 'next-auth';
 
@@ -11,6 +12,7 @@ interface ChatMessage {
 }
 
 const Mascota: React.FC = () => {
+    const pathname = usePathname();
     const [isChatOpen, setIsChatOpen] = useState(false); 
     const [showTooltip, setShowTooltip] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -308,6 +310,11 @@ const Mascota: React.FC = () => {
 
         return () => clearTimeout(timer);
     }, [hasUserClicked]);
+
+    // No renderizar Mascota en rutas de admin (después de todos los hooks)
+    if (pathname?.startsWith("/admin")) {
+        return null;
+    }
 
     return (
         <div>
