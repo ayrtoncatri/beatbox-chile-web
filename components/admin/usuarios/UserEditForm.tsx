@@ -84,7 +84,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Email</label>
           <input
-            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800"
             value={user.email || ""} // 'email' sigue estando en 'user'
             disabled
           />
@@ -117,7 +117,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Nombres</label>
           <input
-            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="nombres"
             value={nombres} // El 'value' viene del estado local
             onChange={(e) => setNombres(e.target.value)}
@@ -128,7 +128,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido paterno</label>
           <input
-            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="apellidoPaterno"
             value={apellidoPaterno} // El 'value' viene del estado local
             onChange={(e) => setApellidoPaterno(e.target.value)}
@@ -139,7 +139,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido materno</label>
           <input
-            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="apellidoMaterno"
             value={apellidoMaterno} // El 'value' viene del estado local
             onChange={(e) => setApellidoMaterno(e.target.value)}
@@ -150,7 +150,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Imagen (URL)</label>
           <input
-            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="image"
             value={image} // El 'value' viene del estado local
             onChange={(e) => setImage(e.target.value)}

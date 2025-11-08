@@ -5,7 +5,7 @@ export default function Banner() {
     <section className="relative h-[340px] bg-gradient-to-br from-blue-900 to-black rounded-2xl flex items-center justify-center mb-8 shadow-lg overflow-hidden">
       {/* Imagen de fondo superpuesta (usa la imagen que subiste o cualquier link temporal) */}
       <Image
-        src="/banner-bbx.webp" // Usa la imagen dummy o reemplaza por "/banner.jpg"
+        src="/new-banner-bbx.webp" // Usa la imagen dummy o reemplaza por "/banner.jpg"
         alt="Banner Beatbox Chile"
         fill
         className="object-cover opacity-60"

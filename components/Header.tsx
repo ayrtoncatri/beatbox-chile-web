@@ -60,18 +60,18 @@ export default function Header() {
         <div className="flex items-center justify-center gap-2 md:gap-3">
           <Link href="/">
             <Image
-              src="/ISOTIPO-DEGRADADO.png"
+              src="/logo-beatboxchile.webp"
               alt="Logo Beatbox Chile"
-              width={40}
-              height={40}
-              className="md:w-[50px] md:h-[50px] rounded-full border-2 border-blue-700 shadow"
+              width={60}
+              height={60}
+              className="md:w-[70px] md:h-[70px] rounded-full border-2 border-blue-700 shadow"
               priority
               style={{ cursor: "pointer" }}
             />
           </Link>
-          <Link href="/" className="text-lg md:text-xl text-blue-100 font-extrabold tracking-tight hover:text-blue-300 transition">
+          {/* <Link href="/" className="text-lg md:text-xl text-blue-100 font-extrabold tracking-tight hover:text-blue-300 transition">
             Beatbox Chile
-          </Link>
+          </Link> */}
         </div>
 
         {/* Navegación desktop */}
