@@ -10,6 +10,7 @@ import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   TrophyIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 const navLinks = [
@@ -55,6 +56,15 @@ export default function SidebarNav() {
           {link.label}
         </Link>
       ))}
+      {/* Separador y enlace al sitio web público */}
+      <div className="my-2 border-t border-gray-300"></div>
+      <Link
+        href="/"
+        className="flex items-center gap-3 px-4 py-2 rounded transition-colors font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+      >
+        <GlobeAltIcon className="w-5 h-5" />
+        Ir a sitio web
+      </Link>
     </nav>
   );
 }

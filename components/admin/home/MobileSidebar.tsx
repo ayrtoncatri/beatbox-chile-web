@@ -12,6 +12,7 @@ import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   TrophyIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 import { usePathname } from "next/navigation";
@@ -62,23 +63,27 @@ export default function MobileSidebar() {
 
   const sidebarContent = open && mounted ? (
     <>
-      {/* Overlay - completamente opaco */}
-      <div 
-        className="fixed inset-0 bg-black z-[9998] md:hidden" 
-        onClick={() => setOpen(false)}
-      />
-      {/* Sidebar - fondo completamente sólido sin transparencias */}
-      <aside className="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-blue-900 via-blue-950 to-black shadow-[0_0_50px_rgba(0,0,0,1)] flex flex-col p-6 z-[9999] border-r-4 border-blue-600 md:hidden">
+      <button
+        className="md:hidden p-2 rounded hover:bg-indigo-50"
+        onClick={() => setOpen(true)}
+        aria-label="Abrir menú"
+      >
+        <Bars3Icon className="w-7 h-7 text-indigo-600" />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <aside className="relative w-64 bg-white h-full shadow-lg flex flex-col p-6 z-50">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
-                <div className="rounded-full bg-gradient-to-br from-blue-500 to-blue-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                <div className="rounded-full bg-indigo-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow">
                   BB
                 </div>
-                <span className="text-lg font-bold tracking-tight text-blue-100">Beatbox Admin</span>
+                <span className="text-lg font-bold tracking-tight text-gray-800">Beatbox Admin</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-lg hover:bg-blue-800/50 text-blue-200 transition-colors"
+                className="p-2 rounded-lg hover:bg-indigo-50 text-gray-700 transition-colors"
                 aria-label="Cerrar menú"
               >
                 <XMarkIcon className="w-6 h-6" />
@@ -102,11 +107,23 @@ export default function MobileSidebar() {
                   {link.label}
                 </Link>
               ))}
+              {/* Separador y enlace al sitio web público */}
+              <div className="my-2 border-t border-gray-300"></div>
+              <Link
+                href="/"
+                className="flex items-center gap-3 px-4 py-2 rounded transition-colors text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                onClick={() => setOpen(false)}
+              >
+                <GlobeAltIcon className="w-5 h-5" />
+                Ir a sitio web
+              </Link>
             </nav>
-            <div className="mt-auto pt-8 text-xs text-blue-400/70">
+            <div className="mt-auto pt-8 text-xs text-gray-400">
               &copy; {new Date().getFullYear()} Beatbox Chile
             </div>
           </aside>
+        </div>
+      )}
     </>
   ) : null;
 
