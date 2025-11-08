@@ -27,9 +27,9 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       // (Clases de Tailwind para un botón de admin moderno)
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white 
-                 shadow-sm transition-all hover:bg-indigo-500
-                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-3 text-sm font-semibold text-white 
+                 shadow-lg transition-all hover:from-blue-700 hover:to-blue-600
+                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500
                  disabled:opacity-50 disabled:cursor-wait"
     >
       {pending ? 'Inscribiendo...' : 'Inscribir Participante'}
@@ -62,9 +62,9 @@ export function InscripcionForm({ ligas, users }: FormProps) {
   return (
     <form action={dispatch} className="space-y-6">
       
-      {/* --- Selector de Liga (Estilo Claro) --- */}
+      {/* --- Selector de Liga (Estilo Oscuro) --- */}
       <div>
-        <label htmlFor="eventoId" className="block text-sm font-semibold leading-6 text-gray-900">
+        <label htmlFor="eventoId" className="block text-sm font-semibold leading-6 text-blue-200">
           Seleccionar Liga (Evento)
         </label>
         <select
@@ -73,10 +73,9 @@ export function InscripcionForm({ ligas, users }: FormProps) {
           required
           value={selectedLigaId}
           onChange={(e) => setSelectedLigaId(e.target.value)}
-          // (Clases de Tailwind para un <select> moderno y claro)
-          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 shadow-sm
-                     ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                     focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                     ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                     focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
         >
           {ligas.length === 0 && <option value="">No hay ligas publicadas</option>}
           {ligas.map((liga) => (
@@ -87,9 +86,9 @@ export function InscripcionForm({ ligas, users }: FormProps) {
         </select>
       </div>
 
-      {/* --- Selector de Categoría (Estilo Claro) --- */}
+      {/* --- Selector de Categoría (Estilo Oscuro) --- */}
       <div>
-        <label htmlFor="categoriaId" className="block text-sm font-semibold leading-6 text-gray-900">
+        <label htmlFor="categoriaId" className="block text-sm font-semibold leading-6 text-blue-200">
           Categoría de la Liga
         </label>
         <select
@@ -97,10 +96,10 @@ export function InscripcionForm({ ligas, users }: FormProps) {
           name="categoriaId"
           required
           disabled={availableCategories.length === 0}
-          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 shadow-sm
-                     ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                     focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6
-                     disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                     ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                     focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6
+                     disabled:bg-blue-900/30 disabled:text-blue-300/50 disabled:cursor-not-allowed"
         >
           {availableCategories.length > 0 ? (
             availableCategories.map((cat) => (
@@ -115,7 +114,7 @@ export function InscripcionForm({ ligas, users }: FormProps) {
       </div>
 
       <div>
-        <label htmlFor="nombreArtistico" className="block text-sm font-semibold leading-6 text-gray-900">
+        <label htmlFor="nombreArtistico" className="block text-sm font-semibold leading-6 text-blue-200">
           Nombre Artístico (Beatboxer)
         </label>
         <input
@@ -124,24 +123,24 @@ export function InscripcionForm({ ligas, users }: FormProps) {
           name="nombreArtistico"
           required
           placeholder="Ej: CYTRIX"
-          className="mt-2 block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 shadow-sm
-                     ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                     focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          className="mt-2 block w-full rounded-md border-0 py-2.5 px-3 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                     ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                     focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
         />
       </div>
 
-      {/* --- Selector de Usuario (Estilo Claro) --- */}
+      {/* --- Selector de Usuario (Estilo Oscuro) --- */}
       <div>
-        <label htmlFor="userId" className="block text-sm font-semibold leading-6 text-gray-900">
+        <label htmlFor="userId" className="block text-sm font-semibold leading-6 text-blue-200">
           Seleccionar Usuario (Participante)
         </label>
         <select
           id="userId"
           name="userId"
           required
-          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-gray-900 shadow-sm
-                     ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
-                     focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
+                     ring-1 ring-inset ring-blue-700/50 placeholder:text-blue-400/50
+                     focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
         >
           {users.length === 0 && <option value="">No hay usuarios en el sistema</option>}
           {users.map((user) => (
@@ -153,7 +152,7 @@ export function InscripcionForm({ ligas, users }: FormProps) {
       </div>
 
       {/* --- Botón y Mensajes de Estado Estilizados --- */}
-      <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
+      <div className="flex items-center justify-between gap-4 border-t border-blue-700/30 pt-6">
         <SubmitButton />
       </div>
     </form>

@@ -23,7 +23,7 @@ function SubmitButton() {
         <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="rounded-md bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
         >
             {pending ? 'Asignando...' : 'Asignar Juez'}
         </button>
@@ -65,9 +65,9 @@ export function JudgeAssignmentForm({
         <form
             ref={formRef}
             action={dispatch}
-            className="rounded-lg border bg-white p-4 shadow"
+            className="rounded-lg border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-4 shadow-lg"
         >
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">
+            <h3 className="mb-4 text-lg font-semibold text-white">
                 Asignar Nuevo Juez
             </h3>
 
@@ -79,7 +79,7 @@ export function JudgeAssignmentForm({
                 <div>
                     <label
                         htmlFor="judgeId"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-blue-200"
                     >
                         Juez
                     </label>
@@ -87,7 +87,7 @@ export function JudgeAssignmentForm({
                         id="judgeId"
                         name="judgeId"
                         required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        className="mt-1 block w-full rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 shadow-sm"
                     >
                         <option value="">Seleccionar juez...</option>
                         {allJudges.map((judge) => (
@@ -102,7 +102,7 @@ export function JudgeAssignmentForm({
                 <div>
                     <label
                         htmlFor="categoriaId"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-blue-200"
                     >
                         Categoría
                     </label>
@@ -110,7 +110,7 @@ export function JudgeAssignmentForm({
                         id="categoriaId"
                         name="categoriaId"
                         required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        className="mt-1 block w-full rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 shadow-sm"
                     >
                         <option value="">Seleccionar categoría...</option>
                         {allCategories.map((cat) => (
@@ -125,7 +125,7 @@ export function JudgeAssignmentForm({
                 <div>
                     <label
                         htmlFor="phase"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-blue-200"
                     >
                         Fase
                     </label>
@@ -133,7 +133,7 @@ export function JudgeAssignmentForm({
                         id="phase"
                         name="phase"
                         required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        className="mt-1 block w-full rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 shadow-sm"
                     >
                         <option value="">Seleccionar fase...</option>
                         {phases.map((phase) => (
@@ -148,7 +148,7 @@ export function JudgeAssignmentForm({
             {/* --- Botón de Envío y Mensajes --- */}
             <div className="mt-4 flex items-center justify-end gap-4">
                 {state.ok === false && state.error && (
-                    <p className="text-sm text-red-600">{state.error}</p>
+                    <p className="text-sm text-red-300">{state.error}</p>
                 )}
                 <SubmitButton />
             </div>

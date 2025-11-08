@@ -23,7 +23,7 @@ function ClassifyButton() {
         <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="rounded-md bg-gradient-to-r from-green-600 to-green-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:from-green-700 hover:to-green-600 disabled:cursor-not-allowed disabled:bg-gray-400"
         >
             {pending ? 'Clasificando...' : 'Marcar Seleccionados como Clasificados'}
         </button>
@@ -91,13 +91,13 @@ export function WildcardRankingTable({
     }, [state])
 
     if (!allCategories.length) {
-        return <p>Este evento no tiene categorías de competición definidas.</p>
+        return <p className="text-blue-200">Este evento no tiene categorías de competición definidas.</p>
     }
 
     return (
         <div className="space-y-6">
             {/* Selector de Categoría */}
-            <div className="flex items-center space-x-4 text-gray-600">
+            <div className="flex items-center space-x-4 text-blue-200">
                 <label htmlFor="category" className="font-medium">
                     Categoría:
                 </label>
@@ -105,7 +105,7 @@ export function WildcardRankingTable({
                     id="category"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="rounded-md border-gray-300 py-2 pl-3 pr-10 shadow-sm"
+                    className="rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm"
                 >
                     {allCategories.map((cat) => (
                         <option key={cat.id} value={cat.name}>
@@ -119,33 +119,33 @@ export function WildcardRankingTable({
             <form action={dispatch}>
                 <input type="hidden" name="eventoId" value={eventoId} />
 
-                <div className="overflow-x-auto rounded-lg shadow-xl">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="overflow-x-auto rounded-lg shadow-xl bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30">
+                    <table className="min-w-full divide-y divide-blue-700/30">
+                        <thead className="bg-blue-900/50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Clasificar</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Beatboxer</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nota Final</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jueces</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-blue-200 uppercase">#</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-blue-200 uppercase">Clasificar</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase">Beatboxer</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase">Nota Final</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase">Jueces</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase">Estado</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
+                        <tbody className="divide-y divide-blue-700/30 bg-blue-900/30">
                             {loading && (
                                 <tr>
-                                    <td colSpan={6} className="py-4 text-center text-gray-500">Cargando ranking...</td>
+                                    <td colSpan={6} className="py-4 text-center text-blue-300/70">Cargando ranking...</td>
                                 </tr>
                             )}
                             {!loading && ranking.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="py-4 text-center text-gray-500">Aún no hay puntajes SUBMITTED para esta categoría.</td>
+                                    <td colSpan={6} className="py-4 text-center text-blue-300/70">Aún no hay puntajes SUBMITTED para esta categoría.</td>
                                 </tr>
                             )}
                             {ranking.map((r) => (
-                                <tr key={r.wildcardId}>
-                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900">{r.rank}</td>
-                                    <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
+                                <tr key={r.wildcardId} className="hover:bg-blue-800/30">
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-blue-100">{r.rank}</td>
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm text-blue-200">
                                         <input
                                             type="checkbox"
                                             name="wildcardIds"
@@ -154,25 +154,25 @@ export function WildcardRankingTable({
                                             onChange={(e) => handleCheckboxChange(r.wildcardId, e.target.checked)}
                                             // Si ya está clasificado, no permitimos desmarcar (solo admin podría hacerlo con otra action)
                                             disabled={r.isClassified}
-                                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                            className="h-4 w-4 rounded border-blue-700/50 bg-blue-950/50 text-green-500 focus:ring-green-500"
                                         />
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-blue-100">
                                         {r.nombreArtistico || r.participantId}
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-blue-600">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-blue-300">
                                         {r.avgScore.toFixed(2)}
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">
                                         {r.totalJudges}
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                                         {r.isClassified ? (
-                                            <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                                            <span className="inline-flex rounded-full bg-green-900/50 border border-green-700/30 px-2 text-xs font-semibold leading-5 text-green-300">
                                                 Clasificado
                                             </span>
                                         ) : (
-                                            <span className="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800">
+                                            <span className="inline-flex rounded-full bg-yellow-900/50 border border-yellow-700/30 px-2 text-xs font-semibold leading-5 text-yellow-300">
                                                 Pendiente
                                             </span>
                                         )}
