@@ -72,6 +72,6 @@ textarea::placeholder,
 select {
   color: #6b7280; /* Tailwind gray-500 */
 }
-input, textarea, select, td {
+textarea, select, td {
   color: #111827; /* Tailwind gray-900 */
 }

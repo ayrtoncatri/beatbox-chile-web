@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
         <div className="flex flex-col gap-3 mb-2">
           <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-gray-100 placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             name="nombres"
             type="text"
             placeholder="Nombres"
