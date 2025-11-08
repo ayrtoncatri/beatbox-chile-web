@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FaUserAlt, FaYoutube } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface FormularioWildcardProps {
   eventoId: string;
@@ -11,27 +12,25 @@ interface FormularioWildcardProps {
 
 export default function FormularioWildcard({ eventoId }: FormularioWildcardProps) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [mensaje, setMensaje] = useState<string | null>(null);
 
   const { data: session } = useSession();
   const router = useRouter();
 
   const onSubmit = async (data: any) => {
-    setMensaje(null);
-
     // Validación SOLO al presionar Enviar
     if (!session) {
-      setMensaje("⚠️ Debes registrarte o iniciar sesión antes de enviar tu wildcard.");
+      toast.error("Debes registrarte o iniciar sesión antes de enviar tu wildcard.");
       setTimeout(() => router.push("/auth/register"), 1800);
       return;
     }
 
     if (!data.categoria) {
-      setMensaje("⚠️ Debes seleccionar una categoría (Solo/Loopstation/Tagteam).");
+      toast.error("Debes seleccionar una categoría (Solo/Loopstation/Tagteam).");
       return;
     }
 
     const categoriaLimpia = data.categoria.toUpperCase();
+    const loadingToast = toast.loading("Enviando wildcard...");
 
     try {
       const res = await fetch("/api/wildcard", {
@@ -48,7 +47,7 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
       const json = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        setMensaje('✅ Wildcard guardada con éxito.');
+        toast.success('Wildcard guardada con éxito.', { id: loadingToast });
         reset();
         return; // Salimos de la función
       }
@@ -56,16 +55,18 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
       // 2. Si llegamos aquí, 'res.ok' es 'false' (fue un error 4xx o 5xx)
 
       // 3. Revisamos errores específicos
+      let errorMsg = '';
       if (res.status === 409) {
-        setMensaje(json?.error || '❌ Ya enviaste una wildcard para este evento.');
+        errorMsg = json?.error || 'Ya enviaste una wildcard para este evento.';
       } else if (res.status === 403) {
-        setMensaje(json?.error || '❌ El plazo para enviar wildcards ha cerrado.');
+        errorMsg = json?.error || 'El plazo para enviar wildcards ha cerrado.';
       } else {
-        setMensaje(json?.error || '❌ No se pudo guardar la wildcard.');
+        errorMsg = json?.error || 'No se pudo guardar la wildcard.';
       }
+      toast.error(errorMsg, { id: loadingToast });
     } catch (e) {
       console.error("Error en fetch:", e);
-      setMensaje('❌ Error de red/servidor al guardar la wildcard.');
+      toast.error('Error de red/servidor al guardar la wildcard.', { id: loadingToast });
     }
   };
 
@@ -132,7 +133,6 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
         >
           Enviar
         </button>
-        {mensaje && <p className="mt-4 text-lime-300 font-bold drop-shadow">{mensaje}</p>}
       </form>
     </section>
   );

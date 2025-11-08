@@ -8,6 +8,7 @@ import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { debounce } from 'lodash';
 import { submitScoreSchema, SubmitScorePayload } from '@/lib/schemas/judging';
 import { submitScore } from '@/app/judge/actions';
+import toast from 'react-hot-toast';
 
 // --- Tipos de Props ---
 type FullJudgeAssignment = {
@@ -129,10 +130,12 @@ export function SingleRoundForm({
     debouncedSaveRef.current.cancel();
     // ---------------------------------------------
 
+    const loadingToast = toast.loading('Enviando puntaje...');
     startTransition(async () => {
       const result = await submitScore({ ...data, status: ScoreStatus.SUBMITTED });
       if (result.success) {
         setFormStatus(ScoreStatus.SUBMITTED);
+        toast.success('Puntaje enviado correctamente', { id: loadingToast });
 
         // --- ¡LA SOLUCIÓN (Bug 1: Parte 3)! ---
         // Notificar al componente padre que este round específico
@@ -141,7 +144,10 @@ export function SingleRoundForm({
         // ------------------------------------------
       } else {
         console.error('Error al enviar el puntaje final:', result.error);
-        alert('Error al enviar: ' + JSON.stringify(result.error));
+        const errorMessage = typeof result.error === 'string' 
+          ? result.error 
+          : 'Error al enviar el puntaje';
+        toast.error(errorMessage, { id: loadingToast });
       }
     });
   };

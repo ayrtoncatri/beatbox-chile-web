@@ -8,6 +8,7 @@ import {
     RankingResult,
 } from '@/app/admin/eventos/actions'
 import { useEffect, useState , useActionState } from 'react'
+import toast from 'react-hot-toast'
 
 interface WildcardRankingTableProps {
     eventoId: string
@@ -82,10 +83,10 @@ export function WildcardRankingTable({
     // 3. Manejo de la respuesta de la clasificación
     useEffect(() => {
         if (state.ok === true) {
-            alert(state.message) // Mensaje de éxito
+            toast.success(state.message || 'Wildcards clasificados correctamente')
         }
         if (state.ok === false && state.error) {
-            alert(`Error al clasificar: ${state.error}`)
+            toast.error(`Error al clasificar: ${state.error}`)
         }
     }, [state])
 

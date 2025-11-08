@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Cog6ToothIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 
 type CustomUser = {
   name?: string | null;
@@ -63,7 +64,10 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
         )}
         <button
           className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white px-5 py-2 rounded-lg font-semibold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => {
+            toast.success("Cerrando sesión...");
+            signOut({ callbackUrl: "/" });
+          }}
         >
           Cerrar sesión
         </button>

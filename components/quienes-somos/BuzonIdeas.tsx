@@ -2,25 +2,23 @@
 import { useState } from "react";
 import { FaLightbulb } from "react-icons/fa";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function BuzonIdeas() {
   const { data: session } = useSession();
   const [idea, setIdea] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMsg(null);
-    setErr(null);
 
     if (!idea.trim()) {
-      setErr("Por favor, escribe tu idea.");
+      toast.error("Por favor, escribe tu idea.");
       return;
     }
 
     const userId = (session?.user as { id?: string })?.id;
+    const loadingToast = toast.loading("Enviando idea...");
 
     try {
       setSending(true);
@@ -32,14 +30,15 @@ export default function BuzonIdeas() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setErr(json?.error || "No se pudo enviar tu idea.");
+        const errorMsg = json?.error || "No se pudo enviar tu idea.";
+        toast.error(errorMsg, { id: loadingToast });
         return;
       }
 
-      setMsg("✅ ¡Gracias! Tu idea fue enviada.");
+      toast.success("¡Gracias! Tu idea fue enviada.", { id: loadingToast });
       setIdea("");
     } catch {
-      setErr("Error de red/servidor. Intenta nuevamente.");
+      toast.error("Error de red/servidor. Intenta nuevamente.", { id: loadingToast });
     } finally {
       setSending(false);
     }
@@ -85,9 +84,6 @@ export default function BuzonIdeas() {
           >
             {sending ? "Enviando..." : "Enviar idea"}
           </button>
-
-          {msg && <p className="text-amber-200 font-semibold">{msg}</p>}
-          {err && <p className="text-red-300 font-semibold">{err}</p>}
         </form>
       </div>
     </section>

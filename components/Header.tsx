@@ -6,6 +6,7 @@ import { FaBars, FaTimes, FaUserCircle, FaSignOutAlt, FaCog } from "react-icons/
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButtons from "@/components/home/AuthButtons";
 import { useSession, signOut } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const navItems = [
   { label: "Historial competitivo", href: "/historial-competitivo" },
@@ -153,7 +154,10 @@ export default function Header() {
 
                 {/* Botón de cerrar sesión */}
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    toast.success("Cerrando sesión...");
+                    signOut();
+                  }}
                   className="flex justify-center gap-1 bg-white/90 text-blue-900 font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm shadow-md border border-blue-900/20 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
                   title="Cerrar sesión"
                 >
@@ -280,6 +284,7 @@ export default function Header() {
                     <button
                       onClick={() => {
                         setOpen(false);
+                        toast.success("Cerrando sesión...");
                         signOut();
                       }}
                       className="flex items-center gap-3 text-2xl text-blue-100 font-semibold hover:text-blue-400"

@@ -2,9 +2,10 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
-import { useRef , useActionState } from 'react'
+import { useRef , useActionState, useEffect } from 'react'
 import { Categoria } from '@prisma/client'
 import { upsertCompetitionCategoryAction } from '@/app/admin/eventos/actions'
+import toast from 'react-hot-toast'
 
 interface CompetitionCategoryFormProps {
   eventoId: string
@@ -27,6 +28,14 @@ function SubmitButton() {
 export function CompetitionCategoryForm({ eventoId, allCategories }: CompetitionCategoryFormProps) {
   const initialState = { ok: false, error: undefined, message: undefined }
   const [state, dispatch] = useActionState(upsertCompetitionCategoryAction, initialState as any)
+
+  useEffect(() => {
+    if (state.ok && state.message) {
+      toast.success(state.message)
+    } else if (state.error) {
+      toast.error(`Error: ${state.error}`)
+    }
+  }, [state.ok, state.message, state.error])
 
   return (
     <div className="rounded-lg border border-purple-300 bg-white p-4 shadow">
@@ -76,14 +85,8 @@ export function CompetitionCategoryForm({ eventoId, allCategories }: Competition
           </div>
         </div>
 
-        {/* Botón de Envío y Mensajes */}
+        {/* Botón de Envío */}
         <div className="mt-4 flex items-center justify-end gap-4">
-          {state.error && (
-            <p className="text-sm text-red-600">Error: {state.error}</p>
-          )}
-          {state.message && state.ok && (
-            <p className="text-sm text-green-600">{state.message}</p>
-          )}
           <SubmitButton />
         </div>
       </form>

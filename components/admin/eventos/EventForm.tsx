@@ -5,6 +5,7 @@ import { PlusIcon, PencilSquareIcon, TrashIcon, TicketIcon } from "@heroicons/re
 import { createEvent, editEvent, deleteEvent, createTicketType, deleteTicketType } from "@/app/admin/eventos/actions";
 import { useRouter } from "next/navigation";
 import { Prisma } from "@prisma/client";
+import toast from "react-hot-toast";
 
 
 const eventoWithDetails = Prisma.validator<Prisma.EventoDefaultArgs>()({
@@ -117,16 +118,6 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
   const [newTicketPrice, setNewTicketPrice] = useState("");
   const [newTicketCapacity, setNewTicketCapacity] = useState("");
 
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => {
-        setMessage(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
 
   useEffect(() => {
     if (evento) {
@@ -172,6 +163,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
       formData.set("selectedTipoId", selectedTipoId);
     }
 
+    const loadingToast = toast.loading(actuallyEditing ? "Actualizando evento..." : "Creando evento...");
     startTransition(async () => {
       try {
         let result: ActionResult;
@@ -187,12 +179,10 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
         console.log("📝 Resultado:", result);
 
         if (result && result.ok) {
-          setMessage({
-            type: "success",
-            text: actuallyEditing
-              ? "Evento actualizado correctamente"
-              : "Evento creado correctamente",
-          });
+          const successMessage = actuallyEditing
+            ? "Evento actualizado correctamente"
+            : "Evento creado correctamente";
+          toast.success(successMessage, { id: loadingToast });
 
           if (!actuallyEditing) {
             setTimeout(() => {
@@ -201,23 +191,16 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             }, 2000);
           }
         } else if (result && result.error) {
-          setMessage({
-            type: "error",
-            text: result.error,
-          });
+          toast.error(result.error, { id: loadingToast });
         } else {
           console.log("⚠️ Resultado undefined, no se procesará");
-          setMessage({
-            type: "error",
-            text: "No se pudo procesar la solicitud",
-          });
+          const errorMessage = "No se pudo procesar la solicitud";
+          toast.error(errorMessage, { id: loadingToast });
         }
       } catch (error) {
         console.error("❌ Error:", error);
-        setMessage({
-          type: "error",
-          text: "Error al procesar la solicitud",
-        });
+        const errorMessage = "Error al procesar la solicitud";
+        toast.error(errorMessage, { id: loadingToast });
       }
     });
   }
@@ -231,47 +214,33 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
       return;
     }
 
+    const loadingToast = toast.loading("Eliminando evento...");
     startDeletion(async () => {
       try {
         console.log("🗑️ Eliminando evento...");
-
-        setMessage({
-          type: "success",
-          text: "Eliminando evento...",
-        });
 
         const result = (await deleteEvent(null, formData)) as ActionResult;
 
         console.log("📝 Resultado eliminación:", result);
 
         if (result && result.ok) {
-          setMessage({
-            type: "success",
-            text: "Evento eliminado correctamente. Redirigiendo...",
-          });
+          toast.success("Evento eliminado correctamente", { id: loadingToast });
 
           router.refresh();
           setTimeout(() => {
             router.push("/admin/eventos");
           }, 500);
         } else if (result && result.error) {
-          setMessage({
-            type: "error",
-            text: result.error,
-          });
+          toast.error(result.error, { id: loadingToast });
         } else {
           console.log("⚠️ Resultado eliminación undefined");
-          setMessage({
-            type: "error",
-            text: "No se pudo eliminar el evento",
-          });
+          const errorMessage = "No se pudo eliminar el evento";
+          toast.error(errorMessage, { id: loadingToast });
         }
       } catch (error) {
         console.error("❌ Error eliminando:", error);
-        setMessage({
-          type: "error",
-          text: "Error al eliminar el evento",
-        });
+        const errorMessage = "Error al eliminar el evento";
+        toast.error(errorMessage, { id: loadingToast });
       }
     });
   }
@@ -282,21 +251,22 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
     // Añadir el eventId al formData
     formData.set("eventId", evento.id);
 
+    const loadingToast = toast.loading("Añadiendo tipo de entrada...");
     startTicketAction(async () => {
       try {
         const result = (await createTicketType(null, formData)) as ActionResult;
         if (result?.ok) {
-          setMessage({ type: "success", text: "Tipo de entrada añadido" });
+          toast.success("Tipo de entrada añadido", { id: loadingToast });
           // Limpiar formulario y refrescar datos
           setNewTicketName("");
           setNewTicketPrice("");
           setNewTicketCapacity("");
           router.refresh(); // Vuelve a cargar los datos del servidor (incluyendo la lista de tickets)
         } else {
-          setMessage({ type: "error", text: result?.error || "Error al añadir" });
+          toast.error(result?.error || "Error al añadir", { id: loadingToast });
         }
       } catch (error: any) {
-        setMessage({ type: "error", text: error.message || "Error al añadir" });
+        toast.error(error.message || "Error al añadir", { id: loadingToast });
       }
     });
   }
@@ -310,17 +280,18 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
     formData.set("id", ticketTypeId);
     formData.set("eventId", evento.id); // Para revalidación
 
+    const loadingToast = toast.loading("Eliminando tipo de entrada...");
     startTicketAction(async () => {
       try {
         const result = (await deleteTicketType(null, formData)) as ActionResult;
         if (result?.ok) {
-          setMessage({ type: "success", text: "Tipo de entrada eliminado" });
+          toast.success("Tipo de entrada eliminado", { id: loadingToast });
           router.refresh(); // Vuelve a cargar los datos del servidor
         } else {
-          setMessage({ type: "error", text: result?.error || "Error al eliminar" });
+          toast.error(result?.error || "Error al eliminar", { id: loadingToast });
         }
       } catch (error: any) {
-        setMessage({ type: "error", text: error.message || "Error al eliminar" });
+        toast.error(error.message || "Error al eliminar", { id: loadingToast });
       }
     });
   }
@@ -529,20 +500,6 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           />
         </div>
 
-        {message && !message.text.includes("entrada") && (
-          <div
-            className={`text-sm p-3 rounded-lg border ${
-              message.type === "success"
-                ? "text-green-700 bg-green-50 border-green-200"
-                : "text-red-600 bg-red-50 border-red-200"
-            }`}
-          >
-            {message.type === "success" ? "✅" : "❌"} {message.text}
-            {message.type === "success" &&
-              !actuallyEditing &&
-              " Redirigiendo en 2 segundos..."}
-          </div>
-        )}
 
         <div className="flex justify-between items-center">
           <SubmitButton isEditing={actuallyEditing} isPending={isPending || isDeleting} />
@@ -605,18 +562,6 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             </button>
           </form>
 
-          {/* Mensaje de éxito/error de las acciones de ticket */}
-          {message && message.text.includes("entrada") && (
-             <div
-               className={`text-sm p-3 rounded-lg border ${
-                 message.type === "success"
-                   ? "text-green-700 bg-green-50 border-green-200"
-                   : "text-red-600 bg-red-50 border-red-200"
-               }`}
-             >
-               {message.type === "success" ? "✅" : "❌"} {message.text}
-             </div>
-           )}
 
           {/* Lista de tipos existentes */}
           <h3 className="text-lg font-semibold mb-4 text-gray-600">Entradas Actuales</h3>

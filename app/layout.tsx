@@ -5,6 +5,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AuthProvider from '@/components/AuthProvider';
+import ToastProvider from '@/components/ToastProvider';
 import Mascota from '@/components/mascota/Mascota';
 
 export const metadata: Metadata = {
@@ -24,16 +25,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       */}
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
-          <Header />
-          <Mascota />
-          
-          {/* 2. MAIN CON FLEX-GROW: 
-            Esto hace que el <main> ocupe todo el espacio disponible,
-            empujando el <Footer> al fondo de la página.
-          */}
-          <main className="flex-grow">{children}</main>
-          
-          <Footer />
+          <ToastProvider>
+            <Header />
+            <Mascota />
+            
+            {/* 2. MAIN CON FLEX-GROW: 
+              Esto hace que el <main> ocupe todo el espacio disponible,
+              empujando el <Footer> al fondo de la página.
+            */}
+            <main className="flex-grow">{children}</main>
+            
+            <Footer />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

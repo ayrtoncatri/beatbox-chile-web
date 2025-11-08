@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FaTicketAlt } from 'react-icons/fa';
 import { FaCreditCard } from 'react-icons/fa';
 import { SiMercadopago } from 'react-icons/si';
+import toast from 'react-hot-toast';
 
 // 1. Definimos los tipos de props que este componente recibirá
 // (Estos vienen de la página del evento, app/eventos/[id])
@@ -70,7 +71,9 @@ export default function CompraTicketsForm({
 
     // A. Validar sesión
     if (!session) {
-      setError('Debes iniciar sesión para comprar.');
+      const errorMsg = 'Debes iniciar sesión para comprar.';
+      setError(errorMsg);
+      toast.error(errorMsg);
       setSubmitting(false);
       router.push('/auth/login'); // Redirige a login
       return;
@@ -85,11 +88,14 @@ export default function CompraTicketsForm({
       }));
 
     if (itemsToPurchase.length === 0) {
-      setError('Debes seleccionar al menos una entrada.');
+      const errorMsg = 'Debes seleccionar al menos una entrada.';
+      setError(errorMsg);
+      toast.error(errorMsg);
       setSubmitting(false);
       return;
     }
 
+    const loadingToast = toast.loading('Creando orden de compra...');
     try {
       // C. Llamar a la *NUEVA* API de "Crear Orden"
       const res = await fetch('/api/compra/crear-orden', {
@@ -105,7 +111,9 @@ export default function CompraTicketsForm({
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error || 'No se pudo crear la orden.');
+        const errorMsg = json.error || 'No se pudo crear la orden.';
+        setError(errorMsg);
+        toast.error(errorMsg, { id: loadingToast });
         setSubmitting(false);
         return;
       }
@@ -113,17 +121,22 @@ export default function CompraTicketsForm({
       // D. ¡ÉXITO! Redirigir a la pasarela de pago (Webpay)
       const { redirectUrl } = json;
       if (!redirectUrl) {
-        setError('No se pudo obtener la URL de pago.');
+        const errorMsg = 'No se pudo obtener la URL de pago.';
+        setError(errorMsg);
+        toast.error(errorMsg, { id: loadingToast });
         setSubmitting(false);
         return;
       }
 
+      toast.success('Redirigiendo a la pasarela de pago...', { id: loadingToast });
       // Redirección del usuario al sitio de Webpay
       router.push(redirectUrl);
       // No seteamos submitting(false) porque estamos saliendo de la página
       
     } catch (err) {
-      setError('Error de red. Intenta de nuevo más tarde.');
+      const errorMsg = 'Error de red. Intenta de nuevo más tarde.';
+      setError(errorMsg);
+      toast.error(errorMsg, { id: loadingToast });
       setSubmitting(false);
     }
   };

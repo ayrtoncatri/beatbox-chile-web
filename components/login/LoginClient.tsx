@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from 'next/image';
+import toast from "react-hot-toast";
 
 // Utilidades OWASP
 function isValidEmail(email: string) {
@@ -18,7 +19,6 @@ export default function LoginClient({
   callbackUrl = "/",
 }: { registered?: boolean; callbackUrl?: string }) {
   const router = useRouter();
-  const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -29,17 +29,27 @@ export default function LoginClient({
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
     if (!email || !password) {
-      setError("Correo y contraseña son obligatorios.");
+      toast.error("Correo y contraseña son obligatorios.");
       return;
     }
     if (!isValidEmail(email)) {
-      setError("Correo inválido.");
+      toast.error("Correo inválido.");
       return;
     }
 
+    const loadingToast = toast.loading("Iniciando sesión...");
     const res = await signIn("credentials", { redirect: false, email, password, callbackUrl });
-    if (res?.error) setError("Credenciales inválidas");
-    else startTransition(() => router.push(callbackUrl));
+    
+    if (res?.error) {
+      toast.error("Credenciales inválidas", { id: loadingToast });
+    } else {
+      toast.success("¡Sesión iniciada correctamente! Redirigiendo...", { id: loadingToast });
+      startTransition(() => {
+        setTimeout(() => {
+          router.push(callbackUrl);
+        }, 500);
+      });
+    }
   };
 
   return (
@@ -99,8 +109,6 @@ export default function LoginClient({
           {isPending ? "Ingresando…" : "Iniciar sesión"}
         </button>
       </form>
-
-      {error && <p className="mt-4 text-red-400 font-semibold">{error}</p>}
 
       <button
         className="mt-6 underline text-blue-300 hover:text-blue-100 transition font-medium"

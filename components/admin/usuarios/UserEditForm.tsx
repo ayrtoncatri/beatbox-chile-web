@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { editUser } from "@/app/admin/usuarios/actions";
 import { Prisma } from "@prisma/client";
+import toast from "react-hot-toast";
 
 const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
   include: {
@@ -64,6 +65,14 @@ export default function UserEditForm({
     setRole(user.roles[0]?.role.name ?? "user");
     setImage(user.image ?? "");
   }, [user]);
+
+  useEffect(() => {
+    if (state.ok) {
+      toast.success("Usuario actualizado correctamente");
+    } else if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.ok, state.error]);
 
   const isRoleChangeDisabled = isSelf || isTargetAdmin;
 
@@ -149,9 +158,6 @@ export default function UserEditForm({
           />
         </div>
       </div>
-
-      {state.error && <div className="text-red-600 text-sm">{state.error}</div>}
-      {state.ok && <div className="text-green-600 text-sm">Guardado</div>}
 
       <div className="flex items-center gap-2">
         <SubmitButton />

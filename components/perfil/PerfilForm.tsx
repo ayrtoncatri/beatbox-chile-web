@@ -9,6 +9,7 @@ import {
   fetchComunasByRegionCode,
   normalize,
 } from "@/lib/cl-geo";
+import toast from "react-hot-toast";
 
 type UserLike = {
   email: string;
@@ -45,7 +46,6 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     birthDate: "",
     edad: user.edad ? String(user.edad) : "",
   });
-  const [msg, setMsg] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [regiones, setRegiones] = useState<DPARegion[]>([]);
@@ -152,16 +152,18 @@ export default function PerfilForm({ user }: { user: UserLike }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMsg("");
     setErrors({});
 
     // Validar edad antes de enviar
     const edadNum = parseInt(form.edad, 10);
     if (isNaN(edadNum) || edadNum < 10 || edadNum > 80) {
-      setErrors({ edad: "Edad fuera de rango permitido" });
+      const errorMsg = "Edad fuera de rango permitido";
+      setErrors({ edad: errorMsg });
+      toast.error(errorMsg);
       return;
     }
 
+    const loadingToast = toast.loading("Actualizando perfil...");
     try {
       const res = await fetch("/api/user/update", {
         method: "POST",
@@ -176,12 +178,13 @@ export default function PerfilForm({ user }: { user: UserLike }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg("Perfil actualizado correctamente");
+        toast.success("Perfil actualizado correctamente", { id: loadingToast });
       } else {
-        setMsg(data?.error || "Error al actualizar perfil");
+        const errorMsg = data?.error || "Error al actualizar perfil";
+        toast.error(errorMsg, { id: loadingToast });
       }
     } catch {
-      setMsg("Error de red al actualizar");
+      toast.error("Error de red al actualizar", { id: loadingToast });
     }
   };
 
@@ -320,7 +323,6 @@ export default function PerfilForm({ user }: { user: UserLike }) {
           Guardar cambios
         </button>
 
-        {msg && <p className="text-center text-blue-300">{msg}</p>}
         {errorGeo && <p className="text-center text-red-300">{errorGeo}</p>}
       </form>
 
@@ -337,12 +339,10 @@ export default function PerfilForm({ user }: { user: UserLike }) {
 }
 
 function WildcardEditForm({ wildcard }: { wildcard: any }) {
-  const [nombreArtistico, setNombreArtistico] = useState(
-    wildcard.nombreArtistico || ""
-  );
-  const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
-  const [msg, setMsg] = useState("");
-  const [errMsg, setErrMsg] = useState(""); // Estado separado para errores
+  const [nombreArtistico, setNombreArtistico] = useState(
+    wildcard.nombreArtistico || ""
+  );
+  const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
 
   // 1. Leemos la fecha límite que cargamos desde la página
   // El 'wildcard.evento' ahora existe gracias al Paso 1
@@ -361,26 +361,26 @@ function WildcardEditForm({ wildcard }: { wildcard: any }) {
       ? "Tu wildcard ya fue revisada."
       : "La fecha límite para editar ya pasó.";
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setMsg("");
-    setErrMsg("");
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
 
-    const res = await fetch("/api/wildcard", {
-      method: "PUT",
-      body: JSON.stringify({ id: wildcard.id, nombreArtistico, youtubeUrl }),
-      headers: { "Content-Type": "application/json" },
-    });
+    const loadingToast = toast.loading("Actualizando wildcard...");
+    const res = await fetch("/api/wildcard", {
+      method: "PUT",
+      body: JSON.stringify({ id: wildcard.id, nombreArtistico, youtubeUrl }),
+      headers: { "Content-Type": "application/json" },
+    });
 
-    // 4. Mejoramos el manejo de mensajes
-    if (res.ok) {
-      setMsg("Wildcard actualizada correctamente");
-    } else {
-      // Mostramos el error real que envía el backend
-      const data = await res.json();
-      setErrMsg(data.error || "Error al actualizar wildcard");
-    }
-  };
+    // 4. Mejoramos el manejo de mensajes
+    if (res.ok) {
+      toast.success("Wildcard actualizada correctamente", { id: loadingToast });
+    } else {
+      // Mostramos el error real que envía el backend
+      const data = await res.json();
+      const errorMsg = data.error || "Error al actualizar wildcard";
+      toast.error(errorMsg, { id: loadingToast });
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -407,14 +407,11 @@ function WildcardEditForm({ wildcard }: { wildcard: any }) {
         type="submit"
         className="rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-500"
         disabled={!isEditingAllowed} // 7. Deshabilitar botón
-      >
-        {isEditingAllowed ? "Guardar cambios" : "Edición cerrada"}
-      </button>
-      
-      {msg && <p className="text-center text-green-400 text-sm">{msg}</p>}
-      {errMsg && <p className="text-center text-red-400 text-sm">{errMsg}</p>}
-      
-      {/* 8. Mensaje claro de por qué está deshabilitado */}
+      >
+        {isEditingAllowed ? "Guardar cambios" : "Edición cerrada"}
+      </button>
+      
+      {/* 8. Mensaje claro de por qué está deshabilitado */}
       {!isEditingAllowed && (
         <p className="text-center text-yellow-400 text-xs mt-2">
           {disabledMessage}

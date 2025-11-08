@@ -6,6 +6,7 @@ import { useActionState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircleIcon, XCircleIcon, ClockIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 import React from 'react';
+import toast from 'react-hot-toast';
 
 type Status = WildcardStatus;
 
@@ -16,11 +17,13 @@ export default function ReviewButtons({ id, status, isInscrito }: { id: string; 
   const handleApprove = () => {
     if (!confirm('¿Estás seguro de que quieres APROBAR este wildcard? Esto creará una inscripción.')) return;
 
+    const loadingToast = toast.loading('Aprobando wildcard...');
     startTransition(async () => {
       const result = await approveWildcard(id);
       if (result.error) {
-        alert(`Error: ${result.error}`);
+        toast.error(`Error: ${result.error}`, { id: loadingToast });
       } else {
+        toast.success('Wildcard aprobado correctamente', { id: loadingToast });
         router.refresh(); 
       }
     });
@@ -29,12 +32,14 @@ export default function ReviewButtons({ id, status, isInscrito }: { id: string; 
   const handleReject = () => {
     if (!confirm('¿Estás seguro de que quieres RECHAZAR este wildcard?')) return;
 
+    const loadingToast = toast.loading('Rechazando wildcard...');
     startTransition(async () => {
       // --- (3) Llamada a la acción sin ID de admin ---
       const result = await rejectWildcard(id);
       if (result.error) {
-        alert(`Error: ${result.error}`); // (O usa un toast)
+        toast.error(`Error: ${result.error}`, { id: loadingToast });
       } else {
+        toast.success('Wildcard rechazado correctamente', { id: loadingToast });
         router.refresh();
       }
     });
