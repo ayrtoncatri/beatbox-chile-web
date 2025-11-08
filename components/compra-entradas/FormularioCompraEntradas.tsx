@@ -81,8 +81,6 @@ export default function FormularioCompraEntradas({ eventoSeleccionado }: Props) 
       setSubmitting(false);
     }
   };
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-read_file
 
   return (
     <section className="mt-12 relative z-10">
