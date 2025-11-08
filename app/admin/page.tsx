@@ -56,7 +56,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     {
       label: "Usuarios",
-      icon: <UserIcon className="w-7 h-7 text-indigo-500" />,
+      icon: <UserIcon className="w-7 h-7 text-blue-300" />,
       color: "from-indigo-100 to-indigo-50",
       href: "/admin/usuarios",
       value: usuarios,
@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Inscripciones",
-      icon: <ClipboardDocumentListIcon className="w-7 h-7 text-blue-500" />,
+      icon: <ClipboardDocumentListIcon className="w-7 h-7 text-blue-300" />,
       color: "from-blue-100 to-blue-50",
       href: "/admin/inscripciones",
       value: inscripciones,
@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Clasificación CN",
-      icon: <TrophyIcon className="w-7 h-7 text-red-500" />,
+      icon: <TrophyIcon className="w-7 h-7 text-blue-300" />,
       color: "from-red-100 to-red-50",
       href: "/admin/clasificacion",
       value: "►", // Un ícono de "Play" o "Ejecutar"
@@ -83,7 +83,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Wildcards",
-      icon: <TicketIcon className="w-7 h-7 text-pink-500" />,
+      icon: <TicketIcon className="w-7 h-7 text-blue-300" />,
       color: "from-pink-100 to-pink-50",
       href: "/admin/wildcards",
       value: wildcards,
@@ -92,7 +92,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Eventos",
-      icon: <CalendarDaysIcon className="w-7 h-7 text-emerald-500" />,
+      icon: <CalendarDaysIcon className="w-7 h-7 text-blue-300" />,
       color: "from-emerald-100 to-emerald-50",
       href: "/admin/eventos",
       value: eventos,
@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Compras",
-      icon: <ShoppingCartIcon className="w-7 h-7 text-orange-500" />,
+      icon: <ShoppingCartIcon className="w-7 h-7 text-blue-300" />,
       color: "from-orange-100 to-orange-50",
       href: "/admin/compras",
       value: comprasAgg._count._all,
@@ -111,7 +111,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Sugerencias",
-      icon: <ChatBubbleLeftRightIcon className="w-7 h-7 text-cyan-500" />,
+      icon: <ChatBubbleLeftRightIcon className="w-7 h-7 text-blue-300" />,
       color: "from-cyan-100 to-cyan-50",
       href: "/admin/sugerencias",
       value: sugerencias,
@@ -135,8 +135,8 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h2>
-        <p className="mt-2 text-base text-gray-600">
+        <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
+        <p className="mt-2 text-base text-blue-100">
           Bienvenido al panel de administración. Usa la navegación para gestionar usuarios, wildcards, eventos, compras y sugerencias.
         </p>
       </div>
@@ -145,39 +145,39 @@ export default async function AdminDashboardPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className={`rounded-xl bg-gradient-to-br ${stat.color} p-6 flex flex-col gap-3 items-start shadow hover:shadow-lg transition-shadow group`}
+            className="rounded-xl bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 flex flex-col gap-3 items-start shadow-lg hover:shadow-xl hover:scale-105 transition-all group"
           >
-            <div className={`flex-shrink-0 rounded-full ${stat.bgIcon} shadow p-2`}>
+            <div className="flex-shrink-0 rounded-full bg-blue-600/30 backdrop-blur-sm shadow-lg p-2 border border-blue-500/30">
               {stat.icon}
             </div>
             <div>
-              <div className={`text-xs font-semibold uppercase tracking-wide ${stat.text}`}>{stat.label}</div>
-              <div className={`mt-1 font-extrabold text-gray-900 ${
-                typeof stat.value === 'number' ? 'text-3xl' : 'text-2xl' // Letras más pequeñas si es texto
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">{stat.label}</div>
+              <div className={`mt-1 font-extrabold text-white ${
+                typeof stat.value === 'number' ? 'text-3xl' : 'text-2xl'
               }`}>
                 {stat.value}
               </div>
               {stat.label === "Compras" && (
-                <div className="text-xs text-gray-500 mt-1">Ingresos: <span className="font-bold">{stat.extra}</span></div>
+                <div className="text-xs text-blue-100 mt-1">Ingresos: <span className="font-bold text-white">{stat.extra}</span></div>
               )}
             </div>
-            <span className="mt-auto text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition">Ver detalles →</span>
+            <span className="mt-auto text-xs text-blue-300 opacity-0 group-hover:opacity-100 transition">Ver detalles →</span>
           </Link>
         ))}
       </div>
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-4 text-indigo-700">Usuarios por estado</h3>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-lg p-6 flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4 text-white">Usuarios por estado</h3>
           <UsuariosPorEstadoChart data={usuariosEstadoData} />
         </div>
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-4 text-pink-700">Wildcards por estado</h3>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-lg p-6 flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4 text-white">Wildcards por estado</h3>
           <WildcardsPorEstadoChart data={wildcardsEstadoData} />
         </div>
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-4 text-orange-700">Ingresos por mes</h3>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-lg p-6 flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4 text-white">Ingresos por mes</h3>
           <ComprasPorMesChart data={comprasMesData} />
         </div>
       </div>

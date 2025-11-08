@@ -15,15 +15,15 @@ export default async function NuevoEventoPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Nuevo evento</h1>
+    <div className="max-w-2xl mx-auto space-y-8">
+      <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold mb-6 text-white">Nuevo evento</h1>
         <EventForm
           regiones={regiones}
           comunas={comunas}
           eventTypes={eventTypes}
         />
       </div>
-    </main>
+    </div>
   );
 }

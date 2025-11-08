@@ -27,53 +27,53 @@ function CompraDetailPopup({ compra }: { compra: CompraDetail }) {
     : "";
 
   return (
-    <div className="text-gray-700">
-      <h2 className="text-lg font-bold mb-4">Detalle de compra</h2>
+    <div className="text-blue-100">
+      <h2 className="text-lg font-bold mb-4 text-white">Detalle de compra</h2>
       <div className="mb-2 text-sm">
-        <b>ID:</b> {compra.id}
+        <b className="text-blue-300">ID:</b> <span className="text-blue-100">{compra.id}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Fecha compra:</b> {new Date(compra.createdAt).toLocaleString("es-CL")}
+        <b className="text-blue-300">Fecha compra:</b> <span className="text-blue-100">{new Date(compra.createdAt).toLocaleString("es-CL")}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Evento:</b> {compra.evento?.nombre ?? "—"}{" "}
+        <b className="text-blue-300">Evento:</b> <span className="text-blue-100">{compra.evento?.nombre ?? "—"}{" "}
         {compra.evento?.fecha && (
           <>({new Date(compra.evento.fecha).toLocaleString("es-CL")})</>
-        )}
+        )}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Comprador:</b> {nombreCompleto || "—"} — {compra.user?.email}
+        <b className="text-blue-300">Comprador:</b> <span className="text-blue-100">{nombreCompleto || "—"} — {compra.user?.email}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Comuna:</b> {compra.user?.profile?.comuna?.name ?? "—"}{" "}
-        <b>Región:</b> {compra.user?.profile?.comuna?.region?.name ?? "—"}
+        <b className="text-blue-300">Comuna:</b> <span className="text-blue-100">{compra.user?.profile?.comuna?.name ?? "—"}{" "}
+        <b className="text-blue-300">Región:</b> {compra.user?.profile?.comuna?.region?.name ?? "—"}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Estado:</b> {compra.status}
+        <b className="text-blue-300">Estado:</b> <span className="text-blue-100">{compra.status}</span>
       </div>
       <div className="mb-2 text-sm">
-        <b>Entradas:</b>
+        <b className="text-blue-300">Entradas:</b>
         <ul className="mt-2 space-y-2">
           {compra.items.map((item) => (
-            <li key={item.id} className="border-b pb-2">
+            <li key={item.id} className="border-b border-blue-700/30 pb-2">
               <div>
-                <b>Tipo:</b> {item.ticketType.name}
+                <b className="text-blue-300">Tipo:</b> <span className="text-blue-100">{item.ticketType.name}</span>
               </div>
               <div>
-                <b>Cantidad:</b> {item.quantity}
+                <b className="text-blue-300">Cantidad:</b> <span className="text-blue-100">{item.quantity}</span>
               </div>
               <div>
-                <b>Precio unitario:</b> ${item.unitPrice.toLocaleString("es-CL")}
+                <b className="text-blue-300">Precio unitario:</b> <span className="text-blue-100">${item.unitPrice.toLocaleString("es-CL")}</span>
               </div>
               <div>
-                <b>Total:</b> ${item.subtotal.toLocaleString("es-CL")}
+                <b className="text-blue-300">Total:</b> <span className="text-blue-100">${item.subtotal.toLocaleString("es-CL")}</span>
               </div>
             </li>
           ))}
         </ul>
       </div>
       <div className="mb-2 text-sm">
-        <b>Total compra:</b> ${compra.total.toLocaleString("es-CL")}
+        <b className="text-blue-300">Total compra:</b> <span className="text-blue-100 font-bold">${compra.total.toLocaleString("es-CL")}</span>
       </div>
     </div>
   );
@@ -113,7 +113,7 @@ export default function ComprasPageWrapper({
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Compras</h1>
+      <h1 className="text-3xl font-bold mb-8 text-white">Compras</h1>
 
       <ComprasFilters
         events={events}
@@ -122,23 +122,23 @@ export default function ComprasPageWrapper({
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-indigo-600">Ingresos brutos</h3>
-          <p className="text-2xl font-bold text-gray-700">
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 rounded-xl shadow-lg">
+          <h3 className="font-semibold text-blue-100">Ingresos brutos</h3>
+          <p className="text-2xl font-bold text-white">
             ${stats?.ingresosBrutos?.toLocaleString("es-CL") ?? "0"}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-indigo-600">Entradas vendidas</h3>
-          <p className="text-2xl font-bold text-gray-600">{stats?.entradasVendidas ?? "0"}</p>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 rounded-xl shadow-lg">
+          <h3 className="font-semibold text-blue-100">Entradas vendidas</h3>
+          <p className="text-2xl font-bold text-white">{stats?.entradasVendidas ?? "0"}</p>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
-          <h3 className="font-semibold text-indigo-600">Por tipo</h3>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 rounded-xl shadow-lg">
+          <h3 className="font-semibold text-blue-100">Por tipo</h3>
           {stats &&
             Object.entries(stats.porTipo).map(([tipo, data]) => {
               const tipoData = data as { cantidad: number; total: number };
               return (
-                <div key={tipo} className="flex justify-between text-gray-600">
+                <div key={tipo} className="flex justify-between text-white">
                   <span>
                     {tipo}: {tipoData.cantidad}
                   </span>

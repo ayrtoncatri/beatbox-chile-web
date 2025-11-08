@@ -74,22 +74,22 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
   const isInscrito = w.inscripcion !== null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-2 sm:px-6">
+    <div className="min-h-screen py-8 px-2 sm:px-6">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Wildcard</h2>
-            <div className="text-sm text-gray-600">ID: {w.id}</div>
+            <h2 className="text-3xl font-bold tracking-tight text-white">Wildcard</h2>
+            <div className="text-sm text-blue-300/70">ID: {w.id}</div>
           </div>
-          <Link href="/admin/wildcards" className="btn btn-outline btn-sm">
+          <Link href="/admin/wildcards" className="btn btn-outline btn-sm text-blue-200 border-blue-700/50 hover:bg-blue-800/50">
             ← Volver
           </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow">
-              <h3 className="font-semibold mb-4 text-lg text-gray-800">Editar wildcard</h3>
+            <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg">
+              <h3 className="font-semibold mb-4 text-lg text-white">Editar wildcard</h3>
               <WildcardEditForm
                 item={{
                   id: w.id,
@@ -101,8 +101,8 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
               />
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow">
-              <h3 className="font-semibold mb-4 text-lg text-gray-800">Video</h3>
+            <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg">
+              <h3 className="font-semibold mb-4 text-lg text-white">Video</h3>
               {embed ? (
                 <div className="aspect-video">
                   <iframe
@@ -114,11 +114,11 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                   />
                 </div>
               ) : (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-blue-300/70">
                   {w.youtubeUrl ? (
                     <>
                       URL no reconocida para embeber.{" "}
-                      <a href={w.youtubeUrl} className="text-blue-600 underline" target="_blank">
+                      <a href={w.youtubeUrl} className="text-blue-400 underline hover:text-blue-300" target="_blank">
                         Abrir enlace
                       </a>
                     </>
@@ -131,27 +131,27 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow flex flex-col gap-4">
-              <h3 className="font-semibold mb-2 text-lg text-gray-800">Resumen</h3>
+            <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg flex flex-col gap-4">
+              <h3 className="font-semibold mb-2 text-lg text-white">Resumen</h3>
               <div className="text-sm space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold border-2 border-indigo-200 shadow">
+                  <div className="w-8 h-8 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-300 font-bold border-2 border-blue-500/50 shadow">
                     <UserIcon className="w-5 h-5" />
                   </div>
                   <span>
-                    <span className="text-gray-700">{nombreUsuario || "—"}</span>
-                    <span className="text-gray-400"> ({w.user?.email || "—"})</span>
+                    <span className="text-blue-100">{nombreUsuario || "—"}</span>
+                    <span className="text-blue-300/70"> ({w.user?.email || "—"})</span>
                   </span>
                 </div>
-                <div className="text-gray-900"><span className="text-gray-500">Alias:</span> {w.nombreArtistico || "—"}</div>
+                <div className="text-blue-100"><span className="text-blue-300/70">Alias:</span> {w.nombreArtistico || "—"}</div>
                 <div>
-                  <span className="text-gray-500">Estado:</span>{" "}
+                  <span className="text-blue-300/70">Estado:</span>{" "}
                   <span className={
                     w.status === "APPROVED"
-                      ? "bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      ? "bg-green-900/50 text-green-300 border border-green-700/30 px-2 py-0.5 rounded-full text-xs font-semibold"
                       : w.status === "REJECTED"
-                      ? "bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold"
-                      : "bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      ? "bg-red-900/50 text-red-300 border border-red-700/30 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      : "bg-yellow-900/50 text-yellow-300 border border-yellow-700/30 px-2 py-0.5 rounded-full text-xs font-semibold"
                   }>
                     {w.status}
                   </span>
@@ -159,30 +159,30 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
 
                 {w.status === "APPROVED" && (
                   <div>
-                    <span className="text-gray-500">Inscripción:</span>{" "}
+                    <span className="text-blue-300/70">Inscripción:</span>{" "}
                     {isInscrito ? (
-                      <span className="inline-flex items-center gap-1 text-green-700 font-semibold text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-green-300 font-semibold text-xs px-2 py-0.5 bg-green-900/50 border border-green-700/30 rounded-full">
                         <CheckBadgeIcon className="w-4 h-4" />
                         Creada
                       </span>
                     ) : (
-                      <span className="text-yellow-700 font-semibold text-xs px-2 py-0.5 bg-yellow-100 rounded-full">
+                      <span className="text-yellow-300 font-semibold text-xs px-2 py-0.5 bg-yellow-900/50 border border-yellow-700/30 rounded-full">
                         Procesando...
                       </span>
                     )}
                   </div>
                 )}
-                <div className="text-gray-900"><span className="text-gray-500">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
-                <div className="text-gray-900"><span className="text-gray-500">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
+                <div className="text-blue-100"><span className="text-blue-300/70">Revisado por:</span> {nombreRevisor || w.reviewedBy?.email || "—"}</div>
+                <div className="text-blue-100"><span className="text-blue-300/70">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">
                 <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
               </div>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow">
-              <h3 className="font-semibold mb-2 text-lg text-gray-800">Notas</h3>
-              <div className="text-sm whitespace-pre-wrap text-gray-700">{w.notes || "Sin notas."}</div>
+            <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg">
+              <h3 className="font-semibold mb-2 text-lg text-white">Notas</h3>
+              <div className="text-sm whitespace-pre-wrap text-blue-200">{w.notes || "Sin notas."}</div>
             </div>
           </div>
         </div>

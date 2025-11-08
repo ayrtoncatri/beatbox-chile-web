@@ -126,64 +126,64 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
       <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
       
       {/* Drawer */}
-      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-lg">
-        <div className="p-4 flex justify-between items-center border-b">
-          <h2 className="text-xl font-bold">Detalle de sugerencia</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+      <div className="absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border-l border-blue-700/30 shadow-lg">
+        <div className="p-4 flex justify-between items-center border-b border-blue-700/30">
+          <h2 className="text-xl font-bold text-white">Detalle de sugerencia</h2>
+          <button onClick={onClose} className="text-blue-300 hover:text-blue-100">
             Cerrar
           </button>
         </div>
         
         {loading ? (
-          <div className="p-4">Cargando...</div>
+          <div className="p-4 text-blue-200">Cargando...</div>
         ) : sugerencia ? (
-          <div className="p-4">
+          <div className="p-4 text-blue-100">
             <form action={formAction}>
               <input type="hidden" name="id" value={sugerencia.id} />
               
               {/* Información básica */}
               <div className="mb-4">
-                <p><strong>ID:</strong> {sugerencia.id}</p>
-                <p><strong>Fecha:</strong> {new Date(sugerencia.createdAt).toLocaleString()}</p>
-                <p><strong>Usuario:</strong> {renderUserName()}</p>
+                <p><strong className="text-blue-200">ID:</strong> <span className="text-blue-100">{sugerencia.id}</span></p>
+                <p><strong className="text-blue-200">Fecha:</strong> <span className="text-blue-100">{new Date(sugerencia.createdAt).toLocaleString()}</span></p>
+                <p><strong className="text-blue-200">Usuario:</strong> <span className="text-blue-100">{renderUserName()}</span></p>
               </div>
               
               {/* Mensaje */}
               <div className="mb-4">
-                <h3 className="font-semibold mb-1">Mensaje:</h3>
-                <p className="bg-gray-50 p-2 rounded">{sugerencia.mensaje}</p>
+                <h3 className="font-semibold mb-1 text-blue-200">Mensaje:</h3>
+                <p className="bg-blue-900/50 border border-blue-700/30 p-2 rounded text-blue-100">{sugerencia.mensaje}</p>
               </div>
               
               {/* Estado */}
               <div className="mb-4">
-                <label className="block font-semibold mb-1">Estado:</label>
-                <select 
-                  name="estado" 
-                  defaultValue={sugerencia.estado}
-                  className="w-full p-2 border rounded"
-                >
+                <label className="block font-semibold mb-1 text-blue-200">Estado:</label>
+                <select 
+                  name="estado" 
+                  defaultValue={sugerencia.estado}
+                  className="w-full p-2 border border-blue-700/50 rounded bg-blue-950/50 text-blue-100"
+                >
                     {/* CAMBIO: Usar los valores y etiquetas del Enum */}
                     {Object.values(SuggestionStatus).map(status => (
                       <option key={status} value={status}>
                         {statusLabels[status] || status}
                       </option>
                     ))}
-                </select>
-              </div>
+                </select>
+              </div>
               
               {/* Nota privada */}
               <div className="mb-4">
-                <label className="block font-semibold mb-1">Nota privada:</label>
+                <label className="block font-semibold mb-1 text-blue-200">Nota privada:</label>
                 <textarea
                   name="notaPrivada"
                   defaultValue={sugerencia.notaPrivada || ''}
-                  className="w-full p-2 border rounded h-24"
+                  className="w-full p-2 border border-blue-700/50 rounded h-24 bg-blue-950/50 text-blue-100 placeholder:text-blue-400/50"
                 />
               </div>
               
               {/* Mensajes de estado */}
               {formState.message && (
-                <div className={`p-2 mb-4 rounded ${formState.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                <div className={`p-2 mb-4 rounded border ${formState.success ? 'bg-green-900/50 text-green-300 border-green-700/30' : 'bg-red-900/50 text-red-300 border-red-700/30'}`}>
                   {formState.message}
                 </div>
               )}
@@ -194,13 +194,13 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
                   type="button"
                   onClick={handleDelete}
                   disabled={deleteLoading}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
+                  className="bg-gradient-to-r from-red-600 to-red-500 text-white px-4 py-2 rounded-lg shadow-lg hover:from-red-700 hover:to-red-600 disabled:opacity-50"
                 >
                   {deleteLoading ? 'Eliminando...' : 'Eliminar'}
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-600"
                 >
                   Guardar cambios
                 </button>
@@ -208,7 +208,7 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
             </form>
           </div>
         ) : (
-          <div className="p-4">No se encontró la sugerencia</div>
+          <div className="p-4 text-blue-200">No se encontró la sugerencia</div>
         )}
       </div>
     </div>

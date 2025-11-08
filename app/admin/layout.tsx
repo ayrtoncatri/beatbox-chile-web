@@ -14,34 +14,34 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await ensureAdminPage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200">
+        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950 to-neutral-900 admin-panel">
       {/* Mobile top bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900/90 to-blue-800/90 backdrop-blur-lg shadow-lg border-b border-blue-700/30">
         <div className="flex items-center gap-2">
-          <div className="rounded-full bg-indigo-600 w-9 h-9 flex items-center justify-center text-white font-bold text-lg shadow">
+          <div className="rounded-full bg-gradient-to-br from-blue-500 to-blue-600 w-9 h-9 flex items-center justify-center text-white font-bold text-lg shadow-lg">
             BB
           </div>
-          <span className="text-base font-bold tracking-tight text-gray-800">Beatbox Admin</span>
+          <span className="text-base font-bold tracking-tight text-blue-100">Beatbox Admin</span>
         </div>
         {/* Mobile menu button */}
         <MobileSidebar />
       </div>
-      <div className="flex">
+      <div className="flex relative">
         {/* Sidebar desktop */}
-        <aside className="w-64 hidden md:flex flex-col gap-2 border-r bg-white/90 backdrop-blur-lg p-6 sticky top-0 h-screen shadow-lg">
+        <aside className="w-64 hidden md:flex flex-col gap-2 border-r border-blue-800/30 bg-gradient-to-b from-blue-900/95 via-blue-950/95 to-black/95 backdrop-blur-lg p-6 sticky top-0 h-screen shadow-2xl z-10">
           <div className="mb-8 flex items-center gap-2">
-            <div className="rounded-full bg-indigo-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow">
+            <div className="rounded-full bg-gradient-to-br from-blue-500 to-blue-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow-lg">
               BB
             </div>
-            <span className="text-lg font-bold tracking-tight text-gray-800">Beatbox Admin</span>
+            <span className="text-lg font-bold tracking-tight text-blue-100">Beatbox Admin</span>
           </div>
           <SidebarNav />
-          <div className="mt-auto pt-8 text-xs text-gray-400">
+          <div className="mt-auto pt-8 text-xs text-blue-400/70">
             &copy; {new Date().getFullYear()} Beatbox Chile
           </div>
         </aside>
         {/* Main content */}
-        <main className="flex-1 p-4 md:p-10">{children}</main>
+        <main className="flex-1 p-4 md:p-10 relative z-0">{children}</main>
       </div>
     </div>
   );
