@@ -4,6 +4,7 @@ import { useFormStatus } from 'react-dom'
 import { useEffect, useRef, useActionState } from 'react'
 import { Categoria, User, Role, RoundPhase , UserRole } from '@prisma/client'
 import { assignJudgeAction, type AssignJudgeState } from '@/app/admin/eventos/actions'
+import toast from 'react-hot-toast'
 
 type UserRoleWithRole = UserRole & { role: Role };
 type JudgeUser = User & { roles: UserRoleWithRole[] };
@@ -50,12 +51,10 @@ export function JudgeAssignmentForm({
         if (state.ok === true) {
             // Limpiamos el formulario si la asignación fue exitosa
             formRef.current?.reset()
-            // (Aquí podríamos mostrar un toast de éxito)
-            alert(state.message || '¡Juez asignado!')
+            toast.success(state.message || '¡Juez asignado correctamente!')
         }
         if (state.ok === false && state.error) {
-            // (Aquí podríamos mostrar un toast de error)
-            alert(`Error: ${state.error}`)
+            toast.error(`Error: ${state.error}`)
         }
     }, [state])
 

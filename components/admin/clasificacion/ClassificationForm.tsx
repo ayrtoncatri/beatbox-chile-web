@@ -3,7 +3,8 @@
 import { runCnClassification } from '@/app/actions/admin/classification';
 import {  useFormStatus } from 'react-dom';
 import { CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
-import {useActionState} from 'react';
+import {useActionState, useEffect} from 'react';
+import toast from 'react-hot-toast';
 
 // --- (1) Tipo de los eventos que recibe la página ---
 type CNEvento = {
@@ -37,6 +38,14 @@ export function ClassificationForm({ cnEventos }: { cnEventos: CNEvento[] }) {
 
   // Obtener el año actual para el input
   const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success(state.success);
+    } else if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.success, state.error]);
 
   return (
     <form action={dispatch} className="space-y-6">

@@ -4,6 +4,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import PencilSquareIcon from "@heroicons/react/24/solid/esm/PencilSquareIcon";
 import { editWildcard } from "@/app/admin/wildcards/actions";
+import toast from "react-hot-toast";
 
 type Wildcard = {
   id: string;
@@ -38,9 +39,12 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
   
   useEffect(() => {
     if (state.ok) {
+      toast.success("Wildcard actualizado correctamente");
       router.refresh();
+    } else if (state.error) {
+      toast.error(state.error);
     }
-  }, [state.ok, router]);
+  }, [state.ok, state.error, router]);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -79,9 +83,6 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
           />
         </div>
       </div>
-
-      {state.error && <div className="text-sm text-red-600">{state.error}</div>}
-      {state.ok && <div className="text-sm text-green-700">Guardado</div>}
 
       <SubmitButton />
     </form>

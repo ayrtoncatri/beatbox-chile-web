@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client' 
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import { debounce } from 'lodash'
+import toast from 'react-hot-toast'
 
 // Tipos y Zod Schema
 import {
@@ -123,13 +124,18 @@ export function JudgeScoreForm({
   const onSubmit = (data: SubmitScorePayload) => {
     if (formStatus === ScoreStatus.SUBMITTED) return
 
+    const loadingToast = toast.loading('Enviando puntaje...');
     startTransition(async () => {
       const result = await submitScore({ ...data, status: ScoreStatus.SUBMITTED })
       if (result.success) {
-        setFormStatus(ScoreStatus.SUBMITTED) 
+        setFormStatus(ScoreStatus.SUBMITTED)
+        toast.success('Puntaje enviado correctamente', { id: loadingToast })
       } else {
         console.error("Error al enviar el puntaje final:", result.error)
-        alert("Error al enviar: " + JSON.stringify(result.error))
+        const errorMessage = typeof result.error === 'string' 
+          ? result.error 
+          : 'Error al enviar el puntaje';
+        toast.error(errorMessage, { id: loadingToast })
       }
     })
   }

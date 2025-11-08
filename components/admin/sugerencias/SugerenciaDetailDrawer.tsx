@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
 import { getSugerenciaById, updateSugerencia, deleteSugerencia } from "@/app/admin/sugerencias/actions";
 import { SuggestionStatus } from "@prisma/client";
+import toast from "react-hot-toast";
 
 type SugerenciaDetalle = {
   id: string;
@@ -73,18 +74,20 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
       return;
     }
     
+    const loadingToast = toast.loading("Eliminando sugerencia...");
     setDeleteLoading(true);
     try {
       const result = await deleteSugerencia(sugerenciaId);
       if (result.success) {
+        toast.success("Sugerencia eliminada correctamente", { id: loadingToast });
         onClose();
         router.refresh();
       } else {
-        alert(result.message || "Error al eliminar la sugerencia");
+        toast.error(result.message || "Error al eliminar la sugerencia", { id: loadingToast });
       }
     } catch (error) {
       console.error("Error al eliminar:", error);
-      alert("Error al eliminar la sugerencia");
+      toast.error("Error al eliminar la sugerencia", { id: loadingToast });
     } finally {
       setDeleteLoading(false);
     }
@@ -93,10 +96,13 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
   // Efecto para cerrar el drawer cuando se actualiza exitosamente
   useEffect(() => {
     if (formState.success) {
+      toast.success("Sugerencia actualizada correctamente");
       router.refresh();
       onClose();
+    } else if (formState.message && !formState.success) {
+      toast.error(formState.message);
     }
-  }, [formState.success, router]);
+  }, [formState.success, formState.message, router, onClose]);
 
   const renderUserName = () => {
     if (loading || !sugerencia) return 'Cargando...';

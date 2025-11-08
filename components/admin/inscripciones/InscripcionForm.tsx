@@ -4,8 +4,7 @@ import { registerParticipantForLeague } from '@/app/actions/admin/inscripciones'
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useState, useEffect } from 'react';
-// (Importar íconos para los mensajes de estado)
-import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import toast from 'react-hot-toast';
 
 // (Tipos de datos se mantienen)
 type LigaData = {
@@ -51,6 +50,14 @@ export function InscripcionForm({ ligas, users }: FormProps) {
     const selectedLiga = ligas.find((l) => l.id === selectedLigaId);
     setAvailableCategories(selectedLiga?.categorias || []);
   }, [selectedLigaId, ligas]);
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success(state.success);
+    } else if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.success, state.error]);
 
   return (
     <form action={dispatch} className="space-y-6">
@@ -148,22 +155,6 @@ export function InscripcionForm({ ligas, users }: FormProps) {
       {/* --- Botón y Mensajes de Estado Estilizados --- */}
       <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
         <SubmitButton />
-
-        {/* Mensaje de Éxito */}
-        {state.success && (
-          <div className="flex items-center gap-2 text-sm font-medium text-green-600">
-            <CheckCircleIcon className="h-5 w-5" />
-            {state.success}
-          </div>
-        )}
-        
-        {/* Mensaje de Error */}
-        {state.error && (
-          <div className="flex items-center gap-2 text-sm font-medium text-red-600">
-            <ExclamationTriangleIcon className="h-5 w-5" />
-            {state.error}
-          </div>
-        )}
       </div>
     </form>
   );

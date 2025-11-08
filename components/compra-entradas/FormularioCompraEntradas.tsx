@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import type { EventoDTO } from "@/components/compra-entradas/EventosDisponibles";
+import toast from "react-hot-toast";
 
 type FormData = {
   tipoEntrada: "General" | "VIP";
@@ -25,8 +26,6 @@ export default function FormularioCompraEntradas({ eventoSeleccionado }: Props) 
     defaultValues: { tipoEntrada: "General", cantidad: 1 },
   });
 
-  const [mensaje, setMensaje] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const { data: session } = useSession();
@@ -40,24 +39,22 @@ export default function FormularioCompraEntradas({ eventoSeleccionado }: Props) 
   );
 
   const onSubmit = async (data: FormData) => {
-    setMensaje(null);
-    setError(null);
-
     if (!session) {
-      setError("⚠️ Debes iniciar sesión para comprar.");
+      toast.error("Debes iniciar sesión para comprar.");
       setTimeout(() => router.push("/auth/register"), 1600);
       return;
     }
     const userId = (session.user as { id?: string })?.id;
     if (!userId) {
-      setError("No se pudo obtener tu sesión.");
+      toast.error("No se pudo obtener tu sesión.");
       return;
     }
     if (!eventoSeleccionado) {
-      setError("Debes seleccionar un evento primero.");
+      toast.error("Debes seleccionar un evento primero.");
       return;
     }
 
+    const loadingToast = toast.loading("Procesando compra...");
     try {
       setSubmitting(true);
       const res = await fetch("/api/compra-entradas", {
@@ -72,13 +69,14 @@ export default function FormularioCompraEntradas({ eventoSeleccionado }: Props) 
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "No se pudo completar la compra.");
+        const errorMsg = json?.error || "No se pudo completar la compra.";
+        toast.error(errorMsg, { id: loadingToast });
         return;
       }
-      setMensaje("✅ Compra realizada con éxito.");
+      toast.success("Compra realizada con éxito.", { id: loadingToast });
       reset({ tipoEntrada: "General", cantidad: 1 });
     } catch {
-      setError("Error de red/servidor al procesar la compra.");
+      toast.error("Error de red/servidor al procesar la compra.", { id: loadingToast });
     } finally {
       setSubmitting(false);
     }
@@ -144,9 +142,6 @@ export default function FormularioCompraEntradas({ eventoSeleccionado }: Props) 
         >
           {submitting ? "Procesando..." : "Comprar"}
         </button>
-
-        {mensaje && <p className="mt-2 text-lime-300 font-bold">{mensaje}</p>}
-        {error && <p className="mt-2 text-red-400 font-semibold">{error}</p>}
       </form>
     </section>
   );

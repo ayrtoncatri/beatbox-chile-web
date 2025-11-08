@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Criterio, ScoreStatus, RoundPhase, User, UserProfile, Score, ScoreDetail, Battle } from '@prisma/client';
 import { SingleRoundForm } from './SingleRoundForm';
 import { useTransition } from 'react';
@@ -8,6 +8,7 @@ import { declareBattleWinner } from '@/app/actions/judge/winner';
 import { TrophyIcon, LockClosedIcon } from '@heroicons/react/24/solid';
 import { useActionState} from 'react';
 import { useFormStatus } from 'react-dom';
+import toast from 'react-hot-toast';
 
 // --- Tipos de Props ---
 type FullBattle = Battle & {
@@ -34,6 +35,15 @@ function DeclareWinnerButton({ battleId, totalScoreA, totalScoreB, totalSubmitte
   const initialState = { error: undefined, success: undefined, winnerName: undefined };
   const [state, dispatch] = useActionState(declareBattleWinner, initialState);
   const { pending } = useFormStatus();
+
+  useEffect(() => {
+    if (state.success) {
+      const winnerFeedback = state.winnerName || (totalScoreA > totalScoreB ? 'Participante A' : 'Participante B');
+      toast.success(`${state.success} (${winnerFeedback} AVANZA)`);
+    } else if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.success, state.error, state.winnerName, totalScoreA, totalScoreB]);
 
   // Regla: Solo si los 4 formularios (2 rounds x 2 participantes) han sido enviados
   const canDeclare = totalSubmittedRounds === 4 && totalScoreA !== totalScoreB; 
@@ -72,10 +82,6 @@ function DeclareWinnerButton({ battleId, totalScoreA, totalScoreB, totalSubmitte
           {pending ? 'Declarando...' : 'Declarar Ganador Final'}
         </button>
       </form>
-      
-      {/* Mensaje de Resultado */}
-      {state.success && <p className="text-sm font-semibold text-green-600">{state.success} ({winnerFeedback})</p>}
-      {state.error && <p className="text-sm font-semibold text-red-600">{state.error}</p>}
     </div>
   );
 }

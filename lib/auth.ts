@@ -6,7 +6,14 @@ import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 horas en segundos (expiración fija)
+    updateAge: 8 * 60 * 60, // Mismo valor que maxAge para evitar renovación automática
+  },
+  jwt: {
+    maxAge: 8 * 60 * 60, // 8 horas en segundos (expiración fija del JWT)
+  },
   pages: { signIn: "/auth/login" },
   providers: [
     CredentialsProvider({
