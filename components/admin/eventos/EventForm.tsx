@@ -307,7 +307,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
               Nombre del evento *
             </label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               name="nombre"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
@@ -338,7 +338,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">Fecha del Evento *</label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               name="fecha"
               type="date"
               value={fecha}
@@ -352,7 +352,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
               Fecha Límite Wildcards (Opcional)
             </label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               name="wildcardDeadline" 
               type="datetime-local" 
               value={wildcardDeadline}
@@ -368,7 +368,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
               Nombre del Lugar (Venue)
             </label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               name="venueName"
               value={venueName}
               onChange={(e) => setVenueName(e.target.value)}
@@ -380,7 +380,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">Región</label>
             <select
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               value={selectedRegionId || ""}
               onChange={(e) => {
                 setSelectedRegionId(e.target.value || null);
@@ -414,14 +414,13 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
               ))}
             </select>
           </div>
-          {/* --- Fin del cambio de Region/Comuna --- */}
 
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-medium">
               Dirección (Calle y Nro)
             </label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
               name="venueStreet"
               value={venueStreet}
               onChange={(e) => setVenueStreet(e.target.value)}

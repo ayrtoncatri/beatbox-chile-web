@@ -53,7 +53,7 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">Alias (nombre artístico)</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="nombreArtistico"
             value={nombreArtistico}
             onChange={(e) => setNombreArtistico(e.target.value)}
@@ -64,7 +64,7 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
         <div>
           <label className="block text-sm text-gray-600 mb-1 font-medium">YouTube URL</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
             name="youtubeUrl"
             value={youtubeUrl}
             onChange={(e) => setYoutubeUrl(e.target.value)}

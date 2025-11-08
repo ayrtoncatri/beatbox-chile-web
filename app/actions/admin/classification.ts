@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { InscripcionSource, RoundPhase } from '@prisma/client';
+import { InscripcionSource, RoundPhase, ScoreStatus } from '@prisma/client';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth'; // Importamos tu config de auth
@@ -18,7 +18,6 @@ interface ActionState {
 const CN_EVENT_TYPE = "Campeonato Nacional";
 const LIGA_PRESENCIAL_TYPE = "Liga Presencial";
 const LIGA_ONLINE_TYPE = "Liga Online";
-const WILDCARD_EVENT_TYPE = "Wildcard"; // Asumo que tus wildcards están en un evento tipo "Wildcard"
 const CATEGORIA_PRINCIPAL = "SOLO"; // Asumo que la categoría principal es "SOLO"
 
 /**
@@ -29,10 +28,11 @@ async function getTop3(eventoId: string) {
     by: ['participantId'],
     where: {
       eventoId: eventoId,
-      phase: RoundPhase.FINAL, // El Top 3 se decide en la FINAL
+      phase: { in: [RoundPhase.FINAL, RoundPhase.TERCER_LUGAR] }, // <-- CORREGIDO
+      status: ScoreStatus.SUBMITTED,
     },
     _avg: {
-      totalScore: true, // Promedio de las notas de los jueces
+      totalScore: true,
     },
     orderBy: {
       _avg: {
@@ -96,15 +96,10 @@ export async function runCnClassification(
       where: { tipo: { name: LIGA_ONLINE_TYPE }, fecha: { gte: new Date(`${year}-01-01`), lt: new Date(`${year+1}-01-01`) } },
       orderBy: { fecha: 'desc' }
     });
-    const wildcardEvent = await prisma.evento.findFirst({ // Asumo que hay UN evento de wildcard por año
-      where: { tipo: { name: WILDCARD_EVENT_TYPE }, fecha: { gte: new Date(`${year}-01-01`), lt: new Date(`${year+1}-01-01`) } },
-      orderBy: { fecha: 'desc' }
-    });
 
     if (!prevCn) log.push('Advertencia: No se encontró CN anterior.');
     if (!ligaPresencial) log.push('Advertencia: No se encontró Liga Presencial de este año.');
     if (!ligaOnline) log.push('Advertencia: No se encontró Liga Online de este año.');
-    if (!wildcardEvent) log.push('Advertencia: No se encontró evento de Wildcard de este año.');
 
     // --- 4. Buscar Clasificados (Top 3) ---
     let top3CnAnterior: string[] = [];
@@ -130,20 +125,45 @@ export async function runCnClassification(
 
     // --- 5. Buscar Clasificados (Top 7 Wildcards) ---
     let top7Wildcards: string[] = [];
-    if (wildcardEvent) {
-      // Asumimos que el admin marcó 'isClassified' = true a los 7 ganadores
-      const classifiedWildcards = await prisma.wildcard.findMany({
+    log.push(`Buscando Top 7 Wildcards para el evento: ${cnEventoId}`);
+
+    const classifiedWildcardEntries = await prisma.wildcard.findMany({
+      where: {
+        eventoId: cnEventoId, // Vinculados al CN de destino
+        isClassified: true,  // Que el admin haya marcado
+      },
+      select: { 
+        userId: true, 
+        id: true // ID del Wildcard
+      },
+    });
+
+    if (classifiedWildcardEntries.length > 7) {
+      log.push(`Advertencia: Se encontraron ${classifiedWildcardEntries.length} wildcards marcados como 'Clasificado'. Se procederá a rankearlos.`);
+      
+      // Si hay más de 7 (ej. 8), debemos rankearlos por su score de WILDCARD
+      const scores = await prisma.score.groupBy({
+        by: ['participantId'],
         where: {
-          eventoId: wildcardEvent.id,
-          isClassified: true, // El admin debe setear esto
+          eventoId: cnEventoId,
+          phase: RoundPhase.WILDCARD,
+          status: ScoreStatus.SUBMITTED,
+          // Filtramos solo los participantes que el admin marcó
+          participantId: { in: classifiedWildcardEntries.map(w => w.userId) } 
         },
-        select: { userId: true },
-        take: 7,
+        _avg: { totalScore: true },
+        orderBy: { _avg: { totalScore: 'desc' } },
+        take: 7, // Tomamos solo los 7 mejores
       });
-      top7Wildcards = classifiedWildcards.map(w => w.userId);
-      top7Wildcards.forEach(id => qualifiedUserIds.add(id));
-      log.push(`Clasificados Wildcard (${wildcardEvent.nombre}): ${top7Wildcards.length} encontrados.`);
+      top7Wildcards = scores.map(s => s.participantId);
+
+    } else {
+      // Si hay 7 o menos, todos clasifican
+      top7Wildcards = classifiedWildcardEntries.map(w => w.userId);
     }
+    
+    top7Wildcards.forEach(id => qualifiedUserIds.add(id));
+    log.push(`Clasificados Wildcard (Evento Destino): ${top7Wildcards.length} encontrados.`);
 
     // --- 6. Consolidar y Crear Inscripciones ---
     const finalUserIds = Array.from(qualifiedUserIds);
