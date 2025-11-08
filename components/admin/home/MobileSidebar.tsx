@@ -122,6 +122,8 @@ export default function MobileSidebar() {
               &copy; {new Date().getFullYear()} Beatbox Chile
             </div>
           </aside>
+        </div>
+      )}
     </>
   ) : null;
 
