@@ -40,6 +40,26 @@ export async function registerParticipantForLeague(
   const { userId, eventoId, categoriaId, nombreArtistico } = validatedFields.data;
 
   try {
+    const evento = await prisma.evento.findUnique({
+      where: { id: eventoId },
+      include: { tipo: { select: { name: true } } }
+    });
+
+    if (!evento) {
+      return { error: 'El evento seleccionado no existe.' };
+    }
+
+    // 2. Determinamos la fuente (source) dinámicamente
+    let inscripcionSource: InscripcionSource;
+    if (evento.tipo?.name === 'Campeonato Nacional') {
+      // Si inscribimos manual a un CN, es un override de Admin.
+      // Usamos CN_ADMIN. (Tu script de Fase 4 buscará CN_HISTORICO_TOP3, 
+      // pero este 'CN_ADMIN' es semánticamente correcto para un override manual).
+      inscripcionSource = InscripcionSource.CN_ADMIN;
+    } else {
+      // Comportamiento original para Ligas
+      inscripcionSource = InscripcionSource.LIGA_ADMIN;
+    }
   
     const existingRegistration = await prisma.inscripcion.findUnique({
       where: {
@@ -61,7 +81,7 @@ export async function registerParticipantForLeague(
         eventoId,
         categoriaId,
         nombreArtistico: nombreArtistico,
-        source: InscripcionSource.LIGA_ADMIN,
+        source: inscripcionSource,
         wildcardId: null,
       },
     });
@@ -119,7 +139,7 @@ export async function getRegistrationFormData() {
     where: {
       isPublished: true,
       tipo: {
-        name: { in: ['Liga Presencial', 'Liga Online'] }
+        name: { in: ['Liga Presencial', 'Liga Online', 'Campeonato Nacional'] }
       }
     },
     select: {
