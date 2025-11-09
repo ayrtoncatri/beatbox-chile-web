@@ -180,7 +180,7 @@ export function JudgeScoreForm({
               id={`scores.${index}.value`}
               {...form.register(`scores.${index}.value`, { valueAsNumber: true })}
               disabled={formStatus === ScoreStatus.SUBMITTED}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-800"
             >
               {generateOptions(criterio.maxScore).map((val) => (
                 <option key={val} value={val}>
