@@ -67,6 +67,11 @@ export async function approveWildcard(
   // 1. Obtener el wildcard para asegurar que existe y está PENDIENTE
   const wildcard = await prisma.wildcard.findUnique({
     where: { id: wildcardId },
+    include: {
+      evento: { // <-- (1) Incluimos el evento al que postula
+        select: { wildcardDeadline: true, nombre:true }
+      }
+    }
   });
 
   if (!wildcard) {
@@ -76,54 +81,25 @@ export async function approveWildcard(
     return { error: 'Este wildcard ya ha sido revisado.' };
   }
 
+  const now = new Date(); 
+  
+  if (wildcard.evento.wildcardDeadline && now > wildcard.evento.wildcardDeadline) {
+    // Si la fecha límite existe Y la fecha actual es posterior a la fecha límite
+    return { 
+      error: `El plazo de Wildcards para este evento cerró el ${wildcard.evento.wildcardDeadline.toLocaleDateString()}. No se puede aprobar.` 
+    };
+  }
+
   try {
     // 2. Iniciar la transacción de Prisma (CRUCIAL)
-    await prisma.$transaction(async (tx) => {
-      
-      // 3a. Actualizar el Wildcard a APROBADO
-      await tx.wildcard.update({
-        where: { id: wildcardId },
-        data: {
-          status: WildcardStatus.APPROVED,
-          reviewedAt: new Date(),
-          reviewedById: adminUserId,
-        },
-      });
-
-      // 3b. (Robustez) Verificar si ya existe una inscripción (ej. admin la creó manualmente)
-      const existingInscripcion = await tx.inscripcion.findUnique({
-        where: {
-          userId_eventoId_categoriaId: {
-            userId: wildcard.userId,
-            eventoId: wildcard.eventoId,
-            categoriaId: wildcard.categoriaId,
-          },
-        },
-      });
-
-      if (existingInscripcion) {
-        // Si ya existe, solo la vinculamos a este wildcard
-        await tx.inscripcion.update({
-          where: { id: existingInscripcion.id },
-          data: { 
-            wildcardId: wildcardId,
-            source: InscripcionSource.WILDCARD // Actualizamos la fuente
-          },
-        });
-      } else {
-        // 3c. (Caso normal) Crear la nueva Inscripción
-        await tx.inscripcion.create({
-          data: {
-            userId: wildcard.userId,
-            eventoId: wildcard.eventoId,
-            categoriaId: wildcard.categoriaId,
-            nombreArtistico: wildcard.nombreArtistico, // Tomamos el nombre del wildcard
-            source: InscripcionSource.WILDCARD, // Marcamos que vino de un wildcard
-            wildcardId: wildcardId, // Vinculamos los dos registros
-          },
-        });
-      }
-    }); // Fin de la transacción
+    await prisma.wildcard.update({
+      where: { id: wildcardId },
+      data: {
+        status: WildcardStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedById: adminUserId,
+      },
+    });
 
     // 4. Revalidar cachés y devolver éxito
     revalidatePath('/admin/wildcards');

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { JudgePanel } from '@/components/judge/dashboard/JudgePanel'
-import { RoundPhase, ScoreStatus } from '@prisma/client'
+import { RoundPhase, ScoreStatus, WildcardStatus } from '@prisma/client'
 import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
 
 /**
@@ -61,7 +61,7 @@ export default async function JudgeDashboardPage() {
   const assignedCategoriaIds = assignments.map((a) => a.categoriaId)
 
   // 4. OBTENER DATOS ADICIONALES (Criterios, Participantes, Batallas, Puntajes)
-  const [allCriterios, participants, battles, existingScores] = await Promise.all([
+  const [allCriterios, participants, battles, existingScores, approvedWildcards] = await Promise.all([
     
     // Cargar todos los Criterios
     prisma.criterio.findMany({
@@ -111,6 +111,19 @@ export default async function JudgeDashboardPage() {
         details: true,
       },
     }),
+
+    prisma.wildcard.findMany({
+      where: {
+        eventoId: { in: assignedEventoIds },
+        categoriaId: { in: assignedCategoriaIds },
+        status: WildcardStatus.APPROVED, // <-- La nueva lógica de negocio
+      },
+      include: {
+        user: {
+          include: { profile: true }
+        }
+      }
+    })
   ]);
 
   // 5. RENDERIZAR EL PANEL
@@ -140,6 +153,7 @@ export default async function JudgeDashboardPage() {
         participants={participants}
         battles={battles}
         initialScores={existingScores}
+        approvedWildcards={approvedWildcards}
       />
     </div>
   )
