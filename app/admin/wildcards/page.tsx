@@ -118,7 +118,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                 <th className="text-left p-5 font-semibold">Usuario</th>
                 <th className="text-left p-5 font-semibold">Estado</th>
                 <th className="text-left p-5 font-semibold">Revisado por</th>
-                <th className="text-right p-5 font-semibold">Acciones</th>
+                <th className="text-center p-5 font-semibold">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -168,10 +168,10 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                         <span className="text-xs text-blue-300/70">—</span>
                       )}
                     </td>
-                    <td className="p-5 text-right">
-                      <div className="grid grid-cols-2 items-start gap-2">
-                        {/* Columna 1: Botón "Ver" (Alineado a la derecha) */}
-                          <div className="flex justify-end items-center">
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end">
+                        {/* Columna 1: Botón "Ver" (50% de ancho, centrado) */}
+                          <div className="w-1/2 flex justify-end">
                             <Link
                               href={`/admin/wildcards/${w.id}`}
                               className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
@@ -180,10 +180,10 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                               <EyeIcon className="w-4 h-4" /> Ver
                             </Link>
                           </div>
-                        {/* Columna 2: Botones/Badges (Alineados a la izquierda) */}
-                          <div className="flex justify-end">
+                        {/* Columna 2: Botones/Badges (50% de ancho, centrado) */}
+                          <div className="w-1/2 flex justify-start">
                             <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
-                          </div>
+                        </div>
                       </div>
                     </td>
                   </tr>
