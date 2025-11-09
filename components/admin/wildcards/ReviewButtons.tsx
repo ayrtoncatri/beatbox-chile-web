@@ -2,7 +2,7 @@
 
 import { approveWildcard, rejectWildcard } from '@/app/admin/wildcards/actions';
 import { WildcardStatus } from '@prisma/client';
-import { useActionState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircleIcon, XCircleIcon, ClockIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 import React from 'react';
@@ -10,12 +10,12 @@ import toast from 'react-hot-toast';
 
 type Status = WildcardStatus;
 
-export default function ReviewButtons({ id, status, isInscrito }: { id: string; status: Status; isInscrito: boolean }) {
+export default function ReviewButtons({ id, status, isClassified }: { id: string; status: Status; isClassified: boolean }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleApprove = () => {
-    if (!confirm('¿Estás seguro de que quieres APROBAR este wildcard? Esto creará una inscripción.')) return;
+    if (!confirm('¿Estás seguro de que quieres APROBAR este wildcard? El video será habilitado para evaluación de los jueces.')) return;
 
     const loadingToast = toast.loading('Aprobando wildcard...');
     startTransition(async () => {
@@ -81,24 +81,24 @@ export default function ReviewButtons({ id, status, isInscrito }: { id: string; 
 
   // Estado: APROBADO (Mostrar estado de inscripción)
   if (status === WildcardStatus.APPROVED) {
-    if (isInscrito) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
-                         bg-green-100 text-green-800">
-          <CheckBadgeIcon className="w-4 h-4" />
-          Inscrito
-        </span>
-      );
-    } else {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
-                         bg-yellow-100 text-yellow-800">
-          <ClockIcon className="w-4 h-4" />
-          Inscripción Pendiente
-        </span>
-      );
-    }
-  }
+    if (isClassified) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border 
+                         bg-green-900/50 text-green-300 border-green-700/30">
+          <CheckBadgeIcon className="w-4 h-4" />
+          Clasificado
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border 
+                         bg-yellow-900/50 text-yellow-300 border-yellow-700/30">
+          <ClockIcon className="w-4 h-4" />
+            Pendiente de clasificación
+        </span>
+      );
+    }
+  }
 
   // Estado: RECHAZADO (Mostrar badge de rechazo)
   return (
