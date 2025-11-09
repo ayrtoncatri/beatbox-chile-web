@@ -587,6 +587,9 @@ model Battle {
   winnerId    String? // El User.id del ganador
   winner      User?   @relation("Winner", fields: [winnerId], references: [id], onDelete: SetNull)
   
+  winnerVotes Int @default(0)
+  loserVotes  Int @default(0)
+
   // (Opcional) Enlace para la siguiente batalla (ej. ganador de Octavos 1 va a Cuartos 1)
   nextBattleId String?  @unique
   nextBattle   Battle?  @relation("NextBattle", fields: [nextBattleId], references: [id], onDelete: SetNull)
