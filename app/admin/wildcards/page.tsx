@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import ReviewButtons from "@/components/admin/wildcards/ReviewButtons";
-import { UserIcon, FunnelIcon, EyeIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
+import { UserIcon, FunnelIcon, EyeIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -36,14 +36,13 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
   if (statusParam !== "ALL") where.status = statusParam as any;
 
   const [total, items] = await Promise.all([
-    prisma.wildcard.count({ where }),
-    prisma.wildcard.findMany({
-      where,
-      include: {
-        inscripcion: {
-          select: { id: true } // Solo necesitamos saber si existe
-        },
-        user: {
+    prisma.wildcard.count({ where }),
+    prisma.wildcard.findMany({
+      where,
+      include: {
+        // --- CAMBIO ---: Eliminamos la consulta a 'inscripcion'.
+        // Ya no es relevante para esta tabla.
+        user: {
           select: {
             id: true,
             email: true,
@@ -65,8 +64,8 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
       orderBy: { id: "desc" },
       skip,
       take: pageSize,
-    }),
-  ]);
+    }),
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const buildPageUrl = (p: number) => {
@@ -133,15 +132,10 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                       .join(" ") || w.reviewedBy.email // Fallback al email
                   : null;
 
-                const isInscrito = w.inscripcion !== null;
-
                 return (
                   <tr key={w.id} className="border-b border-blue-700/20 last:border-b-0 hover:bg-blue-800/30 transition">
                     <td className="p-5 text-white">
                       {w.nombreArtistico || "—"}
-                      {isInscrito && (
-                        <CheckBadgeIcon className="w-4 h-4 inline-block ml-1 text-blue-400" title="Inscripción creada" />
-                      )}
                     </td>
                     <td className="p-5">
                       <div className="flex items-center gap-3">
@@ -175,18 +169,22 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                       )}
                     </td>
                     <td className="p-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href={`/admin/wildcards/${w.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
-                          title="Ver wildcard"
-                        >
-                          <EyeIcon className="w-4 h-4" /> Ver
-                        </Link>
-                        {/* 'ReviewButtons' ahora devuelve 1 o 2 elementos
-                            que 'flex' y 'gap-2' alinearán perfectamente */}
-                        <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
-                      </div>
+                      <div className="grid grid-cols-2 items-start gap-2">
+                        {/* Columna 1: Botón "Ver" (Alineado a la derecha) */}
+                          <div className="flex justify-end items-center">
+                            <Link
+                              href={`/admin/wildcards/${w.id}`}
+                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600/50 text-blue-200 hover:bg-blue-600/70 border border-blue-500/30 font-semibold transition"
+                              title="Ver wildcard"
+                            >
+                              <EyeIcon className="w-4 h-4" /> Ver
+                            </Link>
+                          </div>
+                        {/* Columna 2: Botones/Badges (Alineados a la izquierda) */}
+                          <div className="flex justify-end">
+                            <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
+                          </div>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -214,8 +212,6 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   .join(" ") || w.reviewedBy.email // Fallback al email
               : null;
 
-            const isInscrito = w.inscripcion !== null;
-
             return (
               <div key={w.id} className="rounded-2xl shadow-lg bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
@@ -229,9 +225,6 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                 </div>
                 <div className="text-xs text-white">
                   Alias: {w.nombreArtistico || "—"}
-                  {isInscrito && (
-                    <CheckBadgeIcon className="w-4 h-4 inline-block ml-1 text-blue-400" title="Inscripción creada" />
-                  )}
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span
@@ -257,7 +250,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
                   </Link>
-                  <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
+                  <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
                 </div>
               </div>
             );
