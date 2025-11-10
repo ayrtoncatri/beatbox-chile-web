@@ -12,21 +12,24 @@ import Image from "next/image";
 export default async function UsuarioDetallePage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as any)?.id;
-  const { id } = params; 
+  const { id } = await params; 
 
-  const user = await prisma.user.findUnique({
-    where: { id },
-    include: {
-      profile: true, 
-      roles: {
-        include: {
-          role: {
-            select: { name: true },
-          },
-        },
-      },
-    },
-  });
+  const [user, allRoles] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true, 
+        roles: {
+          include: {
+            role: {
+              select: { name: true, id: true }, // <-- Obtenemos ID y Nombre
+            },
+          },
+        },
+      },
+    }),
+    prisma.role.findMany({ orderBy: { name: 'asc' } }) // <-- Obtenemos todos los roles
+  ]);
 
   if (!user) notFound();
 
@@ -87,6 +90,7 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
               user={user} 
               isSelf={isSelf} 
               isTargetAdmin={isTargetAdmin}
+              allRoles={allRoles}
             />
           </div>
 

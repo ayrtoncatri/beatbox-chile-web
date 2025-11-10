@@ -4,8 +4,9 @@ import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { editUser } from "@/app/admin/usuarios/actions";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import toast from "react-hot-toast";
+
 
 const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
   include: {
@@ -13,7 +14,7 @@ const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
     roles: {
       include: {
         role: {
-          select: { name: true },
+          select: { id: true, name: true },
         },
       },
     },
@@ -41,11 +42,13 @@ function SubmitButton() {
 export default function UserEditForm({ 
     user, 
     isSelf,
-    isTargetAdmin, 
+    isTargetAdmin,
+    allRoles, 
   }: { 
     user: UserFormProps 
     isSelf: boolean;
     isTargetAdmin: boolean; 
+    allRoles: Role[];
   }) {
   const [nombres, setNombres] = useState(user.profile?.nombres ?? "");
   const [apellidoPaterno, setApellidoPaterno] = useState(user.profile?.apellidoPaterno ?? "");
@@ -55,6 +58,10 @@ export default function UserEditForm({
   
   const [image, setImage] = useState(user.image ?? "");
 
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>(
+    user.roles.map(r => r.role.id)
+  );
+
   const initialState = { ok: false, error: null };
   const [state, formAction] = useActionState(editUser, initialState);
 
@@ -62,7 +69,7 @@ export default function UserEditForm({
     setNombres(user.profile?.nombres ?? "");
     setApellidoPaterno(user.profile?.apellidoPaterno ?? "");
     setApellidoMaterno(user.profile?.apellidoMaterno ?? "");
-    setRole(user.roles[0]?.role.name ?? "user");
+    setSelectedRoleIds(user.roles.map(r => r.role.id));
     setImage(user.image ?? "");
   }, [user]);
 
@@ -74,7 +81,16 @@ export default function UserEditForm({
     }
   }, [state.ok, state.error]);
 
-  const isRoleChangeDisabled = isSelf || isTargetAdmin;
+  const handleRoleChange = (roleId: string) => {
+    setSelectedRoleIds(prevIds => 
+      prevIds.includes(roleId) 
+        ? prevIds.filter(id => id !== roleId) // Quitar rol
+        : [...prevIds, roleId] // Añadir rol
+    );
+  };
+
+  // No se puede modificar el rol 'admin' de un admin (incluido uno mismo)
+  const isRoleChangeDisabled = isTargetAdmin;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -84,7 +100,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Email</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 placeholder:text-blue-300/70 opacity-70"
             value={user.email || ""} // 'email' sigue estando en 'user'
             disabled
           />
@@ -92,21 +108,29 @@ export default function UserEditForm({
 
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Rol</label>
-          <select
-            className={`w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-blue-100 ${
-              isRoleChangeDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            name="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            // 3. Aplicamos la restricción al <select>
-            disabled={isRoleChangeDisabled}
-            title={isRoleChangeDisabled ? "No puedes cambiar el rol de un administrador." : ""}
-          >
-            <option value="user">user</option>
-            <option value="admin">admin</option>
-            <option value="judge">judge</option> {/* Añadí 'judge' como ejemplo */}
-          </select>
+          <div className="space-y-2 mt-2">
+            {allRoles.map(role => {
+              // No se puede desmarcar el rol 'admin' de un admin
+              // (ni de uno mismo si es admin)
+              const isDisabled = isRoleChangeDisabled && role.name === 'admin';
+              
+              return (
+                <label key={role.id} className={`flex items-center gap-2 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    // El 'name' es crucial para 'formData.getAll'
+                    name="roles" 
+                    value={role.id}
+                    checked={selectedRoleIds.includes(role.id)}
+                    onChange={() => !isDisabled && handleRoleChange(role.id)}
+                    disabled={isDisabled}
+                    className="rounded border-blue-700/50 bg-blue-950/50 text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-blue-100 capitalize">{role.name}</span>
+                </label>
+              );
+            })}
+          </div>
           {isRoleChangeDisabled && (
             <p className="text-xs text-blue-300/70 mt-1">
               No puedes cambiar el rol de un administrador.
@@ -117,7 +141,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Nombres</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white placeholder:text-blue-300/70"
             name="nombres"
             value={nombres} // El 'value' viene del estado local
             onChange={(e) => setNombres(e.target.value)}
@@ -128,7 +152,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido paterno</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white placeholder:text-blue-300/70"
             name="apellidoPaterno"
             value={apellidoPaterno} // El 'value' viene del estado local
             onChange={(e) => setApellidoPaterno(e.target.value)}
@@ -139,7 +163,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Apellido materno</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white placeholder:text-blue-300/70"
             name="apellidoMaterno"
             value={apellidoMaterno} // El 'value' viene del estado local
             onChange={(e) => setApellidoMaterno(e.target.value)}
@@ -150,7 +174,7 @@ export default function UserEditForm({
         <div>
           <label className="block text-sm text-blue-200 mb-1 font-medium">Imagen (URL)</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800"
+            className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white placeholder:text-blue-300/70"
             name="image"
             value={image} // El 'value' viene del estado local
             onChange={(e) => setImage(e.target.value)}
