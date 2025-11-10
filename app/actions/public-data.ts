@@ -360,3 +360,118 @@ export async function aggregateHistoryForTable(
   // Ordenamos por fecha (más reciente primero)
   return aggregatedRows.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
 }
+
+export type PublicBracketData = Awaited<
+  ReturnType<typeof getPublicEventBracket>
+>;
+
+/**
+ * Obtiene todas las batallas de un evento, formateadas y
+ * agrupadas por fase, listas para ser consumidas por el frontend del bracket.
+ * @param eventoId La ID del evento del cual obtener el bracket.
+ */
+export async function getPublicEventBracket(eventoId: string) {
+  try {
+    // 1. Consultamos TODAS las batallas del evento
+    const battles = await prisma.battle.findMany({
+      where: { eventoId: eventoId },
+      orderBy: [
+        /**
+         * Este orden es CRÍTICO.
+         * 1. Ordena por Fase (PRELIMINAR, OCTAVOS, CUARTOS...)
+         * 2. Ordena por el 'orderInRound' (Batalla 1, Batalla 2...)
+         * Esto asegura que el bracket se construye en el orden correcto.
+         */
+        { phase: 'asc' }, 
+        { orderInRound: 'asc' },
+      ],
+      include: {
+        // Incluimos los datos del Participante A
+        participantA: {
+          select: {
+            id: true,
+            // Obtenemos su 'nombreArtistico' de la inscripción
+            // específica de ESTE evento.
+            inscripciones: {
+              where: { eventoId: eventoId },
+              select: { nombreArtistico: true },
+              take: 1, // Solo necesitamos una
+            },
+          },
+        },
+        // Incluimos los datos del Participante B (si existe)
+        participantB: {
+          select: {
+            id: true,
+            inscripciones: {
+              where: { eventoId: eventoId },
+              select: { nombreArtistico: true },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    // 2. Formateamos los datos para simplificarlos
+    const formattedBattles = battles.map((b) => ({
+      // Pasamos todos los datos de la batalla (id, phase, winnerId, winnerVotes...)
+      ...b,
+      // Y creamos objetos 'participantA' y 'participantB' más limpios
+      participantA: {
+        id: b.participantAId,
+        name:
+          b.participantA.inscripciones[0]?.nombreArtistico || 'Participante A',
+      },
+      participantB: {
+        id: b.participantBId,
+        name:
+          b.participantB?.inscripciones[0]?.nombreArtistico || '??', // '??' si B aún no está definido
+      },
+    }));
+
+    // 3. Agrupamos las batallas por Fase
+    // El resultado será un objeto como:
+    // { PRELIMINAR: [...], OCTAVOS: [...], CUARTOS: [...] }
+    const rounds = formattedBattles.reduce((acc, battle) => {
+      const phase = battle.phase; // ej. "OCTAVOS"
+      
+      // Si el array para esta fase aún no existe, lo creamos
+      if (!acc[phase]) {
+        acc[phase] = [];
+      }
+      
+      // Añadimos la batalla a su grupo de fase correspondiente
+      acc[phase].push(battle);
+      
+      return acc;
+    }, {} as Record<RoundPhase, typeof formattedBattles>); // Tipado fuerte
+
+    // 4. Devolvemos el objeto agrupado
+    return rounds;
+
+  } catch (error) {
+    // Manejo de errores
+    console.error('Error fetching public bracket data:', error);
+    // Devolvemos null si falla, el frontend (Fase 6) sabrá cómo manejarlo.
+    return null;
+  }
+}
+
+export async function checkEventHasBattles(eventoId: string) {
+  try {
+    const battleCount = await prisma.battle.count({
+      where: {
+        eventoId: eventoId,
+      },
+    });
+
+    // Si el conteo es mayor a 0, significa que existen llaves
+    return battleCount > 0;
+
+  } catch (error) {
+    console.error('Error checking for battles:', error);
+    // Si hay un error, devolvemos 'false' para no mostrar el enlace
+    return false;
+  }
+}

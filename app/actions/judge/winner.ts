@@ -75,6 +75,7 @@ export async function declareBattleWinner(
     });
 
     // 4. Mapear puntajes y contar VOTOS
+    type JudgeScoreGroup = (typeof judgeScores)[0];
     const judgeIds = [...new Set(judgeScores.map((s) => s.judgeId))];
     const totalJudges = judgeIds.length;
 
@@ -116,17 +117,23 @@ export async function declareBattleWinner(
     // 5. Decidir ganador por VOTOS
     let winnerId: string;
     let winnerName: string;
+    let finalWinnerVotes: number;
+    let finalLoserVotes: number;
 
     if (votosA > votosB) {
       // <--- Lógica de victoria actualizada
       winnerId = battle.participantAId;
       winnerName =
         battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
+      finalWinnerVotes = votosA; 
+      finalLoserVotes = votosB;
     } else if (votosB > votosA) {
       // <--- Lógica de victoria actualizada
       winnerId = battle.participantBId;
       winnerName =
         battle.participantB?.inscripciones[0]?.nombreArtistico || 'Participante B';
+      finalWinnerVotes = votosA; // Guardamos el recuento de A
+      finalLoserVotes = votosB;
     } else {
       // Empate en VOTOS (ej. 1-1, o 0-0 si todos empataron)
       return {
@@ -139,6 +146,8 @@ export async function declareBattleWinner(
       where: { id: battleId },
       data: {
         winnerId: winnerId,
+        winnerVotes: finalWinnerVotes,
+        loserVotes: finalLoserVotes,
         // TODO: En fases posteriores, aquí actualizarías 'nextBattleId'
       },
     });
