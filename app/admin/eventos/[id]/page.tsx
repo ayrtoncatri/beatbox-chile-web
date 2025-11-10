@@ -1,5 +1,3 @@
-// app/admin/eventos/[id]/page.tsx
-
 import { prisma } from "@/lib/prisma";
 import EventForm from "@/components/admin/eventos/EventForm";
 import { notFound } from "next/navigation";
@@ -9,6 +7,8 @@ import { CompetitionCategoryForm } from "@/components/admin/eventos/CompetitionC
 import { getInscritosForEvent } from "@/app/admin/eventos/actions";
 import { InscritosTable } from "@/components/admin/eventos/InscritosTable";
 import { BracketGenerator } from "@/components/admin/eventos/BracketGenerator";
+import { RoundPhase, ScoreStatus } from "@prisma/client";
+import { PreliminaryRankingTable, type RankingRowWithDetails } from "@/components/admin/eventos/PreliminaryRankingTable";
 
 // Igual que antes
 const serializeData = (data: any) => {
@@ -22,17 +22,31 @@ const serializeData = (data: any) => {
   );
 };
 
-// ➜ Ajuste importante: params y searchParams como Promise
 type AdminEditEventoPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+type PreliminaryScoreAvg = {
+  participantId: string;
+  _avg: {
+    totalScore: number | null;
+  };
+};
+
 export default async function AdminEditEventoPage({ params }: AdminEditEventoPageProps) {
-  // ➜ Ahora sí: esperar params antes de usar sus propiedades
   const { id } = await params;
 
-  const [evento, regiones, comunas, eventTypes, allJudges, allCategories, inscritos] = await Promise.all([
+  const [evento, 
+        regiones, 
+        comunas, 
+        eventTypes, 
+        allJudges, 
+        allCategories, 
+        inscritos,
+        preliminaryScoresAvg,
+        allPreliminaryScores
+      ] = await Promise.all([
     prisma.evento.findUnique({
       where: { id },
       include: {
@@ -59,8 +73,44 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
     }),
     prisma.categoria.findMany({ orderBy: { name: "asc" } }),
 
-    getInscritosForEvent(id)
-  ]);
+    getInscritosForEvent(id),
+
+    prisma.score.groupBy({
+    by: ['participantId'],
+    where: {
+      eventoId: id,
+      phase: RoundPhase.PRELIMINAR,
+      status: ScoreStatus.SUBMITTED,
+    },
+    _avg: {
+      totalScore: true,
+    },
+    orderBy: {
+      _avg: {
+        totalScore: 'desc',
+      },
+    },
+  }),
+
+  prisma.score.findMany({
+      where: {
+        eventoId: id,
+        phase: RoundPhase.PRELIMINAR,
+        status: ScoreStatus.SUBMITTED,
+      },
+      select: {
+        participantId: true,
+        judgeId: true,
+        totalScore: true,
+        judge: {
+          select: {
+            id: true,
+            profile: { select: { nombres: true, apellidoPaterno: true } }
+          }
+        }
+      }
+    })
+]);
 
   if (!evento) notFound();
 
@@ -71,9 +121,40 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   const serializedAllCategories = serializeData(allCategories);
   const serializedAllJudges = serializeData(allJudges);
   const serializedInscritos = serializeData(inscritos);
+  const serializedAllPreliminaryScores = serializeData(allPreliminaryScores);
 
   const judgesList = serializedAllJudges || [];
   const activeCategories = serializedEvento.categories.map((c: any) => c.categoria) || [];
+
+  const judgesWhoScoredMap = new Map<string, { id: string; name: string }>();
+  (serializedAllPreliminaryScores as any[]).forEach(score => {
+    if (score.judge && !judgesWhoScoredMap.has(score.judge.id)) {
+      const name = `${score.judge.profile?.nombres || ''} ${score.judge.profile?.apellidoPaterno || ''}`.trim() || score.judge.id.slice(-4);
+      judgesWhoScoredMap.set(score.judge.id, { id: score.judge.id, name });
+    }
+  });
+  const uniqueJudges = Array.from(judgesWhoScoredMap.values());
+
+  // 2. Unimos los promedios con los puntajes individuales
+  const preliminaryRanking: RankingRowWithDetails[] = (preliminaryScoresAvg as PreliminaryScoreAvg[]).map(scoreAvg => {
+    const inscrito = serializedInscritos.find((i: any) => i.userId === scoreAvg.participantId);
+    
+    // Filtramos los scores individuales para este participante
+    const participantScores = (serializedAllPreliminaryScores as any[]).filter(
+      (s: any) => s.participantId === scoreAvg.participantId
+    );
+    
+    return {
+      id: scoreAvg.participantId,
+      nombreArtistico: inscrito?.nombreArtistico || `Usuario (${scoreAvg.participantId.slice(-4)})`,
+      avgScore: scoreAvg._avg.totalScore ? Number(scoreAvg._avg.totalScore.toFixed(2)) : 0,
+      // Pasamos los scores detallados
+      scores: participantScores.map((s: any) => ({
+        judgeId: s.judgeId,
+        score: s.totalScore
+      }))
+    };
+  });
 
   return (
     <main className="min-h-screen py-8 px-2 sm:px-6">
@@ -104,6 +185,14 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
             allCategories={serializedAllCategories}
           />
         </div>
+
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-white">Ranking Preliminar (Showcase)</h2>
+          <PreliminaryRankingTable 
+            ranking={preliminaryRanking} 
+            judges={uniqueJudges}
+          />
+        </div>
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
           <BracketGenerator 
