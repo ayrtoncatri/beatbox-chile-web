@@ -8,22 +8,21 @@ import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client'
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import { debounce } from 'lodash'
 import toast from 'react-hot-toast'
+import LiteYouTubeEmbed from 'react-lite-youtube-embed';
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
 
-// Tipos y Zod Schema
 import {
   submitScoreSchema,
   SubmitScorePayload,
 } from '@/lib/schemas/judging'
-// ===== CORRECCIÓN 2: Ruta de importación correcta =====
+
 import { submitScore } from '@/app/judge/actions' 
 
-// --- Tipos de los props ---
-// ===== CORRECCIÓN 3: Tipo de 'phase' corregido =====
 type FullJudgeAssignment = {
   id: string
   eventoId: string
   categoriaId: string
-  phase: RoundPhase // <-- CORREGIDO (antes 'any')
+  phase: RoundPhase 
 }
 type FullWildcard = {
   id: string
@@ -33,7 +32,7 @@ type FullWildcard = {
   user: { id: string; profile: { nombres: string | null; apellidoPaterno: string | null } | null }
 }
 type FullScore = {
-  status: ScoreStatus // <-- CORREGIDO
+  status: ScoreStatus 
   notes: string | null
   details: { criterioId: string; value: number }[]
 } | null
@@ -44,6 +43,24 @@ interface JudgeScoreFormProps {
   assignment: FullJudgeAssignment
   criterios: Criterio[]
   existingScore: FullScore
+}
+
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname === 'www.youtube.com' || urlObj.hostname === 'youtube.com') {
+      const videoId = urlObj.searchParams.get('v');
+      if (videoId) return videoId;
+    }
+    if (urlObj.hostname === 'youtu.be') {
+      return urlObj.pathname.slice(1); 
+    }
+  } catch (error) {
+    console.error("URL de YouTube inválida:", url, error);
+    return null;
+  }
+  return null;
 }
 
 const generateOptions = (max: number) => {
@@ -61,27 +78,25 @@ export function JudgeScoreForm({
   const [total, setTotal] = useState(0)
   const [formStatus, setFormStatus] = useState(existingScore?.status || ScoreStatus.DRAFT)
 
-  // 1. CONFIGURACIÓN DE REACT-HOOK-FORM
+  const videoId = getYouTubeVideoId(wildcard.youtubeUrl);
   const form = useForm<SubmitScorePayload>({
     resolver: zodResolver(submitScoreSchema),
-    
-    // ===== CORRECCIÓN 4: Añadir 'optional chaining' (?.) =====
     defaultValues: {
       eventoId: assignment.eventoId,
       categoriaId: assignment.categoriaId,
       phase: assignment.phase,
       participantId: wildcard.userId,
       roundNumber: 1,
-      notes: existingScore?.notes || undefined, // <-- CORREGIDO
-      status: existingScore?.status ?? ScoreStatus.DRAFT, // <-- CORREGIDO
+      notes: existingScore?.notes || undefined, 
+      status: existingScore?.status ?? ScoreStatus.DRAFT,
     
       scores: criterios.map((c) => {
-        const existingDetail = existingScore?.details.find( // <-- CORREGIDO
+        const existingDetail = existingScore?.details.find( 
           (d) => d.criterioId === c.id
         )
         return {
           criterioId: c.id,
-          value: existingDetail?.value ?? 0, // <-- CORREGIDO
+          value: existingDetail?.value ?? 0, 
         }
       }),
     },
@@ -149,23 +164,44 @@ export function JudgeScoreForm({
   return (
     <form 
       onSubmit={form.handleSubmit(onSubmit)} 
-      className="rounded-lg border bg-white p-4 shadow-md transition-all"
+      className="rounded-lg border bg-white p-4 shadow-md transition-all space-y-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
         <h3 className="text-xl font-semibold text-gray-900">
           {participantName}
         </h3>
-        <a
-          href={wildcard.youtubeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white no-underline shadow-sm hover:bg-red-500"
-        >
-          Ver Wildcard (YouTube)
-        </a>
+        {/* <a
+          href={wildcard.youtubeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white no-underline shadow-sm hover:bg-red-500"
+        >
+          Ver Wildcard (YouTube)
+        </a> 
+        */}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 lg:grid-cols-6">
+      {assignment.phase === RoundPhase.WILDCARD && (
+        <div className="rounded-lg overflow-hidden border border-gray-300">
+          {videoId ? (
+            <LiteYouTubeEmbed
+              id={videoId}
+              title={`Wildcard de ${participantName}`}
+              adNetwork={false} 
+              noCookie={true} 
+            />
+          ) : (
+            // Fallback si la URL es inválida
+            <div className="aspect-video bg-gray-100 flex items-center justify-center">
+              <p className="text-red-600 font-semibold">
+                URL de video inválida o no encontrada.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 lg:grid-cols-6">
         {criterios.map((criterio, index) => (
           <div key={criterio.id}>
             <label 

@@ -1,4 +1,4 @@
-import { getEventDetails } from "@/app/actions/public-data";
+import { getEventDetails, getPublicWildcardsForEvent } from "@/app/actions/public-data";
 import { notFound } from "next/navigation";
 import Link from 'next/link';
 // (Importamos los íconos que usaremos para las tarjetas de información)
@@ -9,7 +9,8 @@ import {
   FaGavel, 
   FaTrophy, 
   FaHandshake, 
-  FaInfoCircle 
+  FaInfoCircle,
+  FaVideo
 } from 'react-icons/fa';
 
 interface PageProps {
@@ -30,14 +31,16 @@ function formatInscripcionSource(source: string) {
 
 // Esta es una página de Servidor (Server Component)
 export default async function EventoDetallePage({ params }: PageProps) {
-  
-  // (1) Obtenemos los datos del evento usando la acción de la Fase 5
-  const event = await getEventDetails(params.id);
+  const [event, wildcards] = await Promise.all([
+    getEventDetails(params.id),
+    getPublicWildcardsForEvent(params.id) // <-- Tu nueva función
+  ]);
+  // highlight-end
 
-  // (2) Si el evento no existe, mostramos un 404
-  if (!event) {
-    notFound();
-  }
+  // (2) Si el evento no existe, mostramos un 404
+  if (!event) {
+    notFound();
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-blue-950 to-neutral-900 py-12 px-4 md:px-8 text-white">
@@ -101,6 +104,24 @@ export default async function EventoDetallePage({ params }: PageProps) {
 
           {/* --- Columna Lateral (Jueces, Premios, Sponsors) --- */}
           <div className="lg:col-span-1 space-y-8">
+                
+            {wildcards && wildcards.length > 0 && (
+              <InfoCard title="Galería de Wildcards" icon={<FaVideo />}>
+                <p className="text-gray-300 mb-4 text-sm">
+                  Mira las postulaciones aprobadas para este evento.
+                </p>
+                <Link
+                  // Esta es la ruta a la página que creamos en el paso anterior
+                  href={`/eventos/${event.id}/wildcards`} 
+                  className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 
+                            rounded-lg bg-blue-600 text-white font-semibold shadow-lg
+                            hover:bg-blue-500 transition-colors"
+                >
+                  <FaVideo />
+                  Ver {wildcards.length} {wildcards.length === 1 ? 'Video' : 'Videos'}
+                </Link>
+              </InfoCard>
+            )}
             
             {/* Jueces */}
             <InfoCard title="Jueces" icon={<FaGavel />}>

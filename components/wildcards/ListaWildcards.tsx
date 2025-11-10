@@ -1,11 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import LiteYouTubeEmbed from 'react-lite-youtube-embed';
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
 
 type Wildcard = {
   id: string;
   youtubeUrl: string;
   nombreArtistico: string;
-  categoria?: string; // 👈 nuevo campo
+  categoria?: string; 
 };
 
 function getYouTubeId(url: string) {
@@ -54,26 +56,15 @@ export default function ListaWildcards() {
                 </div>
               )}
               {ytId ? (
-                <iframe
-                  className="rounded-lg mb-2"
-                  width="320"
-                  height="180"
-                  src={`https://www.youtube.com/embed/${ytId}`}
-                  title="YouTube video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                <LiteYouTubeEmbed
+                    id={ytId}
+                    title={`Wildcard de ${w.nombreArtistico}`}
+                    adNetwork={false}
+                    noCookie={true}
+                />
               ) : (
                 <div className="text-red-400">Video no válido</div>
               )}
-              <a
-                href={w.youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline text-sm"
-              >
-                Ver en YouTube
-              </a>
             </div>
           );
         })}

@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { Prisma, RoundPhase, InscripcionSource } from '@prisma/client';
+import { Prisma, RoundPhase, InscripcionSource, WildcardStatus } from '@prisma/client';
 import { groupBy, meanBy } from 'lodash'; // 'lodash' ya está en tu package.json
 
 // ===============================================
@@ -26,6 +26,8 @@ export type GlobalJudgeStatsData = Awaited<ReturnType<typeof getJudgeStats>>;
 
 // Para app/historial-competitivo/eventos/[id]/page.tsx
 export type EventDetailsData = Awaited<ReturnType<typeof getEventDetails>>;
+
+export type PublicWildcardsData = Awaited<ReturnType<typeof getPublicWildcardsForEvent>>;
 
 // Para app/historial-competitivo/competidores/[userId]/page.tsx
 // (Definimos la forma de los datos del historial granular)
@@ -295,6 +297,51 @@ export async function getEventDetails(eventId: string) {
     auspiciadores: event.sponsors, 
     premios: event.premios,
   };
+}
+
+export async function getPublicWildcardsForEvent(eventId: string) {
+  if (!eventId) {
+    return []; // Devolver vacío si no hay ID
+  }
+
+  try {
+    const wildcards = await prisma.wildcard.findMany({
+      where: {
+        eventoId: eventId,
+        status: WildcardStatus.APPROVED, // Regla de Negocio: Solo mostrar wildcards aprobados
+      },
+      include: {
+        user: { // Necesitamos el usuario para el nombre de fallback
+          select: {
+            id: true,
+            profile: {
+              select: { nombres: true, apellidoPaterno: true }
+            }
+          }
+        }
+      },
+      orderBy: {
+        reviewedAt: 'desc' // Opcional: mostrar los más recientemente aprobados primero
+      }
+    });
+
+    // Mapeamos los datos a un formato limpio para el cliente
+    return wildcards.map(w => {
+      const profileName = `${w.user.profile?.nombres || ''} ${w.user.profile?.apellidoPaterno || ''}`.trim();
+      const artistName = w.nombreArtistico || profileName || `Usuario (${w.user.id.slice(-4)})`; // Lógica de fallback para el nombre
+
+      return {
+        id: w.id, // ID del Wildcard
+        userId: w.userId,
+        nombreArtistico: artistName,
+        youtubeUrl: w.youtubeUrl
+      };
+    });
+
+  } catch (error) {
+    console.error("Error al obtener wildcards públicos:", error);
+    return []; // Devolver vacío en caso de error
+  }
 }
 
 /**
