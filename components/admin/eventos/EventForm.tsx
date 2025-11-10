@@ -567,7 +567,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           {evento.ticketTypes && evento.ticketTypes.length > 0 ? (
             <ul className="space-y-3">
               {evento.ticketTypes.map((ticket) => (
-                <li key={ticket.id} className="flex justify-between items-center bg-blue-900/50 p-3 rounded-lg border border-blue-700/30 text-blue-200">
+                <li key={ticket.id} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-2 bg-blue-900/50 p-3 rounded-lg border border-blue-700/30 text-blue-200">
                   <div className="flex items-center gap-3">
                     <TicketIcon className="w-5 h-5 text-blue-400" />
                     <div>
@@ -577,7 +577,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
                     </div>
                   </div>
                   {/* Formulario individual para eliminar */}
-                  <form action={() => handleDeleteTicketType(ticket.id)}>
+                  <form action={() => handleDeleteTicketType(ticket.id)} className="self-start md:self-auto">
                     {/* No necesitamos pasar FormData aquí, el ID es suficiente */}
                     <button
                       type="submit"
