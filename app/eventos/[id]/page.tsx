@@ -2,8 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import FormularioWildcard from '@/components/wildcards/FormularioWildcard'; 
 import CompraTicketsForm from '@/components/compra-entradas/CompraTicketsForm';
+import { checkEventHasBattles } from '@/app/actions/public-data';
+import { SwatchIcon } from '@heroicons/react/24/outline';
 
 // (Función getEvento - Sin cambios)
 async function getEvento(id: string) {
@@ -149,6 +152,33 @@ function CompraEntradasSeccion({ evento }: { evento: any }) {
   );
 }
 
+async function BracketLink({ eventoId }: { eventoId: string }) {
+  
+  // 1. Llamamos al verificador que creamos
+  const hasBattles = await checkEventHasBattles(eventoId);
+
+  // 2. Si no hay batallas, no renderizamos NADA
+  if (!hasBattles) {
+    return null; 
+  }
+
+  // 3. Si HAY batallas, renderizamos el enlace
+  return (
+    <div className="text-center"> {/* Contenedor para centrar el botón */}
+      <Link
+        href={`/eventos/${eventoId}/bracket`}
+        className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-5 py-3 
+                   text-sm font-semibold text-white shadow-sm transition-all 
+                   hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 
+                   focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+      >
+        <SwatchIcon className="h-5 w-5" />
+        Ver Llaves (Bracket)
+      </Link>
+    </div>
+  );
+}
+
 // --- Página de detalle del evento principal (Textos Rediseñados) ---
 export default async function EventoPage({
  params: { id },
@@ -240,6 +270,16 @@ export default async function EventoPage({
             </p>
           </div>
         </div>
+
+        <Suspense fallback={
+          <div className="text-center">
+            <p className="text-purple-400">Cargando llaves...</p>
+          </div>
+        }>
+          <BracketLink eventoId={evento.id} />
+        </Suspense>
+        
+        <hr className="max-w-3xl mx-auto border-t-2 border-lime-400/20 my-12 md:my-16" />
 
         {/* Sección Wildcard */}
         <WildcardInscripcion evento={evento} />
