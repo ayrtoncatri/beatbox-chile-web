@@ -5,6 +5,8 @@ import ToggleUserActiveButton from "@/components/admin/usuarios/ToggleUserActive
 import { EyeIcon, UserIcon } from "@heroicons/react/24/solid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Image from "next/image";
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -152,11 +154,14 @@ export default async function UsuariosPage({ searchParams }: Props) {
                       {/* ... (código de perfil de usuario) ... */}
                        <div className="flex items-center gap-3">
                          {u.image ? (
-                           <img
-                             src={u.image}
-                             alt={u.email ?? "avatar"}
-                             className="w-11 h-11 rounded-full object-cover border-2 border-blue-500/50 shadow"
-                           />
+                           <Image
+                            src={u.image}
+                            alt={u.email ?? "avatar"}
+                            width={44}                      // w-11 = 44px
+                            height={44}                     // h-11 = 44px
+                            sizes="44px"                    // evita cargar imágenes más grandes
+                            className="rounded-full object-cover border-2 border-blue-500/50 shadow"
+                          />
                          ) : (
                            <div className="w-11 h-11 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-300 font-bold text-xl border-2 border-blue-500/50 shadow">
                              <UserIcon className="w-6 h-6" />
@@ -243,11 +248,14 @@ export default async function UsuariosPage({ searchParams }: Props) {
                 {/* ... (código de perfil móvil) ... */}
                 <div className="flex items-center gap-3">
                    {u.image ? (
-                     <img
-                       src={u.image}
-                       alt={u.email ?? "avatar"}
-                       className="w-10 h-10 rounded-full object-cover border-2 border-blue-500/50 shadow"
-                     />
+                     <Image
+                      src={u.image}
+                      alt={u.email ?? "avatar"}
+                      width={40}                      // w-10 = 40px
+                      height={40}                     // h-10 = 40px
+                      sizes="40px"
+                      className="rounded-full object-cover border-2 border-blue-500/50 shadow"
+                    />
                    ) : (
                      <div className="w-10 h-10 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-300 font-bold text-lg border-2 border-blue-500/50 shadow">
                        <UserIcon className="w-5 h-5" />

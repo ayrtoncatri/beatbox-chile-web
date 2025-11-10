@@ -6,6 +6,8 @@ import ToggleUserActiveButton from "@/components/admin/usuarios/ToggleUserActive
 import { UserIcon } from "@heroicons/react/24/solid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Image from "next/image";
+
 
 export default async function UsuarioDetallePage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -54,10 +56,13 @@ export default async function UsuarioDetallePage({ params }: { params: { id: str
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {user.image ? (
-              <img
+              <Image
                 src={user.image}
                 alt={user.email ?? "avatar"}
-                className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200 shadow"
+                width={64}               // w-16
+                height={64}              // h-16
+                sizes="64px"
+                className="rounded-full object-cover border-2 border-indigo-200 shadow"
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-3xl border-2 border-indigo-200 shadow">

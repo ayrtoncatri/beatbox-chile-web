@@ -197,7 +197,7 @@ export default async function EventoPage({
       {/* ======================= */}
       <div className="relative h-[60vh] min-h-[400px] w-full">
         <Image
-          src={evento.image || '/beatbox-chile-campeonato.png'}
+          src={evento.image || '/beatbox-chile-campeonato.webp'}
           alt={evento.nombre}
           fill
           className="object-cover"
