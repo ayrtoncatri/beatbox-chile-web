@@ -19,17 +19,24 @@ import { BracketMatch } from './BracketMatch';
 // --- 1. Nodo de Título ---
 function TitleNode({ data }: { data: { label: string } }) {
   return (
-    <div className="relative flex justify-center">
-      {/* Fondo borroso con opacidad */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm rounded-xl shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+    <div className="relative flex justify-center items-center">
+      {/* Capa translúcida detrás del texto */}
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-xl shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
 
-      {/* Texto del título */}
+      {/* Resplandor neón suave */}
+      <div className="absolute inset-0 blur-[12px] bg-[#D6160F]/40 rounded-xl animate-pulse-slow" />
+
+      {/* Texto principal */}
       <h3
-        className="relative px-4 py-1 text-3xl font-extrabold text-center uppercase tracking-widest
-                   text-[#D6160F] drop-shadow-[2px_2px_6px_rgba(0,0,0,0.9)]"
+        className="relative px-5 py-1 text-3xl font-extrabold uppercase tracking-widest 
+                   text-[#ff3b3b] drop-shadow-[0_0_8px_rgba(214,22,15,0.9)]
+                   text-center select-none"
       >
         {data.label}
       </h3>
+
+      {/* Sombra inferior leve (para darle profundidad) */}
+      <div className="absolute bottom-0 w-2/3 h-[2px] bg-[#ff3b3b]/60 blur-sm" />
     </div>
   );
 }
