@@ -18,11 +18,20 @@ import { BracketMatch } from './BracketMatch';
 
 // --- 1. Nodo de Título ---
 function TitleNode({ data }: { data: { label: string } }) {
-  return (
-    <h3 className="text-3xl font-bold text-center text-[#D6160F] uppercase tracking-widest text-shadow-red">
-      {data.label}
-    </h3>
-  );
+  return (
+    <div className="relative flex justify-center">
+      {/* Fondo borroso con opacidad */}
+      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm rounded-xl shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+
+      {/* Texto del título */}
+      <h3
+        className="relative px-4 py-1 text-3xl font-extrabold text-center uppercase tracking-widest
+                   text-[#D6160F] drop-shadow-[2px_2px_6px_rgba(0,0,0,0.9)]"
+      >
+        {data.label}
+      </h3>
+    </div>
+  );
 }
 // ---------------------------------
 
