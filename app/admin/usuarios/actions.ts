@@ -13,7 +13,7 @@ const EditUserSchema = z.object({
   nombres: z.string().optional(),
   apellidoPaterno: z.string().optional(),
   apellidoMaterno: z.string().optional(),
-  role: z.enum(["user", "admin", "judge"]),
+  roles: z.array(z.string()).min(1, "El usuario debe tener al menos un rol."),
   image: z.string().optional(),
 });
 
@@ -26,12 +26,10 @@ export async function editUser(prevState: any, formData: FormData) {
   const session = await getServerSession(authOptions);
 
   try {
-    // 3. VERIFICAR QUE EL USUARIO ACTUAL ES ADMIN
     await checkAdmin();
   } catch (e: any) {
     return { ok: false, error: "No tienes permisos de administrador." };
   }
-  // Obtenemos el ID del admin que realiza la acción
   const currentUserId = (session?.user as any)?.id;
 
   try {
@@ -40,7 +38,7 @@ export async function editUser(prevState: any, formData: FormData) {
       nombres: formData.get("nombres")?.toString(),
       apellidoPaterno: formData.get("apellidoPaterno")?.toString(),
       apellidoMaterno: formData.get("apellidoMaterno")?.toString(),
-      role: formData.get("role")?.toString(),
+      roles: formData.getAll("roles"),
       image: formData.get("image")?.toString(),
     };
 
@@ -48,31 +46,55 @@ export async function editUser(prevState: any, formData: FormData) {
     const userId = parsed.id;
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { roles: { include: { role: { select: { name: true } } } } },
-    });
+      where: { id: userId },
+      include: { roles: { include: { role: { select: { name: true, id: true } } } } },
+    });
 
     if (!targetUser) {
       return { ok: false, error: "Usuario a editar no encontrado." };
     }
 
-    const isSelf = targetUser.id === currentUserId;
     const isTargetAdmin = targetUser.roles.some(r => r.role.name === 'admin');
-    const currentRoleName = targetUser.roles[0]?.role.name;
-    const isRoleChanging = parsed.role !== currentRoleName;
+    // La nueva lista de IDs de roles que vienen del formulario
+    const newRoleIds = parsed.roles;
+    // Buscamos el ID del rol 'admin'
+    const adminRole = await prisma.role.findUnique({ where: { name: 'admin' }, select: { id: true } });
 
-    if ((isSelf || isTargetAdmin) && isRoleChanging) {
-      return { ok: false, error: "No tienes permisos para cambiar el rol de un administrador." };
-    }
+    // Si el usuario es admin, pero el rol 'admin' no está en los nuevos IDs...
+    if (isTargetAdmin && !newRoleIds.includes(adminRole!.id)) {
+      return { ok: false, error: "No tienes permisos para quitar el rol de 'admin' a un administrador." };
+    }
 
     const updated = await prisma.$transaction(async (tx) => {
-      const roleRecord = await tx.role.findUnique({
-        where: { name: parsed.role },
-        select: { id: true },
-      });
+      
+      // --- CAMBIO 4: Lógica de actualización de roles (Muchos-a-Muchos) ---
+      
+      // 1. Obtenemos los IDs de los roles actuales del usuario
+      const currentRoleIds = targetUser.roles.map(r => r.role.id);
+      
+      // 2. Calculamos qué roles AÑADIR
+      const rolesToAdd = newRoleIds.filter(id => !currentRoleIds.includes(id));
+      
+      // 3. Calculamos qué roles QUITAR
+      const rolesToRemove = currentRoleIds.filter(id => !newRoleIds.includes(id));
 
-      if (!roleRecord) {
-        throw new Error(`El rol "${parsed.role}" no existe en la base de datos.`);
+      // 4. Ejecutamos las operaciones
+      if (rolesToAdd.length > 0) {
+        await tx.userRole.createMany({
+          data: rolesToAdd.map(roleId => ({
+            userId: userId,
+            roleId: roleId,
+          })),
+        });
+      }
+      
+      if (rolesToRemove.length > 0) {
+        await tx.userRole.deleteMany({
+          where: {
+            userId: userId,
+            roleId: { in: rolesToRemove },
+          },
+        });
       }
 
       // 2. Actualizar el modelo User (solo la imagen)
@@ -100,18 +122,6 @@ export async function editUser(prevState: any, formData: FormData) {
           apellidoMaterno: parsed.apellidoMaterno,
         },
       });
-
-      if (isRoleChanging) {
-        await tx.userRole.deleteMany({
-          where: { userId: userId },
-        });
-        await tx.userRole.create({
-          data: {
-            userId: userId,
-            roleId: roleRecord.id,
-          },
-        });
-      }
       
       return true; // Éxito de la transacción
     });
