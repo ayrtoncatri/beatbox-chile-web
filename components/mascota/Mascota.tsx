@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { User as CustomUser } from 'next-auth';
+import Image from 'next/image';
 
 interface ChatMessage {
     id: string;
@@ -338,9 +339,11 @@ const Mascota: React.FC = () => {
             >
                 <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-blue-500 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors relative">
                     {!imageError ? (
-                        <img
-                            src="/mascotabtx.png"
-                    alt="Mascota"
+                        <Image
+                            src="/mascotabtx.webp"
+                            alt="Mascota"
+                            width={48} height={48}                // tamaño base (md)
+                            sizes="(max-width: 640px) 32px, (max-width: 768px) 40px, 48px"
                             className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-cover rounded-full"
                             onError={handleImageError}
                         />
@@ -374,9 +377,11 @@ const Mascota: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                                 {!imageError ? (
-                                    <img
-                                        src="/mascotabtx.png"
+                                    <Image
+                                        src="/mascotabtx.webp"
                                         alt="Mascota"
+                                        width={20} height={20}
+                                        sizes="20px"
                                         className="w-5 h-5 object-cover rounded-full"
                                         onError={handleImageError}
                                     />
@@ -501,9 +506,11 @@ const Mascota: React.FC = () => {
                                         {message.type === 'bot' && (
                                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                                                 {!imageError ? (
-                                                    <img
-                                                        src="/mascotabtx.png"
+                                                    <Image
+                                                        src="/mascotabtx.webp"
                                                         alt="Mascota"
+                                                        width={20} height={20}
+                                                        sizes="20px"
                                                         className="w-5 h-5 object-cover rounded-full"
                                                         onError={handleImageError}
                                                     />
@@ -534,9 +541,11 @@ const Mascota: React.FC = () => {
                                         {message.type === 'user' && (
                                             <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
                                                 {user?.image ? (
-                                                    <img
+                                                    <Image
                                                         src={user.image}
                                                         alt="Usuario"
+                                                        width={24} height={24}
+                                                        sizes="24px"
                                                         className="w-6 h-6 object-cover rounded-full"
                                                     />
                                                 ) : (
@@ -553,9 +562,11 @@ const Mascota: React.FC = () => {
                                         {/* Avatar del bot */}
                                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                                             {!imageError ? (
-                                                <img
-                                                    src="/mascotabtx.png"
+                                                <Image
+                                                    src="/mascotabtx.webp"
                                                     alt="Mascota"
+                                                    width={20} height={20}
+                                                    sizes="20px"
                                                     className="w-5 h-5 object-cover rounded-full"
                                                     onError={handleImageError}
                                                 />
