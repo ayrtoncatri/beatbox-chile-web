@@ -1,5 +1,4 @@
 'use client';
-
 import { approveWildcard, rejectWildcard } from '@/app/admin/wildcards/actions';
 import { WildcardStatus } from '@prisma/client';
 import { useTransition } from 'react';

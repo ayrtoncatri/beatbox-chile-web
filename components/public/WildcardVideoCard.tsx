@@ -3,6 +3,8 @@
 import type { PublicWildcardsData } from "@/app/actions/public-data";
 import Link from "next/link";
 import { UserIcon } from "@heroicons/react/24/solid";
+import LiteYouTubeEmbed from 'react-lite-youtube-embed';
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
 
 // Prop: Acepta un solo objeto del array que devuelve 'getPublicWildcardsForEvent'
 type WildcardVideoCardProps = {
@@ -47,14 +49,12 @@ export function WildcardVideoCard({ wildcard }: WildcardVideoCardProps) {
         {videoId ? (
           // Contenedor responsivo que mantiene la proporción 16:9
           <div className="aspect-video bg-black/50">
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
+            <LiteYouTubeEmbed
+              id={videoId}
               title={`Wildcard de ${wildcard.nombreArtistico}`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
+              adNetwork={false}
+              noCookie={true}
+            />
           </div>
         ) : (
           // Fallback si la URL es inválida

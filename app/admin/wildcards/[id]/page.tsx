@@ -3,18 +3,18 @@ import ReviewButtons from "@/components/admin/wildcards/ReviewButtons";
 import WildcardEditForm from "@/components/admin/wildcards/WildcardEditForm";
 import Link from "next/link";
 import { UserIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
+import { WildcardVideoPlayer } from "@/components/admin/wildcards/WildcardVideoPlayer";
 
-function toYouTubeEmbed(url?: string | null) {
+function getYouTubeVideoId(url?: string | null): string | null {
   if (!url) return null;
   try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) {
-      const v = u.searchParams.get("v");
-      if (v) return `https://www.youtube.com/embed/${v}`;
+    const urlObj = new URL(url);
+    if (urlObj.hostname === 'www.youtube.com' || urlObj.hostname === 'youtube.com') {
+      const videoId = urlObj.searchParams.get('v');
+      if (videoId) return videoId;
     }
-    if (u.hostname === "youtu.be") {
-      const v = u.pathname.slice(1);
-      if (v) return `https://www.youtube.com/embed/${v}`;
+    if (urlObj.hostname === 'youtu.be') {
+      return urlObj.pathname.slice(1); // Quita el '/' inicial
     }
   } catch {}
   return null;
@@ -26,9 +26,6 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
   const w = await prisma.wildcard.findUnique({
     where: { id },
     include: {
-      inscripcion: {
-        select: { id: true }
-      },
       user: {
         select: {
           id: true,
@@ -69,9 +66,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
     .filter(Boolean)
     .join(" ");
 
-  const embed = toYouTubeEmbed(w.youtubeUrl);
-
-  const isInscrito = w.inscripcion !== null;
+  const videoId = getYouTubeVideoId(w.youtubeUrl);
 
   return (
     <div className="min-h-screen py-8 px-2 sm:px-6">
@@ -103,30 +98,25 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
 
             <div className="rounded-2xl border border-blue-700/30 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg p-8 shadow-lg">
               <h3 className="font-semibold mb-4 text-lg text-white">Video</h3>
-              {embed ? (
-                <div className="aspect-video">
-                  <iframe
-                    className="w-full h-full rounded"
-                    src={embed}
-                    title="YouTube video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div className="text-sm text-blue-300/70">
-                  {w.youtubeUrl ? (
-                    <>
-                      URL no reconocida para embeber.{" "}
-                      <a href={w.youtubeUrl} className="text-blue-400 underline hover:text-blue-300" target="_blank">
-                        Abrir enlace
-                      </a>
-                    </>
-                  ) : (
-                    "Sin URL de YouTube."
-                  )}
-                </div>
-              )}
+              {videoId ? (
+                <WildcardVideoPlayer
+                  videoId={videoId}
+                  title={`Wildcard de ${w.nombreArtistico || nombreUsuario}`}
+                />
+              ) : (
+                <div className="text-sm text-blue-300/70">
+                  {w.youtubeUrl ? (
+                    <>
+                      URL no reconocida para embeber.{" "}
+                      <a href={w.youtubeUrl} className="text-blue-400 underline hover:text-blue-300" target="_blank">
+                        Abrir enlace
+                	 </a>
+                    </>
+                  ) : (
+                    "Sin URL de YouTube."
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -156,18 +146,17 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                     {w.status}
                   </span>
                 </div>
-
                 {w.status === "APPROVED" && (
                   <div>
                     <span className="text-blue-300/70">Inscripción:</span>{" "}
-                    {isInscrito ? (
+                    {w.isClassified ? (
                       <span className="inline-flex items-center gap-1 text-green-300 font-semibold text-xs px-2 py-0.5 bg-green-900/50 border border-green-700/30 rounded-full">
                         <CheckBadgeIcon className="w-4 h-4" />
-                        Creada
+                        Clasificado
                       </span>
                     ) : (
                       <span className="text-yellow-300 font-semibold text-xs px-2 py-0.5 bg-yellow-900/50 border border-yellow-700/30 rounded-full">
-                        Procesando...
+                        Pendiente
                       </span>
                     )}
                   </div>
@@ -176,7 +165,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                 <div className="text-blue-100"><span className="text-blue-300/70">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">
-                <ReviewButtons id={w.id} status={w.status as any} isInscrito={isInscrito} />
+                <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
               </div>
             </div>
 
