@@ -11,7 +11,7 @@ export default async function JudgeLayout({ children }: { children: ReactNode })
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0f] text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0a0a0f] text-white">
       {/* Capa 1: degradado urbano tipo neón */}
       <div
         aria-hidden

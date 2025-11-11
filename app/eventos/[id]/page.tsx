@@ -256,6 +256,20 @@ export default async function EventoPage({
       {/* ================================ */}
       {/* Sección 2: Contenido (Textos Rediseñados) */}
       {/* ================================ */}
+
+      {evento.descripcion && (
+          <div className={`${boxStyle} mb-12`}>
+            <h2 className="text-5xl text-lime-300 mb-4 text-shadow-lime">
+              Descripción del Evento
+            </h2>
+            <div className="prose prose-invert text-gray-200 max-w-none">
+              <p className="whitespace-pre-wrap text-lg leading-relaxed">
+                {evento.descripcion}
+              </p>
+            </div>
+          </div>
+        )}
+
       <div className="container mx-auto px-4 py-12 md:py-16">
         
         {/* Sección Reglas */}
