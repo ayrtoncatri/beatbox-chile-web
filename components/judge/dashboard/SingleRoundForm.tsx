@@ -157,20 +157,20 @@ export function SingleRoundForm({
     <form 
       onSubmit={form.handleSubmit(onSubmit)} 
       // (Estilo más sutil para el formulario anidado)
-      className="rounded-lg border bg-gray-50 p-4 shadow-sm"
+      className="rounded-xl bg-gradient-to-br from-[#0b0b13] to-[#131b2c] border border-purple-500/10 p-6 shadow-lg shadow-purple-900/10 space-y-6 transition-all duration-300 hover:shadow-purple-700/20"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-        <h4 className="text-lg font-semibold text-gray-800">
-          {participantName} - <span className="text-indigo-600">Round {roundNumber}</span>
+      <div className="flex items-center justify-between border-b border-purple-700/30 pb-3">
+        <h4 className="text-xl font-bold tracking-tight text-white">
+          {participantName} - <span className="text-fuchsia-400">Round {roundNumber}</span>
         </h4>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-3 lg:grid-cols-6 text-blue-100">
         {criterios.map((criterio, index) => (
           <div key={criterio.id}>
             <label 
               htmlFor={`scores.${index}.value`} 
-              className="flex items-center space-x-1 text-sm font-medium text-gray-700"
+              className="flex items-center space-x-1 text-sm font-semibold text-blue-200"
               title={criterio.description || 'Sin descripción'}
             >
               <span>{criterio.name} (0-{criterio.maxScore})</span>
@@ -180,7 +180,7 @@ export function SingleRoundForm({
               id={`scores.${index}.value`}
               {...form.register(`scores.${index}.value`, { valueAsNumber: true })}
               disabled={formStatus === ScoreStatus.SUBMITTED}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-900 placeholder:text-gray-400"
+              className="mt-1 block w-full rounded-md border border-purple-600/30 bg-[#141826] text-blue-100 focus:ring-2 focus:ring-fuchsia-500 disabled:opacity-50"
             >
               {generateOptions(criterio.maxScore).map((val) => (
                 <option key={val} value={val}>
@@ -196,14 +196,14 @@ export function SingleRoundForm({
           </div>
         ))}
 
-        <div className="flex flex-col justify-end rounded-md bg-white p-3 text-center lg:col-start-6 border">
-          <span className="text-sm font-medium text-gray-500">Total Round</span>
-          <span className="text-3xl font-bold text-gray-900">{total}</span>
+        <div className="flex flex-col justify-end rounded-lg border border-purple-500/30 bg-gradient-to-b from-purple-900/10 to-transparent p-3 text-center lg:col-start-6">
+          <span className="text-sm font-medium text-fuchsia-400">Total Round</span>
+          <span className="text-4xl font-extrabold text-white drop-shadow-lg">{total}</span>
         </div>
       </div>
 
       <div className="mt-6 border-t pt-4">
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="notes" className="block text-sm font-semibold text-fuchsia-300">
           Notas (Round {roundNumber})
         </label>
         <textarea
@@ -211,7 +211,7 @@ export function SingleRoundForm({
           {...form.register('notes')}
           rows={2}
           disabled={formStatus === ScoreStatus.SUBMITTED}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-900 placeholder:text-gray-400"
+          className="mt-1 block w-full rounded-md border border-purple-700/30 bg-[#131b2a] text-blue-100 placeholder:text-blue-300/40 focus:ring-2 focus:ring-fuchsia-500 disabled:opacity-60"
           placeholder="Comentarios sobre este round..."
         />
       </div>
@@ -220,10 +220,10 @@ export function SingleRoundForm({
         <button
           type="submit"
           disabled={isPending || formStatus === ScoreStatus.SUBMITTED}
-          className={`rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${
+          className={`rounded-full px-6 py-2.5 text-sm font-bold tracking-wide shadow-md transition-all ${
             formStatus === ScoreStatus.SUBMITTED
-              ? 'cursor-not-allowed bg-green-600'
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? 'cursor-not-allowed bg-emerald-600 text-white'
+              : 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-sky-600 hover:from-fuchsia-500 hover:to-sky-500 text-white'
           } ${isPending ? 'animate-pulse' : ''}`}
         >
           {isPending

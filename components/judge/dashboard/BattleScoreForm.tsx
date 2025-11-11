@@ -67,7 +67,7 @@ function DeclareWinnerButton({ battleId, totalScoreA, totalScoreB, totalSubmitte
         
         {/* Muestra el mensaje de bloqueo */}
         {!canDeclare && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg bg-yellow-100 text-yellow-800">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-amber-400/15 text-amber-200 border border-amber-400/30">
                 <LockClosedIcon className="w-4 h-4" /> Enviar ambos Rounds primero.
             </span>
         )}
@@ -75,8 +75,9 @@ function DeclareWinnerButton({ battleId, totalScoreA, totalScoreB, totalSubmitte
         <button
           type="submit"
           disabled={!canDeclare || pending}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white
-                     shadow-sm transition-all hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 via-purple-600 to-sky-600
+           px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-fuchsia-500 hover:to-sky-500
+           disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <TrophyIcon className="w-5 h-5" />
           {pending ? 'Declarando...' : 'Declarar Ganador Final'}
@@ -155,44 +156,44 @@ export function BattleScoreForm({
   const totalSubmittedRounds = Object.values(submissionStatus).filter(Boolean).length;
 
   return (
-    <div className="rounded-lg border bg-white shadow-md overflow-hidden">
+    <div className="w-full space-y-8">
       {/* --- (2) Cabecera de la Batalla (Estilizada) --- */}
-      <div className="p-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-0 md:px-2 pt-2 pb-4">
         <div className="flex justify-between items-center">
           {/* Participante A */}
-          <div className={`text-center p-2 ${totalA > totalB ? 'bg-green-100 rounded-lg' : ''}`}>
-            <h3 className={`text-xl font-bold ${totalA > totalB ? 'text-green-700' : 'text-gray-900'}`}>{nameA}</h3>
-            <span className="text-2xl font-bold text-blue-600">{totalA} pts</span>
+          <div className={`text-center p-2 ${totalA > totalB ? 'bg-emerald-400/10 border border-emerald-400/30 rounded-lg' : ''}`}>
+            <h3 className={`text-xl font-extrabold tracking-tight ${totalA > totalB ? 'text-emerald-300' : 'text-blue-50'}`}>{nameA}</h3>
+            <span className="text-2xl font-extrabold text-sky-300">{totalA} pts</span>
           </div>
           
-          <span className="text-gray-400 font-bold">VS</span>
+          <span className="text-blue-200/60 font-extrabold">VS</span>
 
           {/* Participante B */}
-          <div className={`text-center p-2 ${totalB > totalA ? 'bg-green-100 rounded-lg' : ''}`}>
-            <h3 className={`text-xl font-bold ${totalB > totalA ? 'text-green-700' : 'text-gray-900'}`}>{nameB}</h3>
-            <span className="text-2xl font-bold text-blue-600">{totalB} pts</span>
+          <div className={`text-center p-2 ${totalA > totalB ? 'bg-emerald-400/10 border border-emerald-400/30 rounded-lg' : ''}`}>
+            <h3 className={`text-xl font-extrabold tracking-tight ${totalA > totalB ? 'text-emerald-300' : 'text-blue-50'}`}>{nameB}</h3>
+            <span className="text-2xl font-extrabold text-sky-300">{totalB} pts</span>
           </div>
         </div>
         
         {/* --- (3) Pestañas (Tabs) para Round 1 / Round 2 --- */}
-        <div className="mt-4 border-b border-gray-300">
+        <div className="mt-6">
           <nav className="-mb-px flex space-x-6" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('R1')}
-              className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm
-                ${activeTab === 'R1' 
-                  ? 'border-indigo-500 text-indigo-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              className={`whitespace-nowrap pb-3 px-1 border-b-2 font-semibold text-sm
+                ${activeTab === 'R1'
+                ? 'border-fuchsia-400 text-blue-50'
+                : 'border-transparent text-blue-200/70 hover:text-blue-100'
                 }`}
             >
               Round 1
             </button>
             <button
               onClick={() => setActiveTab('R2')}
-              className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm
-                ${activeTab === 'R2' 
-                  ? 'border-indigo-500 text-indigo-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              className={`whitespace-nowrap pb-3 px-1 border-b-2 font-semibold text-sm
+                ${activeTab === 'R2'
+                  ? 'border-fuchsia-400 text-blue-50'
+                  : 'border-transparent text-blue-200/70 hover:text-blue-100'
                 }`}
             >
               Round 2
@@ -202,7 +203,7 @@ export function BattleScoreForm({
       </div>
 
       {/* --- (4) Contenido de las Pestañas (Formularios) --- */}
-      <div className="p-4 space-y-6">
+      <div className="px-0 md:px-2 py-4 space-y-10">
         {/* Contenido de Round 1 */}
         <div className={activeTab === 'R1' ? 'block' : 'hidden'}>
           <div className="space-y-6">
@@ -261,7 +262,7 @@ export function BattleScoreForm({
       </div>
 
       {/* TODO (Fase 10.7): Botón de "Declarar Ganador" */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+      <div className="pt-6 flex justify-end">
         <DeclareWinnerButton 
           battleId={battle.id}
           totalScoreA={totalA}

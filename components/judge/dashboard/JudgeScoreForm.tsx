@@ -4,7 +4,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client' 
+import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client'
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import { debounce } from 'lodash'
 import toast from 'react-hot-toast'
@@ -16,13 +16,13 @@ import {
   SubmitScorePayload,
 } from '@/lib/schemas/judging'
 
-import { submitScore } from '@/app/judge/actions' 
+import { submitScore } from '@/app/judge/actions'
 
 type FullJudgeAssignment = {
   id: string
   eventoId: string
   categoriaId: string
-  phase: RoundPhase 
+  phase: RoundPhase
 }
 type FullWildcard = {
   id: string
@@ -32,7 +32,7 @@ type FullWildcard = {
   user: { id: string; profile: { nombres: string | null; apellidoPaterno: string | null } | null }
 }
 type FullScore = {
-  status: ScoreStatus 
+  status: ScoreStatus
   notes: string | null
   details: { criterioId: string; value: number }[]
 } | null
@@ -54,7 +54,7 @@ function getYouTubeVideoId(url: string): string | null {
       if (videoId) return videoId;
     }
     if (urlObj.hostname === 'youtu.be') {
-      return urlObj.pathname.slice(1); 
+      return urlObj.pathname.slice(1);
     }
   } catch (error) {
     console.error("URL de YouTube inválida:", url, error);
@@ -73,7 +73,7 @@ export function JudgeScoreForm({
   criterios,
   existingScore,
 }: JudgeScoreFormProps) {
-  
+
   const [isPending, startTransition] = useTransition()
   const [total, setTotal] = useState(0)
   const [formStatus, setFormStatus] = useState(existingScore?.status || ScoreStatus.DRAFT)
@@ -87,16 +87,16 @@ export function JudgeScoreForm({
       phase: assignment.phase,
       participantId: wildcard.userId,
       roundNumber: 1,
-      notes: existingScore?.notes || undefined, 
+      notes: existingScore?.notes || undefined,
       status: existingScore?.status ?? ScoreStatus.DRAFT,
-    
+
       scores: criterios.map((c) => {
-        const existingDetail = existingScore?.details.find( 
+        const existingDetail = existingScore?.details.find(
           (d) => d.criterioId === c.id
         )
         return {
           criterioId: c.id,
-          value: existingDetail?.value ?? 0, 
+          value: existingDetail?.value ?? 0,
         }
       }),
     },
@@ -104,10 +104,10 @@ export function JudgeScoreForm({
 
   // 2. CÁLCULO DE TOTAL (REGLA 1)
   const watchedScores = useWatch({ control: form.control, name: 'scores' })
-  
+
   useEffect(() => {
     const newTotal = watchedScores.reduce(
-      (acc, current) => acc + Number(current.value || 0), 
+      (acc, current) => acc + Number(current.value || 0),
       0
     )
     setTotal(newTotal)
@@ -118,11 +118,11 @@ export function JudgeScoreForm({
   useEffect(() => {
     const debouncedSave = debounce(async (payload: SubmitScorePayload) => {
       if (formStatus === ScoreStatus.SUBMITTED) return
-      
+
       startTransition(async () => {
         await submitScore({ ...payload, status: ScoreStatus.DRAFT })
       })
-    }, 2000) 
+    }, 2000)
 
     const subscription = form.watch((data) => {    // <-- CORREGIDO
       const result = submitScoreSchema.safeParse(data) // <-- Esto ahora funcionará
@@ -130,7 +130,7 @@ export function JudgeScoreForm({
         debouncedSave(result.data)
       }
     })
-    
+
     return () => subscription.unsubscribe()
   }, [form, formStatus, startTransition])
 
@@ -147,14 +147,14 @@ export function JudgeScoreForm({
         toast.success('Puntaje enviado correctamente', { id: loadingToast })
       } else {
         console.error("Error al enviar el puntaje final:", result.error)
-        const errorMessage = typeof result.error === 'string' 
-          ? result.error 
+        const errorMessage = typeof result.error === 'string'
+          ? result.error
           : 'Error al enviar el puntaje';
         toast.error(errorMessage, { id: loadingToast })
       }
     })
   }
-  
+
   const participantName =
     wildcard.nombreArtistico ||
     `${wildcard.user.profile?.nombres} ${wildcard.user.profile?.apellidoPaterno}`
@@ -162,38 +162,29 @@ export function JudgeScoreForm({
 
   // 5. RENDERIZADO (JSX)
   return (
-    <form 
-      onSubmit={form.handleSubmit(onSubmit)} 
-      className="rounded-lg border bg-white p-4 shadow-md transition-all space-y-4"
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="w-full transition-all space-y-6 md:space-y-8"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-        <h3 className="text-xl font-semibold text-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-blue-50">
           {participantName}
         </h3>
-        {/* <a
-          href={wildcard.youtubeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white no-underline shadow-sm hover:bg-red-500"
-        >
-          Ver Wildcard (YouTube)
-        </a> 
-        */}
       </div>
 
       {assignment.phase === RoundPhase.WILDCARD && (
-        <div className="rounded-lg overflow-hidden border border-gray-300">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c12]">
           {videoId ? (
             <LiteYouTubeEmbed
               id={videoId}
               title={`Wildcard de ${participantName}`}
-              adNetwork={false} 
-              noCookie={true} 
+              adNetwork={false}
+              noCookie={true}
             />
           ) : (
             // Fallback si la URL es inválida
-            <div className="aspect-video bg-gray-100 flex items-center justify-center">
-              <p className="text-red-600 font-semibold">
+            <div className="aspect-video bg-neutral-900 flex items-center justify-center">
+              <p className="text-red-300 font-semibold">
                 URL de video inválida o no encontrada.
               </p>
             </div>
@@ -201,22 +192,23 @@ export function JudgeScoreForm({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3 lg:grid-cols-6">
         {criterios.map((criterio, index) => (
           <div key={criterio.id}>
-            <label 
-              htmlFor={`scores.${index}.value`} 
-              className="flex items-center space-x-1 text-sm font-medium text-gray-700"
+            <label
+              htmlFor={`scores.${index}.value`}
+              className="flex items-center gap-1 text-sm font-semibold text-blue-100/90"
               title={criterio.description || 'Sin descripción'}
             >
               <span>{criterio.name} (0-{criterio.maxScore})</span>
-              <InformationCircleIcon className="h-4 w-4 text-gray-400" />
+              <InformationCircleIcon className="h-4 w-4 text-blue-300/70" />
             </label>
             <select
               id={`scores.${index}.value`}
               {...form.register(`scores.${index}.value`, { valueAsNumber: true })}
               disabled={formStatus === ScoreStatus.SUBMITTED}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100 text-gray-800"
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-[#0c0c12] text-blue-50 shadow-sm
+              focus:border-fuchsia-400/40 focus:ring-2 focus:ring-fuchsia-400/30 disabled:bg-neutral-800"
             >
               {generateOptions(criterio.maxScore).map((val) => (
                 <option key={val} value={val}>
@@ -232,14 +224,14 @@ export function JudgeScoreForm({
           </div>
         ))}
 
-        <div className="flex flex-col justify-end rounded-md bg-gray-50 p-3 text-center lg:col-start-6">
-          <span className="text-sm font-medium text-gray-500">Total Juez</span>
-          <span className="text-3xl font-bold text-gray-900">{total}</span>
+        <div className="flex flex-col justify-end rounded-lg bg-white/5 p-4 text-center lg:col-start-6 border border-white/10">
+          <span className="text-xs font-semibold uppercase tracking-wider text-blue-100/80">Total Juez</span>
+          <span className="text-4xl md:text-5xl font-extrabold text-blue-50">{total}</span>
         </div>
       </div>
 
-      <div className="mt-6 border-t pt-4">
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+      <div className="mt-6 pt-4">
+        <label htmlFor="notes" className="block text-sm font-semibold text-blue-100/90">
           Notas (privadas)
         </label>
         <textarea
@@ -247,26 +239,28 @@ export function JudgeScoreForm({
           {...form.register('notes')}
           rows={2}
           disabled={formStatus === ScoreStatus.SUBMITTED}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm disabled:bg-gray-100"
+          className="mt-1 block w-full rounded-xl border border-white/10 bg-[#0c0c12] text-blue-50 shadow-sm
+          placeholder:text-blue-200/40 focus:border-fuchsia-400/40 focus:ring-2 focus:ring-fuchsia-400/30
+          disabled:bg-neutral-800"
           placeholder="Comentarios sobre el participante..."
         />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-6 flex justify-end">
         <button
           type="submit"
           disabled={isPending || formStatus === ScoreStatus.SUBMITTED}
-          className={`rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${
-            formStatus === ScoreStatus.SUBMITTED
-              ? 'cursor-not-allowed bg-green-600'
-              : 'bg-blue-600 hover:bg-blue-700'
+          className={`rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all
+          ${formStatus === ScoreStatus.SUBMITTED
+              ? 'cursor-not-allowed bg-green-600/90 hover:bg-green-600'
+              : 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-sky-600 hover:from-fuchsia-500 hover:to-sky-500'
           } ${isPending ? 'animate-pulse' : ''}`}
-        >
+          >
           {isPending
             ? 'Guardando...'
             : formStatus === ScoreStatus.SUBMITTED
-            ? '✔ Enviado'
-            : 'Enviar Puntaje Final'}
+              ? '✔ Enviado'
+              : 'Enviar Puntaje Final'}
         </button>
       </div>
     </form>

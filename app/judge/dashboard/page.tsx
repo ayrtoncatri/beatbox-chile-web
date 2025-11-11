@@ -137,7 +137,7 @@ export default async function JudgeDashboardPage() {
           <ClipboardDocumentCheckIcon className="h-7 w-7" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white text-center text-gray900">
+          <h1 className="text-3xl font-bold text-white text-center">
             Panel de Evaluación
           </h1>
           <p className="mt-1 text-base text-white text-center text-gray600">
