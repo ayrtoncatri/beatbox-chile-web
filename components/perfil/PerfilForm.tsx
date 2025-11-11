@@ -64,25 +64,63 @@ export default function PerfilForm({ user }: { user: UserLike }) {
         if (!alive) return;
         setRegiones(regs);
 
-        if (form.region) {
+        // Usar los valores iniciales del usuario en lugar del estado del formulario
+        const initialRegion = user.region || "";
+        const initialComuna = user.comuna || "";
+
+        if (initialRegion) {
+          // Buscar la región con múltiples estrategias de normalización
           const r = regs.find(
-            (x) => normalize(x.nombre) === normalize(form.region)
+            (x) => 
+              normalize(x.nombre) === normalize(initialRegion) ||
+              x.nombre === initialRegion ||
+              normalize(x.nombre).includes(normalize(initialRegion)) ||
+              normalize(initialRegion).includes(normalize(x.nombre))
           );
+          
           if (r) {
             setLoadingComunas(true);
             const cms = await fetchComunasByRegionCode(r.codigo);
             if (!alive) return;
             setComunas(cms);
-            if (
-              form.comuna &&
-              !cms.some(
-                (c) => normalize(c.nombre) === normalize(form.comuna)
-              )
-            ) {
-              setForm((f) => ({ ...f, comuna: "" }));
+            
+            // Verificar que la comuna existe en la lista cargada
+            if (initialComuna) {
+              const comunaExists = cms.some(
+                (c) => 
+                  normalize(c.nombre) === normalize(initialComuna) ||
+                  c.nombre === initialComuna ||
+                  normalize(c.nombre).includes(normalize(initialComuna)) ||
+                  normalize(initialComuna).includes(normalize(c.nombre))
+              );
+              
+              if (!comunaExists) {
+                // Si la comuna no existe, intentar mantener la región pero limpiar la comuna
+                setForm((f) => ({ ...f, comuna: "", comunaId: undefined }));
+              } else {
+                // Asegurar que el formulario tenga los valores correctos
+                const foundComuna = cms.find(
+                  (c) => 
+                    normalize(c.nombre) === normalize(initialComuna) ||
+                    c.nombre === initialComuna
+                );
+                if (foundComuna) {
+                  setForm((f) => ({
+                    ...f,
+                    region: r.nombre,
+                    comuna: foundComuna.nombre,
+                    comunaId: Number(foundComuna.codigo),
+                  }));
+                }
+              }
+            } else {
+              // Si hay región pero no comuna, asegurar que la región esté en el formulario
+              setForm((f) => ({ ...f, region: r.nombre }));
             }
           } else {
-            setForm((f) => ({ ...f, region: "", comuna: "" }));
+            // Si no se encuentra la región, mantener los valores pero mostrar advertencia
+            console.warn(`Región "${initialRegion}" no encontrada en la lista de regiones`);
+            // No resetear los valores, solo mantenerlos como están
           }
         }
       } catch {
@@ -98,7 +136,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [user.region, user.comuna, user.comunaId]);
 
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
