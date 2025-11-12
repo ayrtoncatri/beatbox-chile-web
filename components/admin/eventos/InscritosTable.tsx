@@ -1,6 +1,7 @@
 // components/admin/eventos/InscritosTable.tsx
 
-// (No necesitamos 'use client' aquí, es un componente de UI simple)
+'use client';
+
 import { InscritosResult } from '@/app/admin/eventos/actions';
 import { InscripcionSource } from '@prisma/client';
 
@@ -11,7 +12,7 @@ import {
   TrophyIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 
 // --- (1) Componente Helper para los Badges de "Fuente" ---
 // Esto crea los badges de colores para mostrar CÓMO se inscribió
@@ -61,9 +62,32 @@ function SourceBadge({ source }: { source: InscripcionSource }) {
 // --- (2) Componente Principal de la Tabla ---
 interface InscritosTableProps {
   inscritos: InscritosResult[];
+  allCategories: { id: string; name: string }[];
 }
 
-export function InscritosTable({ inscritos }: InscritosTableProps) {
+export function InscritosTable({ inscritos, allCategories }: InscritosTableProps) {
+  const [selectedCategory, setSelectedCategory] = useState(allCategories[0]?.name || '');
+
+  // Filtrar inscritos por categoría seleccionada
+  const filteredInscritos = useMemo(() => {
+    if (!selectedCategory) return inscritos;
+    
+    const selectedCategoryObj = allCategories.find(cat => cat.name === selectedCategory);
+    if (!selectedCategoryObj) return inscritos;
+    
+    return inscritos.filter(inscrito => inscrito.categoria.id === selectedCategoryObj.id);
+  }, [inscritos, selectedCategory, allCategories]);
+
+  if (!allCategories.length) {
+    return (
+      <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg rounded-2xl shadow-lg border border-blue-700/30 overflow-hidden">
+        <div className="px-6 py-4">
+          <p className="text-blue-200">Este evento no tiene categorías de competición definidas.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     // (Contenedor estilizado para el panel de admin)
     <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg rounded-2xl shadow-lg border border-blue-700/30 overflow-hidden">
@@ -71,11 +95,32 @@ export function InscritosTable({ inscritos }: InscritosTableProps) {
       {/* --- (3) Título de la Sección --- */}
       <div className="px-6 py-4 border-b border-blue-700/30">
         <h3 className="text-lg font-semibold leading-6 text-white">
-          Participantes Inscritos ({inscritos.length})
+          Participantes Inscritos ({filteredInscritos.length})
         </h3>
         <p className="mt-1 text-sm text-blue-200">
           Lista de todos los participantes registrados en este evento.
         </p>
+      </div>
+
+      {/* Selector de Categoría */}
+      <div className="px-6 py-4 border-b border-blue-700/30">
+        <div className="flex items-center space-x-4 text-blue-200">
+          <label htmlFor="category-inscritos" className="font-medium">
+            Categoría:
+          </label>
+          <select
+            id="category-inscritos"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm"
+          >
+            {allCategories.map((cat) => (
+              <option key={cat.id} value={cat.name}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* --- (4) Tabla --- */}
@@ -106,19 +151,19 @@ export function InscritosTable({ inscritos }: InscritosTableProps) {
           <tbody className="bg-blue-900/30 divide-y divide-blue-700/30">
             
             {/* --- (5) Estado Vacío --- */}
-            {inscritos.length === 0 && (
+            {filteredInscritos.length === 0 && (
               <tr>
                 <td
                   colSpan={3}
                   className="px-6 py-12 text-center text-sm text-blue-300/70"
                 >
-                  Aún no hay participantes inscritos en este evento.
+                  Aún no hay participantes inscritos en esta categoría.
                 </td>
               </tr>
             )}
 
             {/* --- (6) Mapeo de Inscritos --- */}
-            {inscritos.map((inscrito) => {
+            {filteredInscritos.map((inscrito) => {
               const profile = inscrito.user.profile;
               const fullName =
                 [profile?.nombres, profile?.apellidoPaterno]

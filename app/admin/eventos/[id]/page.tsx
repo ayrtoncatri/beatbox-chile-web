@@ -29,6 +29,7 @@ type AdminEditEventoPageProps = {
 
 type PreliminaryScoreAvg = {
   participantId: string;
+  categoriaId: string;
   _avg: {
     totalScore: number | null;
   };
@@ -76,7 +77,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
     getInscritosForEvent(id),
 
     prisma.score.groupBy({
-    by: ['participantId'],
+    by: ['participantId', 'categoriaId'],
     where: {
       eventoId: id,
       phase: RoundPhase.PRELIMINAR,
@@ -100,6 +101,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
       },
       select: {
         participantId: true,
+        categoriaId: true,
         judgeId: true,
         totalScore: true,
         judge: {
@@ -137,17 +139,18 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
   // 2. Unimos los promedios con los puntajes individuales
   const preliminaryRanking: RankingRowWithDetails[] = (preliminaryScoresAvg as PreliminaryScoreAvg[]).map(scoreAvg => {
-    const inscrito = serializedInscritos.find((i: any) => i.userId === scoreAvg.participantId);
+    const inscrito = serializedInscritos.find((i: any) => i.userId === scoreAvg.participantId && i.categoriaId === scoreAvg.categoriaId);
     
-    // Filtramos los scores individuales para este participante
+    // Filtramos los scores individuales para este participante y categoría
     const participantScores = (serializedAllPreliminaryScores as any[]).filter(
-      (s: any) => s.participantId === scoreAvg.participantId
+      (s: any) => s.participantId === scoreAvg.participantId && s.categoriaId === scoreAvg.categoriaId
     );
     
     return {
       id: scoreAvg.participantId,
       nombreArtistico: inscrito?.nombreArtistico || `Usuario (${scoreAvg.participantId.slice(-4)})`,
       avgScore: scoreAvg._avg.totalScore ? Number(scoreAvg._avg.totalScore.toFixed(2)) : 0,
+      categoriaId: scoreAvg.categoriaId,
       // Pasamos los scores detallados
       scores: participantScores.map((s: any) => ({
         judgeId: s.judgeId,
@@ -187,12 +190,13 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         </div>
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Ranking Preliminar (Showcase)</h2>
-          <PreliminaryRankingTable 
+          <h2 className="text-2xl font-bold mb-6 text-white">Ranking Preliminar (Showcase)</h2>
+          <PreliminaryRankingTable 
             ranking={preliminaryRanking} 
             judges={uniqueJudges}
+            allCategories={activeCategories}
           />
-        </div>
+        </div>
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
           <BracketGenerator 
@@ -209,7 +213,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-white">Participantes Inscritos</h2>
-          <InscritosTable inscritos={serializedInscritos} />
+          <InscritosTable inscritos={serializedInscritos} allCategories={activeCategories} />
         </div>
       </div>
     </main>

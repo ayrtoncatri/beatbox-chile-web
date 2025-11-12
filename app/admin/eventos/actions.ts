@@ -630,7 +630,7 @@ export type InscritosResult = Prisma.InscripcionGetPayload<{
       };
     };
     categoria: {
-      select: { name: true };
+      select: { id: true; name: true };
     };
   };
 }>;
@@ -667,7 +667,7 @@ export async function getInscritosForEvent(
         },
         // Incluimos la categoría
         categoria: {
-          select: { name: true },
+          select: { id: true, name: true },
         },
       },
       orderBy: [
