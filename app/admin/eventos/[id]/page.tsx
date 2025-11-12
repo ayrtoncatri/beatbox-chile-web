@@ -191,11 +191,12 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Ranking Preliminar (Showcase)</h2>
-          <PreliminaryRankingTable 
-            ranking={preliminaryRanking} 
-            judges={uniqueJudges}
+          <PreliminaryRankingTable 
+            ranking={preliminaryRanking || []} 
+            judges={uniqueJudges || []}
+            allCategories={activeCategories || []}
           />
-        </div>
+        </div>
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
           <BracketGenerator 
@@ -212,7 +213,10 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
         <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Participantes Inscritos</h2>
-          <InscritosTable inscritos={serializedInscritos} />
+          <InscritosTable 
+            inscritos={serializedInscritos || []} 
+            allCategories={activeCategories || []}
+          />
         </div>
       </div>
     </div>

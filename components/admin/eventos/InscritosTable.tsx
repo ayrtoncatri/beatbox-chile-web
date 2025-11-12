@@ -66,7 +66,7 @@ interface InscritosTableProps {
 }
 
 export function InscritosTable({ inscritos, allCategories }: InscritosTableProps) {
-  const [selectedCategory, setSelectedCategory] = useState(allCategories[0]?.name || '');
+  const [selectedCategory, setSelectedCategory] = useState((allCategories && allCategories.length > 0) ? allCategories[0]?.name || '' : '');
 
   // Filtrar inscritos por categoría seleccionada
   const filteredInscritos = useMemo(() => {
