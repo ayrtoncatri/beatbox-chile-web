@@ -60,15 +60,15 @@ export function PreliminaryRankingTable({ ranking, judges, allCategories }: Prel
     return (
       <div className="space-y-4">
         {/* Selector de Categoría */}
-        <div className="flex items-center space-x-4 text-blue-200">
-          <label htmlFor="category" className="font-medium">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-blue-200">
+          <label htmlFor="category" className="font-medium text-sm sm:text-base whitespace-nowrap">
             Categoría:
           </label>
           <select
             id="category"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm"
+            className="w-full sm:w-auto rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm text-sm sm:text-base"
           >
             {allCategories.map((cat) => (
               <option key={cat.id} value={cat.name}>
@@ -77,7 +77,7 @@ export function PreliminaryRankingTable({ ranking, judges, allCategories }: Prel
             ))}
           </select>
         </div>
-        <div className="text-center text-blue-300/70 p-4 border border-dashed border-blue-700/30 rounded-lg">
+        <div className="text-center text-blue-300/70 p-4 border border-dashed border-blue-700/30 rounded-lg text-sm sm:text-base">
           Aún no hay puntajes finales (SUBMITTED) para la fase PRELIMINAR en esta categoría.
         </div>
       </div>
@@ -98,15 +98,15 @@ export function PreliminaryRankingTable({ ranking, judges, allCategories }: Prel
   return (
     <div className="space-y-4">
       {/* Selector de Categoría */}
-      <div className="flex items-center space-x-4 text-blue-200">
-        <label htmlFor="category" className="font-medium">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-blue-200">
+        <label htmlFor="category" className="font-medium text-sm sm:text-base whitespace-nowrap">
           Categoría:
         </label>
         <select
           id="category"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm"
+          className="w-full sm:w-auto rounded-md border border-blue-700/50 bg-blue-950/50 text-blue-100 py-2 pl-3 pr-10 shadow-sm text-sm sm:text-base"
         >
           {allCategories.map((cat) => (
             <option key={cat.id} value={cat.name}>
@@ -116,20 +116,20 @@ export function PreliminaryRankingTable({ ranking, judges, allCategories }: Prel
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-blue-700/30">
-        <table className="min-w-full text-sm text-left">
+      <div className="overflow-x-auto rounded-lg border border-blue-700/30 -mx-2 sm:mx-0">
+        <table className="min-w-full text-xs sm:text-sm text-left">
           <thead className="bg-blue-900/50 text-blue-200">
             <tr>
-              <th className="p-3 font-semibold text-center w-16">#</th>
-              <th className="p-3 font-semibold">Participante</th>
+              <th className="p-2 sm:p-3 font-semibold text-center w-12 sm:w-16">#</th>
+              <th className="p-2 sm:p-3 font-semibold min-w-[120px]">Participante</th>
               {judges.map(judge => (
-                <th key={judge.id} className="p-3 font-semibold text-center w-28 truncate" title={judge.name}>
+                <th key={judge.id} className="p-2 sm:p-3 font-semibold text-center w-20 sm:w-28 truncate" title={judge.name}>
                   {/* Mostramos solo el primer nombre o inicial */}
                   {judge.name.split(' ')[0]}
                 </th>
               ))}
-              <th className="p-3 font-semibold text-center w-28">Llave (vs)</th>
-              <th className="p-3 font-semibold text-right w-32">Puntaje (Prom.)</th>
+              <th className="p-2 sm:p-3 font-semibold text-center w-20 sm:w-28">Llave (vs)</th>
+              <th className="p-2 sm:p-3 font-semibold text-right w-24 sm:w-32">Puntaje (Prom.)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-blue-700/20">
@@ -142,21 +142,21 @@ export function PreliminaryRankingTable({ ranking, judges, allCategories }: Prel
             
             return (
               <tr key={participant.id} className={`transition hover:bg-blue-800/50 ${rowClass}`}>
-                <td className="p-3 font-bold text-center text-white">{rank}</td>
-                <td className="p-3 text-white">{participant.nombreArtistico}</td>
+                <td className="p-2 sm:p-3 font-bold text-center text-white">{rank}</td>
+                <td className="p-2 sm:p-3 text-white truncate max-w-[150px] sm:max-w-none">{participant.nombreArtistico}</td>
                 {judges.map(judge => {
                   // Buscamos el puntaje de ESTE juez para ESTE participante
                   const score = participant.scores.find(s => s.judgeId === judge.id);
                   return (
-                    <td key={judge.id} className="p-3 font-mono text-center text-white">
+                    <td key={judge.id} className="p-2 sm:p-3 font-mono text-center text-white">
                       {score ? score.score : '—'}
                     </td>
                   );
                 })}
-                <td className="p-3 text-center text-blue-300">
+                <td className="p-2 sm:p-3 text-center text-blue-300">
                   {opponentRank ? `#${opponentRank}` : '—'}
                 </td>
-                <td className="p-3 font-mono text-right text-lg text-white">
+                <td className="p-2 sm:p-3 font-mono text-right text-base sm:text-lg text-white">
                   {participant.avgScore.toFixed(2)}
                 </td>
               </tr>
