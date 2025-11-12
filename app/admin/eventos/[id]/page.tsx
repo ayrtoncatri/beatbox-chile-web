@@ -157,11 +157,11 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   });
 
   return (
-    <main className="min-h-screen py-8 px-2 sm:px-6">
-      <div className="max-w-2xl mx-auto space-y-12">
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 md:space-y-12">
         {/* EventForm */}
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold mb-6 text-white">Editar evento</h1>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">EDITAR EVENTO</h1>
           <EventForm
             evento={serializedEvento}
             regiones={serializedRegiones}
@@ -171,14 +171,14 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         </div>
 
         {/* CompetitionCategoryForm */}
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Configuración de Competición</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Configuración de Competición</h2>
           <CompetitionCategoryForm eventoId={id} allCategories={serializedAllCategories} />
         </div>
 
         {/* JudgeAssignmentForm */}
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Asignar Jueces</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Asignar Jueces</h2>
           <JudgeAssignmentForm
             eventoId={id}
             allJudges={judgesList}
@@ -186,15 +186,15 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
           />
         </div>
 
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Ranking Preliminar (Showcase)</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Ranking Preliminar (Showcase)</h2>
           <PreliminaryRankingTable 
             ranking={preliminaryRanking} 
             judges={uniqueJudges}
           />
         </div>
 
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
           <BracketGenerator 
             eventoId={id} 
             activeCategories={activeCategories} 
@@ -202,16 +202,16 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
         </div>
 
         {/* WildcardRankingTable */}
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Ranking de Wildcards</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Ranking de Wildcards</h2>
           <WildcardRankingTable eventoId={id} allCategories={activeCategories} />
         </div>
 
-        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-white">Participantes Inscritos</h2>
+        <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Participantes Inscritos</h2>
           <InscritosTable inscritos={serializedInscritos} />
         </div>
       </div>
-    </main>
+    </div>
   );
 }

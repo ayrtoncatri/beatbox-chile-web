@@ -297,12 +297,12 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
   }
 
   return (
-    <div className="space-y-6">
-      <form action={handleSubmit} className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+      <form action={handleSubmit} className="space-y-4 sm:space-y-6 w-full max-w-full">
         {actuallyEditing && <input type="hidden" name="id" value={evento!.id} />}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">
               Nombre del evento *
             </label>
@@ -317,7 +317,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             />
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">Tipo *</label>
             <select
               className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white"
@@ -335,7 +335,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">Fecha del Evento *</label>
             <input
               className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white"
@@ -347,7 +347,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             />
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">
               Fecha Límite Wildcards (Opcional)
             </label>
@@ -363,7 +363,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             </p>
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">
               Nombre del Lugar (Venue)
             </label>
@@ -377,7 +377,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             />
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">Región</label>
             <select
               className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white"
@@ -397,7 +397,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           </div>
 
           {/* --- Campo de Comuna (combo box) --- */}
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">Comuna</label>
             <select
               className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white"
@@ -415,7 +415,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">
               Dirección (Calle y Nro)
             </label>
@@ -428,7 +428,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             />
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">
               Imagen (URL)
             </label>
@@ -442,7 +442,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             />
           </div>
 
-          <div>
+          <div className="min-w-0 w-full">
             <label className="block text-sm text-blue-200 mb-1 font-medium">Estado</label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
@@ -500,20 +500,20 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
         </div>
 
 
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center pt-2">
           <SubmitButton isEditing={actuallyEditing} isPending={isPending || isDeleting} />
         </div>
       </form>
 
       {/* --- SECCIÓN: Gestión de Tipos de Entrada --- */}
       {actuallyEditing && (
-        <div className="space-y-6 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-6 rounded-lg shadow-lg mt-8">
-          <h2 className="text-xl font-semibold border-b border-blue-700/30 pb-2 mb-6 text-white">
+        <div className="space-y-4 sm:space-y-6 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 p-4 sm:p-6 rounded-lg shadow-lg mt-6 sm:mt-8">
+          <h2 className="text-lg sm:text-xl font-semibold border-b border-blue-700/30 pb-2 mb-4 sm:mb-6 text-white">
             Tipos de Entrada
           </h2>
 
           {/* Formulario para añadir nuevo tipo */}
-          <form action={handleAddTicketType} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end border-b border-blue-700/30 pb-6 mb-6">
+          <form action={handleAddTicketType} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-end border-b border-blue-700/30 pb-4 sm:pb-6 mb-4 sm:mb-6">
             <div>
               <label className="block text-sm text-blue-200 mb-1 font-medium">Nombre *</label>
               <input
@@ -553,7 +553,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             </div>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-green-500 text-white text-sm font-semibold shadow-lg hover:from-green-700 hover:to-green-600 transition disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-green-500 text-white text-sm font-semibold shadow-lg hover:from-green-700 hover:to-green-600 transition disabled:opacity-50"
               disabled={isTicketActionPending || isPending || isDeleting}
             >
               <PlusIcon className="w-4 h-4" />
@@ -563,11 +563,11 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
 
 
           {/* Lista de tipos existentes */}
-          <h3 className="text-lg font-semibold mb-4 text-blue-200">Entradas Actuales</h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-blue-200">Entradas Actuales</h3>
           {evento.ticketTypes && evento.ticketTypes.length > 0 ? (
-            <ul className="space-y-3">
+            <ul className="space-y-2 sm:space-y-3">
               {evento.ticketTypes.map((ticket) => (
-                <li key={ticket.id} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-2 bg-blue-900/50 p-3 rounded-lg border border-blue-700/30 text-blue-200">
+                <li key={ticket.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 bg-blue-900/50 p-3 rounded-lg border border-blue-700/30 text-blue-200">
                   <div className="flex items-center gap-3">
                     <TicketIcon className="w-5 h-5 text-blue-400" />
                     <div>
@@ -599,8 +599,8 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
       )}
 
       {actuallyEditing && (
-        <div className="border-t border-blue-700/30 pt-6 mt-8"> 
-          <h3 className="text-lg font-semibold text-red-400 mb-4">
+        <div className="border-t border-blue-700/30 pt-4 sm:pt-6 mt-6 sm:mt-8"> 
+          <h3 className="text-base sm:text-lg font-semibold text-red-400 mb-3 sm:mb-4">
             Zona de peligro
           </h3>
           <form action={handleDelete} className="space-y-4">

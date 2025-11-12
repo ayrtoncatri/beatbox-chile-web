@@ -312,8 +312,8 @@ const Mascota: React.FC = () => {
         return () => clearTimeout(timer);
     }, [hasUserClicked]);
 
-    // No renderizar Mascota en rutas de admin (después de todos los hooks)
-    if (pathname?.startsWith("/admin")) {
+    // No renderizar Mascota en rutas de admin o juez (después de todos los hooks)
+    if (pathname?.startsWith("/admin") || pathname?.startsWith("/judge")) {
         return null;
     }
 

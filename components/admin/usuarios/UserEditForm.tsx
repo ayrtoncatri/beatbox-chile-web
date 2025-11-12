@@ -92,9 +92,16 @@ export default function UserEditForm({
   // No se puede modificar el rol 'admin' de un admin (incluido uno mismo)
   const isRoleChangeDisabled = isTargetAdmin;
 
+  // Obtener el ID del rol admin para asegurarnos de que siempre se envíe si el usuario es admin
+  const adminRoleId = allRoles.find(r => r.name === 'admin')?.id;
+
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="id" value={user.id} />
+      {/* Asegurar que el rol admin siempre se envíe si el usuario objetivo es admin */}
+      {isTargetAdmin && adminRoleId && (
+        <input type="hidden" name="roles" value={adminRoleId} />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
@@ -133,7 +140,7 @@ export default function UserEditForm({
           </div>
           {isRoleChangeDisabled && (
             <p className="text-xs text-blue-300/70 mt-1">
-              No puedes cambiar el rol de un administrador.
+              No puedes quitar el rol de 'admin' a un administrador, pero puedes agregar otros roles.
             </p>
           )}
         </div>

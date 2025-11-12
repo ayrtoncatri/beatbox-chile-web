@@ -36,6 +36,7 @@ type PerfilFormState = {
 };
 
 export default function PerfilForm({ user }: { user: UserLike }) {
+  const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<PerfilFormState>({
     nombres: user.nombres || "",
     apellidoPaterno: user.apellidoPaterno || "",
@@ -188,6 +189,26 @@ export default function PerfilForm({ user }: { user: UserLike }) {
     }
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    // Restaurar valores originales
+    setForm({
+      nombres: user.nombres || "",
+      apellidoPaterno: user.apellidoPaterno || "",
+      apellidoMaterno: user.apellidoMaterno || "",
+      region: user.region || "",
+      comuna: user.comuna || "",
+      comunaId: user.comunaId,
+      birthDate: "",
+      edad: user.edad ? String(user.edad) : "",
+    });
+    setErrors({});
+    setIsEditing(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -217,6 +238,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
       const data = await res.json();
       if (res.ok) {
         toast.success("Perfil actualizado correctamente", { id: loadingToast });
+        setIsEditing(false); // Volver al estado inicial después de guardar
       } else {
         const errorMsg = data?.error || "Error al actualizar perfil";
         toast.error(errorMsg, { id: loadingToast });
@@ -266,7 +288,8 @@ export default function PerfilForm({ user }: { user: UserLike }) {
             value={form.nombres}
             onChange={handleChange}
             placeholder="Nombres"
-            className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            disabled={!isEditing}
+            className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
           />
 
           <div className="flex flex-col md:flex-row gap-2 w-full">
@@ -275,14 +298,16 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               value={form.apellidoPaterno}
               onChange={handleChange}
               placeholder="Apellido paterno"
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              disabled={!isEditing}
+              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <input
               name="apellidoMaterno"
               value={form.apellidoMaterno}
               onChange={handleChange}
               placeholder="Apellido materno"
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              disabled={!isEditing}
+              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -291,7 +316,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               name="region"
               value={form.region}
               onChange={handleChange}
-              disabled={loadingRegiones}
+              disabled={!isEditing || loadingRegiones}
               className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <option value="">
@@ -309,6 +334,7 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               value={form.comuna}
               onChange={handleChange}
               disabled={
+                !isEditing ||
                 !form.region ||
                 loadingComunas ||
                 comunasDisponibles.length === 0
@@ -342,7 +368,8 @@ export default function PerfilForm({ user }: { user: UserLike }) {
               min={10}
               max={80}
               required
-              className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition ${
+              disabled={!isEditing}
+              className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition disabled:opacity-60 disabled:cursor-not-allowed ${
                 errors.edad
                   ? "border-red-500 focus:ring-red-500"
                   : "border-blue-800/30 focus:ring-blue-500"
@@ -354,12 +381,31 @@ export default function PerfilForm({ user }: { user: UserLike }) {
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Guardar cambios
-        </button>
+        {isEditing ? (
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <button
+              type="submit"
+              className="flex-1 rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              Guardar cambios
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex-1 rounded-lg bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700 transition-all text-white py-2 font-bold shadow-md border border-gray-500/30 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="w-full rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            Editar
+          </button>
+        )}
 
         {errorGeo && <p className="text-center text-red-300">{errorGeo}</p>}
       </form>
