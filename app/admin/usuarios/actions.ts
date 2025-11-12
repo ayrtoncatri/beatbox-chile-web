@@ -55,15 +55,28 @@ export async function editUser(prevState: any, formData: FormData) {
     }
 
     const isTargetAdmin = targetUser.roles.some(r => r.role.name === 'admin');
-    // La nueva lista de IDs de roles que vienen del formulario
-    const newRoleIds = parsed.roles;
+    // La nueva lista de IDs de roles que vienen del formulario (eliminar duplicados)
+    const newRoleIds = [...new Set(parsed.roles)];
     // Buscamos el ID del rol 'admin'
     const adminRole = await prisma.role.findUnique({ where: { name: 'admin' }, select: { id: true } });
 
-    // Si el usuario es admin, pero el rol 'admin' no está en los nuevos IDs...
-    if (isTargetAdmin && !newRoleIds.includes(adminRole!.id)) {
-      return { ok: false, error: "No tienes permisos para quitar el rol de 'admin' a un administrador." };
-    }
+    // Si el usuario es admin, asegurarnos de que el rol admin siempre esté presente
+    if (isTargetAdmin && adminRole) {
+      // Si el rol admin no está en los nuevos roles, agregarlo automáticamente
+      if (!newRoleIds.includes(adminRole.id)) {
+        newRoleIds.push(adminRole.id);
+      }
+      
+      // Verificar si realmente se está intentando quitar el rol de admin
+      const currentRoleIds = targetUser.roles.map(r => r.role.id);
+      const wasAdmin = currentRoleIds.includes(adminRole.id);
+      const willBeAdmin = newRoleIds.includes(adminRole.id);
+      
+      // Solo bloquear si realmente se está intentando quitar el rol de admin
+      if (wasAdmin && !willBeAdmin) {
+        return { ok: false, error: "No tienes permisos para quitar el rol de 'admin' a un administrador." };
+      }
+    }
 
     const updated = await prisma.$transaction(async (tx) => {
       

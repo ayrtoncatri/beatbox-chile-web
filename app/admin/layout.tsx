@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await ensureAdminPage();
 
   return (
-        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950 to-neutral-900 admin-panel">
+        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950 to-neutral-900 admin-panel overflow-x-hidden max-w-full">
       {/* Mobile top bar */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900/90 to-blue-800/90 backdrop-blur-lg shadow-lg border-b border-blue-700/30">
         <div className="flex items-center gap-2">
@@ -41,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </aside>
         {/* Main content */}
-        <main className="flex-1 p-4 md:p-10 relative z-0">{children}</main>
+        <main className="flex-1 p-4 md:p-10 relative z-0 overflow-x-hidden max-w-full">{children}</main>
       </div>
     </div>
   );

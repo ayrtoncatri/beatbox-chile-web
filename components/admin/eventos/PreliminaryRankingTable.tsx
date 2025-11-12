@@ -36,7 +36,7 @@ interface PreliminaryRankingTableProps {
 }
 
 export function PreliminaryRankingTable({ ranking, judges, allCategories }: PreliminaryRankingTableProps) {
-  const [selectedCategory, setSelectedCategory] = useState(allCategories[0]?.name || '');
+  const [selectedCategory, setSelectedCategory] = useState((allCategories && allCategories.length > 0) ? allCategories[0]?.name || '' : '');
 
   // Filtrar ranking por categoría seleccionada
   const filteredRanking = useMemo(() => {

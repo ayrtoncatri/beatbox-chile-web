@@ -61,29 +61,20 @@ export default function MobileSidebar() {
     };
   }, [open]);
 
-  const sidebarContent = open && mounted ? (
-    <>
-      <button
-        className="md:hidden p-2 rounded hover:bg-indigo-50"
-        onClick={() => setOpen(true)}
-        aria-label="Abrir menú"
-      >
-        <Bars3Icon className="w-7 h-7 text-indigo-600" />
-      </button>
-      {open && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/30" onClick={() => setOpen(false)} />
-          <aside className="relative w-64 bg-white h-full shadow-lg flex flex-col p-6 z-50">
+  const sidebarContent = mounted ? (
+    <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+          <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`} onClick={() => setOpen(false)} />
+          <aside className={`relative w-64 bg-gradient-to-b from-blue-900/95 via-blue-950/95 to-black/95 backdrop-blur-lg border-l border-blue-800/30 h-full shadow-2xl flex flex-col p-6 z-50 transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
-                <div className="rounded-full bg-indigo-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow">
+                <div className="rounded-full bg-gradient-to-br from-blue-500 to-blue-600 w-10 h-10 flex items-center justify-center text-white font-bold text-xl shadow-lg">
                   BB
                 </div>
-                <span className="text-lg font-bold tracking-tight text-gray-800">Beatbox Admin</span>
+                <span className="text-lg font-bold tracking-tight text-blue-100">Beatbox Admin</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-lg hover:bg-indigo-50 text-gray-700 transition-colors"
+                className="p-2 rounded-lg hover:bg-blue-800/50 text-blue-200 hover:text-blue-100 transition-colors"
                 aria-label="Cerrar menú"
               >
                 <XMarkIcon className="w-6 h-6" />
@@ -94,7 +85,7 @@ export default function MobileSidebar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all font-medium
                     ${
                       pathname === link.href
                         ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/50"
@@ -108,23 +99,21 @@ export default function MobileSidebar() {
                 </Link>
               ))}
               {/* Separador y enlace al sitio web público */}
-              <div className="my-2 border-t border-gray-300"></div>
+              <div className="my-2 border-t border-blue-700/30"></div>
               <Link
                 href="/"
-                className="flex items-center gap-3 px-4 py-2 rounded transition-colors text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                className="flex items-center gap-3 px-4 py-2 rounded transition-colors font-medium text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
                 onClick={() => setOpen(false)}
               >
                 <GlobeAltIcon className="w-5 h-5" />
                 Ir a sitio web
               </Link>
             </nav>
-            <div className="mt-auto pt-8 text-xs text-gray-400">
+            <div className="mt-auto pt-8 text-xs text-blue-400/70">
               &copy; {new Date().getFullYear()} Beatbox Chile
             </div>
           </aside>
         </div>
-      )}
-    </>
   ) : null;
 
   return (

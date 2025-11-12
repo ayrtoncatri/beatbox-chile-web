@@ -17,6 +17,12 @@ export default function BuzonIdeas() {
       return;
     }
 
+    // Validar que el usuario esté registrado antes de enviar
+    if (!session?.user) {
+      toast.error("Primero debes registrarte");
+      return;
+    }
+
     const userId = (session?.user as { id?: string })?.id;
     const loadingToast = toast.loading("Enviando idea...");
 
