@@ -21,7 +21,13 @@ async function main() {
     where: { name: 'user' },
     update: {},
     create: { name: 'user' },
+  }),
+  await prisma.role.upsert({
+    where: { name: 'participant' },
+    update: {},
+    create: { name: 'participant' },
   })
+  
 
   // 2. Crear Tipos de Evento (EventType)
   // ---------------------------------

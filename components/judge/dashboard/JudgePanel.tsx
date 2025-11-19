@@ -274,4 +274,4 @@ export function JudgePanel({
     </div>
   )
 }
-// (sin cambios de lógica; solo estilo)
+

@@ -401,10 +401,40 @@ export async function assignJudgeAction(prevState: AssignJudgeState, formData: F
       },
     });
 
+    if (phase === RoundPhase.PRELIMINAR) {
+      const battlePhases = [
+        RoundPhase.OCTAVOS,
+        RoundPhase.CUARTOS,
+        RoundPhase.SEMIFINAL,
+        RoundPhase.TERCER_LUGAR,
+        RoundPhase.FINAL,
+      ];
+
+      const autoAssignments = battlePhases.map((p) => ({
+        eventoId,
+        judgeId,
+        categoriaId,
+        phase: p,
+      }));
+
+      // Usamos createMany con skipDuplicates para no fallar si el admin
+      // ya había asignado manualmente alguna fase futura.
+      await prisma.judgeAssignment.createMany({
+        data: autoAssignments,
+        skipDuplicates: true, 
+      });
+    }
+
     // 3. Éxito
     revalidatePath(`/admin/eventos/${eventoId}`); // Refrescar la página del admin
     revalidatePath('/judge/dashboard'); // Refrescar el dashboard del juez asignado
-    return { ok: true, message: "Juez asignado exitosamente." };
+
+    const msg = phase === RoundPhase.PRELIMINAR 
+      ? "Juez asignado a Preliminar y fases de Batalla." 
+      : "Juez asignado exitosamente.";
+
+    return { ok: true, message: msg };
+    
   } catch (error: any) {
     // Manejar error si la asignación ya existe (por la llave unique)
     if (error.code === 'P2002') {
