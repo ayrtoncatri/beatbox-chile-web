@@ -1,12 +1,13 @@
-// /components/Historia.tsx
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// 1. IMPORTAMOS 'Variants'
+import { motion, AnimatePresence, Variants } from "framer-motion"; 
+import { ChevronLeftIcon, ChevronRightIcon, TrophyIcon } from "@heroicons/react/24/solid";
 
 const historialCampeonato = [
   {
     año: 2007,
-    titulo: "Primera Edición Campeonato Nacional",
+    titulo: "Primera Edición",
     campeon: "Gustabeat-o",
     subcampeon: "Looney",
     tagTeam: null,
@@ -14,7 +15,7 @@ const historialCampeonato = [
   },
   {
     año: 2008,
-    titulo: "Segunda Edición Campeonato Nacional",
+    titulo: "Segunda Edición",
     campeon: "Creabeatbox",
     subcampeon: "Migraña",
     tagTeam: null,
@@ -22,7 +23,7 @@ const historialCampeonato = [
   },
   {
     año: 2012,
-    titulo: "Tercera Edición Campeonato Nacional",
+    titulo: "Tercera Edición",
     campeon: "Mr. Androide",
     subcampeon: "Besbecko",
     tagTeam: null,
@@ -30,7 +31,7 @@ const historialCampeonato = [
   },
   {
     año: 2015,
-    titulo: "Cuarta Edición Campeonato Nacional",
+    titulo: "Cuarta Edición",
     campeon: "Onetime",
     subcampeon: "Vintrex",
     tagTeam: "Spectros Family (BCJ & MC Sura)",
@@ -38,7 +39,7 @@ const historialCampeonato = [
   },
   {
     año: 2016,
-    titulo: "Quinta Edición Campeonato Nacional",
+    titulo: "Quinta Edición",
     campeon: "Ex-bitt",
     subcampeon: "Karloz",
     tagTeam: "Trakloz (Trako & Karloz)",
@@ -46,7 +47,7 @@ const historialCampeonato = [
   },
   {
     año: 2017,
-    titulo: "Sexta Edición Campeonato Nacional",
+    titulo: "Sexta Edición",
     campeon: "Waali",
     subcampeon: "Patobeats",
     tagTeam: null,
@@ -54,7 +55,7 @@ const historialCampeonato = [
   },
   {
     año: 2018,
-    titulo: "Séptima Edición Campeonato Nacional",
+    titulo: "Séptima Edición",
     campeon: "Tomazacre (Masculino) / Nelbiclap (Femenino)",
     subcampeon: "Patobeats (Masculino) / Cornish (Femenino)",
     tagTeam: null,
@@ -62,7 +63,7 @@ const historialCampeonato = [
   },
   {
     año: 2019,
-    titulo: "Octava Edición Campeonato Nacional",
+    titulo: "Octava Edición",
     campeon: "Ex-BiTT (M) / Cornish (F)",
     subcampeon: "BCJ (M) / Nelbiclap (F)",
     tagTeam: "Abducted (Mr. Androide & Tomazacre)",
@@ -70,7 +71,7 @@ const historialCampeonato = [
   },
   {
     año: 2021,
-    titulo: "Novena Edición Campeonato Nacional",
+    titulo: "Novena Edición",
     campeon: "Xiphire (M)",
     subcampeon: "Onbeatz (M)",
     tagTeam: "D-Auditive (Inferno & Penta)",
@@ -78,27 +79,25 @@ const historialCampeonato = [
   },
 ];
 
-const variants: {
-    enter: (direction: number) => any;
-    center: any;
-    exit: (direction: number) => any;
-    } = {
-    enter: (direction: number) => ({
-        x: direction > 0 ? 300 : -300,
-        opacity: 0,
-        position: "absolute" as const,
-    }),
-    center: {
-        x: 0,
-        opacity: 1,
-        position: "relative" as const,
-        transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-    },
-    exit: (direction: number) => ({
-        x: direction > 0 ? -300 : 300,
-        opacity: 0,
-        position: "absolute" as const,
-        transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] },
+// 2. TIPAMOS LA CONSTANTE COMO 'Variants'
+const variants: Variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 100 : -100,
+    opacity: 0,
+    scale: 0.95,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    scale: 1,
+    // TypeScript a veces necesita ayuda con los arrays de easing, pero con el tipo Variants debería bastar.
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }, 
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -100 : 100,
+    opacity: 0,
+    scale: 0.95,
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
@@ -115,63 +114,109 @@ export default function Historia() {
   const edicion = historialCampeonato[idx];
 
   return (
-    <section className="flex flex-col items-center bg-gradient-to-br from-[#182642]/90 via-[#101e34]/90 to-[#1a2453]/80 shadow-2xl backdrop-blur-lg border border-blue-700/20 rounded-3xl px-7 py-9 max-w-xl mx-auto mt-4"
-      style={{
-        boxShadow: "0 4px 24px 4px rgba(40,70,180,0.25)",
-        background: "linear-gradient(120deg, #151E2E 90%, #1B254B 100%)",
-      }}
-    >
-      <div className="w-full flex justify-between items-center mb-6">
-        <button
-          onClick={() => change(-1)}
-          className="transition shadow-lg hover:scale-110 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-full p-3 hover:from-blue-700 hover:to-blue-500 focus:outline-none"
-          aria-label="Anterior"
-        >
-          <svg width="24" height="24" fill="currentColor"><path d="M15.5 19 9.5 12l6-7"/></svg>
-        </button>
-        <span className="text-2xl md:text-2xl font-bold text-blue-100 text-center flex-1 px-4">
-          {edicion.año} <span className="font-extrabold text-blue-300">—</span> {edicion.titulo}
-        </span>
-        <button
-          onClick={() => change(1)}
-          className="transition shadow-lg hover:scale-110 bg-gradient-to-l from-blue-600 to-blue-400 text-white rounded-full p-3 hover:from-blue-700 hover:to-blue-500 focus:outline-none"
-          aria-label="Siguiente"
-        >
-          <svg width="24" height="24" fill="currentColor"><path d="M8.5 5l6 7-6 7"/></svg>
-        </button>
+    <section className="w-full max-w-3xl mx-auto py-12 px-4">
+      
+      {/* HEADER: Título de la Sección */}
+      <div className="text-center mb-10">
+        <h2 className="text-4xl md:text-5xl font-black text-white uppercase italic tracking-tighter">
+            El Legado <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Histórico</span>
+        </h2>
+        <div className="h-1 w-24 bg-blue-600 mx-auto mt-2 rounded-full" />
       </div>
-      <div className="relative w-full min-h-[200px]">
-        <AnimatePresence custom={direction} mode="wait" initial={false}>
-          <motion.div
-            key={idx}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="w-full"
-          >
-            <div className="text-lg">
-              <p>
-                <span className="font-bold text-blue-300">Campeón:</span> <span className="font-medium text-yellow-300">{edicion.campeon}</span>
-              </p>
-              <p>
-                <span className="font-bold text-blue-300">Subcampeón:</span> <span className="font-medium text-yellow-300">{edicion.subcampeon}</span>
-              </p>
-              {edicion.tagTeam && (
-                <p>
-                  <span className="font-bold text-blue-300">Tag Team:</span>{" "}
-                  <span className="font-medium">{edicion.tagTeam}</span>
-                </p>
-              )}
-              <p className="mt-5 text-blue-100 leading-relaxed">{edicion.descripcion}</p>
+
+      {/* TARJETA PRINCIPAL */}
+      <div className="relative bg-[#0a0a0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl group">
+        
+        {/* Efecto de borde brillante (Glow) */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
+
+        <div className="relative bg-[#0c0c12] p-6 md:p-10 rounded-3xl h-full flex flex-col justify-between min-h-[400px]">
+            
+            {/* NAVEGACIÓN SUPERIOR */}
+            <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+                <button onClick={() => change(-1)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all hover:-translate-x-1">
+                    <ChevronLeftIcon className="w-6 h-6" />
+                </button>
+                
+                <div className="text-center">
+                    <span className="block text-5xl font-black text-white/10 absolute left-1/2 -translate-x-1/2 -top-2 select-none pointer-events-none">
+                        {edicion.año}
+                    </span>
+                    <h3 className="relative text-2xl font-bold text-white uppercase tracking-wide">
+                        {edicion.año}
+                    </h3>
+                    <span className="text-xs text-blue-400 font-bold tracking-widest uppercase">
+                        {edicion.titulo}
+                    </span>
+                </div>
+
+                <button onClick={() => change(1)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all hover:translate-x-1">
+                    <ChevronRightIcon className="w-6 h-6" />
+                </button>
             </div>
-          </motion.div>
-        </AnimatePresence>
+
+            {/* CONTENIDO ANIMADO */}
+            <div className="relative flex-1 overflow-hidden">
+                <AnimatePresence custom={direction} mode="wait" initial={false}>
+                    <motion.div
+                        key={idx}
+                        custom={direction}
+                        variants={variants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        className="w-full h-full flex flex-col justify-center"
+                    >
+                        <div className="space-y-6 text-center">
+                            
+                            {/* CAMPEÓN */}
+                            <div className="space-y-1">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold uppercase tracking-widest mb-2">
+                                    <TrophyIcon className="w-3 h-3" /> Campeón
+                                </div>
+                                <h4 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
+                                    {edicion.campeon}
+                                </h4>
+                            </div>
+
+                            {/* SUBCAMPEÓN & TAG TEAM */}
+                            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-8 text-sm">
+                                <div>
+                                    <span className="text-gray-500 font-bold uppercase text-xs block mb-1">Subcampeón</span>
+                                    <span className="text-gray-300 font-semibold text-lg">{edicion.subcampeon}</span>
+                                </div>
+                                {edicion.tagTeam && (
+                                    <div>
+                                        <span className="text-gray-500 font-bold uppercase text-xs block mb-1">Tag Team</span>
+                                        <span className="text-blue-300 font-semibold text-lg">{edicion.tagTeam}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* DESCRIPCIÓN */}
+                            <div className="pt-6 border-t border-white/5">
+                                <p className="text-gray-400 leading-relaxed text-sm md:text-base max-w-xl mx-auto italic">
+                                    "{edicion.descripcion}"
+                                </p>
+                            </div>
+
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* PAGINACIÓN (DOTS) */}
+            <div className="flex justify-center gap-2 mt-8">
+                {historialCampeonato.map((_, i) => (
+                    <div 
+                        key={i} 
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? 'w-8 bg-blue-500' : 'w-1.5 bg-white/20'}`}
+                    />
+                ))}
+            </div>
+        </div>
       </div>
-      <div className="mt-7 text-blue-400 tracking-widest text-lg font-semibold">
-        {idx + 1} <span className="opacity-50">/</span> {total}
-      </div>
+
     </section>
   );
 }
