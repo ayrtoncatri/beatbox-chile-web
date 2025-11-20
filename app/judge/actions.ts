@@ -1,14 +1,17 @@
-// app/judge/actions.ts
-'use server' // ¡Muy importante! Marca este archivo como Server Actions
+'use server' 
 
 import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
 import { submitScoreSchema, SubmitScorePayload } from '@/lib/schemas/judging'
 import { authOptions } from '@/lib/auth'
-import { RoundPhase } from '@prisma/client'
+// CORRECCIÓN: Añadimos ScoreStatus a la importación
+import { RoundPhase, ScoreStatus } from '@prisma/client'
+import { z } from 'zod'
 
-// Esta es la función que llamará nuestro formulario
+const bulkSubmitSchema = z.array(submitScoreSchema)
+
+// Esta es la función que llamará nuestro formulario individual (Mantener igual)
 export async function submitScore(
   payload: SubmitScorePayload
 ): Promise<{ success: boolean; error?: any; data?: any }> {
@@ -135,5 +138,101 @@ export async function submitScore(
   } catch (error) {
     console.error('Error en Server Action submitScore:', error)
     return { success: false, error: 'Error interno del servidor' }
+  }
+}
+
+// === NUEVA FUNCIÓN: BULK SUBMIT ===
+export async function submitBulkScores(
+  payloads: SubmitScorePayload[]
+): Promise<{ success: boolean; count?: number; error?: any }> {
+  try {
+    // 1. Validación Zod del Array
+    const validation = bulkSubmitSchema.safeParse(payloads)
+    if (!validation.success) {
+      return { success: false, error: validation.error.format() }
+    }
+    const dataList = validation.data
+
+    if (dataList.length === 0) return { success: true, count: 0 }
+
+    // 2. Auth
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return { success: false, error: 'No autorizado' }
+    const judgeId = session.user.id
+
+    // 3. Transacción Atómica
+    // Ejecutamos todas las operaciones de BD secuencialmente pero en una sola transacción.
+    // Si una falla, todas fallan (evita estados corruptos).
+    await prisma.$transaction(async (tx) => {
+      for (const data of dataList) {
+        // Recalcular Total (Seguridad Backend)
+        const criterios = await tx.criterio.findMany({
+            where: { categoriaId: data.categoriaId },
+            select: { id: true, maxScore: true }
+        })
+        
+        let totalScore = 0
+        for (const s of data.scores) {
+            const crit = criterios.find(c => c.id === s.criterioId)
+            if (crit) {
+                // Cap de seguridad
+                const safeValue = Math.min(s.value, crit.maxScore)
+                totalScore += safeValue
+            }
+        }
+
+        // Upsert Individual dentro de la transacción
+        await tx.score.upsert({
+          where: {
+            eventoId_categoriaId_phase_judgeId_participantId_roundNumber: {
+              eventoId: data.eventoId,
+              categoriaId: data.categoriaId,
+              phase: data.phase,
+              judgeId: judgeId,
+              participantId: data.participantId,
+              roundNumber: data.roundNumber || 1,
+            },
+          },
+          create: {
+            eventoId: data.eventoId,
+            categoriaId: data.categoriaId,
+            phase: data.phase,
+            judgeId: judgeId,
+            participantId: data.participantId,
+            roundNumber: data.roundNumber || 1,
+            battleId: data.battleId,
+            totalScore,
+            notes: data.notes,
+            status: ScoreStatus.SUBMITTED, // FORZAMOS SUBMITTED (Ahora sí funcionará)
+            details: {
+              create: data.scores.map(s => ({
+                criterioId: s.criterioId,
+                value: s.value
+              }))
+            }
+          },
+          update: {
+            totalScore,
+            notes: data.notes,
+            status: ScoreStatus.SUBMITTED, // FORZAMOS SUBMITTED
+            battleId: data.battleId,
+            details: {
+              deleteMany: {}, // Borramos detalles previos
+              create: data.scores.map(s => ({
+                criterioId: s.criterioId,
+                value: s.value
+              }))
+            }
+          }
+        })
+      }
+    })
+
+    revalidatePath('/judge/dashboard')
+    return { success: true, count: dataList.length }
+
+  } catch (error) {
+    console.error('Bulk Submit Error:', error)
+    return { success: false, error: 'Error procesando el envío masivo.' }
   }
 }

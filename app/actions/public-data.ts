@@ -468,7 +468,7 @@ export async function getPublicEventBracket(eventoId: string) {
       participantA: {
         id: b.participantAId,
         name:
-          b.participantA.inscripciones[0]?.nombreArtistico || 'Participante A',
+          b.participantA?.inscripciones[0]?.nombreArtistico || 'Participante A',
       },
       participantB: {
         id: b.participantBId,

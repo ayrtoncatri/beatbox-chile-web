@@ -5,9 +5,16 @@ import {  useFormStatus } from 'react-dom';
 import { RoundPhase } from '@prisma/client';
 import { InformationCircleIcon, ExclamationTriangleIcon, CheckCircleIcon, TrophyIcon, CogIcon } from '@heroicons/react/24/solid';
 import React from 'react';
-import { useActionState } from 'react'
+import { useState, useEffect, useActionState } from 'react'
 
-// --- (1) Definir los tipos de props ---
+const PHASE_PARTICIPANTS_MAP: Record<string, number> = {
+  "OCTAVOS": 16,
+  "CUARTOS": 8,
+  "SEMIFINAL": 4,
+  "TERCER_LUGAR": 2,
+  "FINAL": 2
+};
+
 type Category = {
   id: string;
   name: string;
@@ -15,15 +22,14 @@ type Category = {
 
 interface BracketGeneratorProps {
   eventoId: string;
-  activeCategories: Category[]; // Las categorías activas para este evento
+  activeCategories: Category[]; 
 }
 
-// --- (2) Filtrar las fases para mostrar solo las de Batalla ---
 const battlePhases = Object.values(RoundPhase).filter(
   (phase) => phase !== 'WILDCARD' && phase !== 'PRELIMINAR'
 );
 
-// --- (3) Botón de Envío Estilizado ---
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -41,10 +47,21 @@ function SubmitButton() {
   );
 }
 
-// --- (4) Componente Principal del Formulario ---
 export function BracketGenerator({ eventoId, activeCategories }: BracketGeneratorProps) {
   const initialState = { error: undefined, success: undefined, log: [] };
   const [state, dispatch] = useActionState(generateBrackets, initialState);
+
+  const [selectedPhase, setSelectedPhase] = useState<string>(
+    battlePhases.includes(RoundPhase.OCTAVOS) ? RoundPhase.OCTAVOS : battlePhases[0]
+  );
+  
+  const [participantCount, setParticipantCount] = useState<number>(16);
+
+  // Efecto: Cuando cambia la fase, actualiza automáticamente el número de participantes requeridos
+  useEffect(() => {
+    const count = PHASE_PARTICIPANTS_MAP[selectedPhase] || 0;
+    setParticipantCount(count);
+  }, [selectedPhase]);
 
   return (
     <div className="bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-950/80 backdrop-blur-lg border border-blue-700/30 rounded-2xl shadow-lg overflow-hidden">
@@ -94,12 +111,13 @@ export function BracketGenerator({ eventoId, activeCategories }: BracketGenerato
               id="phase"
               name="phase"
               required
-              className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
-                         ring-1 ring-inset ring-blue-700/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
+              value={selectedPhase}
+              onChange={(e) => setSelectedPhase(e.target.value)}
+              className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm ring-1 ring-inset ring-blue-700/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
             >
               {battlePhases.map((phase) => (
                 <option key={phase} value={phase}>
-                  {phase} (ej. 1v1)
+                  {phase}
                 </option>
               ))}
             </select>
@@ -107,22 +125,22 @@ export function BracketGenerator({ eventoId, activeCategories }: BracketGenerato
 
           {/* Dropdown de # de Participantes */}
           <div>
-            <label htmlFor="participantCount" className="block text-sm font-semibold leading-6 text-blue-300">
-              Nº de Participantes
+            <label htmlFor="participantCountDisplay" className="block text-sm font-semibold leading-6 text-blue-300">
+              Nº de Participantes (Auto)
             </label>
-            <select
-              id="participantCount"
-              name="participantCount"
-              required
-              className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 pr-10 bg-blue-950/50 border-blue-700/50 text-blue-100 shadow-sm
-                         ring-1 ring-inset ring-blue-700/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
-            >
-              <option value="32">Top 32 (Dieciseisavos)</option>
-              <option value="16">Top 16 (Octavos)</option>
-              <option value="8">Top 8 (Cuartos)</option>
-              <option value="4">Top 4 (Semifinal)</option>
-              <option value="2">Top 2 (Final)</option>
-            </select>
+            
+            {/* Input visual deshabilitado para UX */}
+            <input 
+                type="text" 
+                id="participantCountDisplay"
+                value={`Top ${participantCount}`}
+                readOnly
+                disabled
+                className="mt-2 block w-full rounded-md border-0 py-2.5 pl-3 bg-blue-900/30 text-blue-400 shadow-sm ring-1 ring-inset ring-blue-800/50 sm:text-sm sm:leading-6 cursor-not-allowed font-mono"
+            />
+            
+            {/* Input hidden real para enviar el valor al Server Action */}
+            <input type="hidden" name="participantCount" value={participantCount} />
           </div>
         </div>
 

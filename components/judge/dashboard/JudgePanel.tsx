@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type {
   JudgeAssignment,
@@ -16,9 +16,12 @@ import type {
   Battle,
 } from '@prisma/client'
 import { RoundPhase } from '@prisma/client'
+import { toast } from 'react-hot-toast'
 
 import { JudgeScoreForm } from '@/components/judge/dashboard/JudgeScoreForm'
 import { BattleScoreForm } from '@/components/judge/dashboard/BattleScoreForm'
+import { submitBulkScores } from '@/app/judge/actions' 
+import { SubmitScorePayload } from '@/lib/schemas/judging'
 
 type FullJudgeAssignment = JudgeAssignment & { evento: Evento; categoria: Categoria }
 type FullScore = Score & { details: ScoreDetail[] }
@@ -26,10 +29,14 @@ type FullParticipant = Inscripcion & {
   user: (User & { profile: UserProfile | null });
   wildcard: { youtubeUrl: string } | null;
 }
+
+// --- CORRECCIÓN DE TIPO AQUÍ ---
+// Ahora participantA también puede ser null o undefined
 type FullBattle = Battle & {
-  participantA: User & { profile: UserProfile | null, inscripciones: { nombreArtistico: string | null }[] };
+  participantA: (User & { profile: UserProfile | null, inscripciones: { nombreArtistico: string | null }[] }) | null;
   participantB: (User & { profile: UserProfile | null, inscripciones: { nombreArtistico: string | null }[] }) | null;
 }
+
 type FullApprovedWildcard = Wildcard & {
   user: (User & { profile: UserProfile | null });
 }
@@ -43,8 +50,6 @@ interface JudgePanelProps {
   approvedWildcards: FullApprovedWildcard[]
 }
 
-const springTransition = { type: 'spring', stiffness: 300, damping: 30 };
-
 export function JudgePanel({
   assignments,
   allCriterios,
@@ -55,6 +60,10 @@ export function JudgePanel({
 }: JudgePanelProps) {
 
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(assignments[0]?.id || '')
+  const [isPending, startTransition] = useTransition()
+
+  const [readyScores, setReadyScores] = useState<Record<string, SubmitScorePayload>>({})
+
   const selectedAssignment = assignments.find(a => a.id === selectedAssignmentId)
 
   const isBattlePhase =
@@ -65,6 +74,39 @@ export function JudgePanel({
     ? allCriterios.filter(c => c.categoriaId === selectedAssignment.categoriaId)
     : []
 
+  const handleScoreChange = useCallback((participantId: string, data: SubmitScorePayload | null, isValid: boolean) => {
+    setReadyScores(prev => {
+        const next = { ...prev }
+        if (isValid && data) {
+            next[participantId] = data
+        } else {
+            delete next[participantId]
+        }
+        return next
+    })
+  }, [])
+
+  const handleBulkSubmit = () => {
+      const scoresToSubmit = Object.values(readyScores).filter(s => 
+          s.categoriaId === selectedAssignment?.categoriaId && 
+          s.phase === selectedAssignment?.phase
+      );
+
+      if (scoresToSubmit.length === 0) return;
+
+      const tId = toast.loading(`Enviando ${scoresToSubmit.length} evaluaciones...`)
+      
+      startTransition(async () => {
+          const res = await submitBulkScores(scoresToSubmit)
+          if (res.success) {
+              toast.success(`¡${res.count} evaluaciones enviadas!`, { id: tId })
+              setReadyScores({}) 
+          } else {
+              toast.error('Hubo un error en el envío masivo', { id: tId })
+          }
+      })
+  }
+  
   // ---------- helpers UI ----------
   const PanelTag = ({ text }: { text: string }) => (
     <div className="relative inline-block -skew-x-6">
@@ -85,6 +127,7 @@ export function JudgePanel({
   const renderShowcaseForms = () => {
     if (!selectedAssignment) return null;
 
+    // WILDCARD
     if (selectedAssignment.phase === RoundPhase.WILDCARD) {
       const relevantWildcards = approvedWildcards.filter(w =>
         w.eventoId === selectedAssignment.eventoId &&
@@ -96,7 +139,7 @@ export function JudgePanel({
       }
 
       return (
-        <div className="flex flex-col gap-20">
+        <div className="flex flex-col gap-20 pb-32">
             {relevantWildcards.map(wildcard => {
             const existingScore = initialScores.find(s =>
                 s.participantId === wildcard.userId &&
@@ -120,6 +163,7 @@ export function JudgePanel({
                     assignment={selectedAssignment}
                     criterios={relevantCriterios}
                     existingScore={existingScore || null}
+                    onDataChange={handleScoreChange}
                 />
                 </div>
             );
@@ -139,7 +183,7 @@ export function JudgePanel({
     }
 
     return (
-      <div className="flex flex-col gap-20">
+      <div className="flex flex-col gap-20 pb-32">
         {relevantParticipants.map(participant => {
           const existingScore = initialScores.find(s =>
             s.participantId === participant.userId &&
@@ -163,6 +207,7 @@ export function JudgePanel({
                 assignment={selectedAssignment}
                 criterios={relevantCriterios}
                 existingScore={existingScore || null}
+                onDataChange={handleScoreChange}
               />
               <div className="mt-10 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </section>
@@ -189,7 +234,7 @@ export function JudgePanel({
     }
 
     return (
-      <div className="flex flex-col gap-20">
+      <div className="flex flex-col gap-20 pb-20">
         {relevantBattles.map(battle => (
           <section key={battle.id} className="pt-2">
             <BattleScoreForm
@@ -205,11 +250,11 @@ export function JudgePanel({
     );
   };
 
-  // ---------- LAYOUT FLUIDO (sin tarjetas) ----------
+  // ---------- LAYOUT FLUIDO ----------
   return (
     <div
       className="
-        relative px-5 md:px-10 py-8 md:py-12 bg-[#0b0b10] text-blue-50 space-y-10
+        relative min-h-screen px-5 md:px-10 py-8 md:py-12 bg-[#0b0b10] text-blue-50 space-y-10
         before:pointer-events-none before:absolute before:inset-0
         before:bg-[radial-gradient(90%_60%_at_10%_0%,rgba(124,58,237,0.10),transparent_60%),radial-gradient(80%_55%_at_90%_0%,rgba(56,189,248,0.08),transparent_55%)]
       "
@@ -242,7 +287,10 @@ export function JudgePanel({
             id="assignment"
             name="assignment"
             value={selectedAssignmentId}
-            onChange={(e) => setSelectedAssignmentId(e.target.value)}
+            onChange={(e) => {
+                setSelectedAssignmentId(e.target.value);
+                setReadyScores({}); 
+            }}
             className="
               w-full appearance-none rounded-xl border border-white/10 bg-[#0c0c12]/80 px-3 py-2.5
               text-sm shadow-sm outline-none
@@ -271,7 +319,42 @@ export function JudgePanel({
           </AnimatePresence>
         </div>
       )}
+
+      {/* === STICKY FOOTER: BULK SUBMIT BUTTON === */}
+      <AnimatePresence>
+         {Object.keys(readyScores).length > 0 && (
+            <motion.div
+               initial={{ y: 100, opacity: 0 }}
+               animate={{ y: 0, opacity: 1 }}
+               exit={{ y: 100, opacity: 0 }}
+               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+               className="fixed bottom-6 left-0 right-0 z-50 mx-auto w-max max-w-[90vw]"
+            >
+               <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0c0c12]/90 p-2 pl-5 shadow-2xl backdrop-blur-xl ring-1 ring-white/5">
+                  <div className="flex flex-col">
+                     <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">Evaluaciones Listas</span>
+                     <span className="text-sm font-medium text-white">{Object.keys(readyScores).length} completas</span>
+                  </div>
+                  
+                  <button
+                     onClick={handleBulkSubmit}
+                     disabled={isPending}
+                     className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-fuchsia-600 to-sky-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-fuchsia-500/25 disabled:opacity-70"
+                  >
+                     {isPending ? (
+                         <span className="flex items-center gap-2">
+                            <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Enviando...
+                         </span>
+                     ) : (
+                         `Enviar Todo (${Object.keys(readyScores).length})`
+                     )}
+                  </button>
+               </div>
+            </motion.div>
+         )}
+      </AnimatePresence>
+
     </div>
   )
 }
-// (sin cambios de lógica; solo estilo)

@@ -145,6 +145,7 @@ model Venue {
 model User {
   id         String       @id @default(cuid())
   email      String       @unique
+  name       String?
   password   String?
   image      String?
   isActive   Boolean      @default(true)
@@ -577,8 +578,8 @@ model Battle {
   orderInRound Int       @default(1)
 
   // --- Participantes ---
-  participantAId String
-  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantAId String?
+  participantA   User?    @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
   
   participantBId String? // Puede ser nulo si el oponente aún no se define (ej. ganador de otra batalla)
   participantB   User?   @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: SetNull)
@@ -591,9 +592,9 @@ model Battle {
   loserVotes  Int @default(0)
 
   // (Opcional) Enlace para la siguiente batalla (ej. ganador de Octavos 1 va a Cuartos 1)
-  nextBattleId String?  @unique
+  nextBattleId String?  
   nextBattle   Battle?  @relation("NextBattle", fields: [nextBattleId], references: [id], onDelete: SetNull)
-  prevBattle   Battle?  @relation("NextBattle") // Batalla anterior que alimenta esta
+  prevBattles  Battle[] @relation("NextBattle")// Batalla anterior que alimenta esta
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
