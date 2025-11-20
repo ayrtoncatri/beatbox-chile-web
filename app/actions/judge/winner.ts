@@ -113,6 +113,22 @@ export async function declareBattleWinner(
       else if (scoreB > scoreA) votosB++;
     }
 
+    const getTournamentName = async (userId: string) => {
+        const inscripcion = await prisma.inscripcion.findFirst({
+            where: { userId: userId, eventoId: battle.eventoId },
+            select: { nombreArtistico: true }
+        });
+        
+        if (inscripcion?.nombreArtistico) return inscripcion.nombreArtistico;
+
+        // Fallback: Buscar nombre real si no tiene AKA inscrito
+        const profile = await prisma.userProfile.findUnique({
+             where: { userId }, 
+             select: { nombres: true, apellidoPaterno: true }
+        });
+        return profile ? `${profile.nombres} ${profile.apellidoPaterno}` : 'Participante';
+    };
+
     // 5. Decidir ganador por VOTOS
     let winnerId: string;
     let winnerName: string;
@@ -120,13 +136,11 @@ export async function declareBattleWinner(
     let finalLoserVotes: number;
 
     if (votosA > votosB) {
-      // TypeScript ya sabe que participantAId existe por la validación inicial, 
-      // pero battle.participantA podría ser null según el tipo autogenerado.
-      // Hacemos un check de seguridad extra o usamos '!' si estamos seguros.
       if (!battle.participantA) return { error: 'Error en datos de Participante A' };
 
       winnerId = battle.participantAId!;
-      winnerName = battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
+      winnerName = await getTournamentName(winnerId);
+
       finalWinnerVotes = votosA; 
       finalLoserVotes = votosB;
 
@@ -134,7 +148,7 @@ export async function declareBattleWinner(
       if (!battle.participantB) return { error: 'Error en datos de Participante B' };
 
       winnerId = battle.participantBId!;
-      winnerName = battle.participantB.inscripciones[0]?.nombreArtistico || 'Participante B';
+      winnerName = await getTournamentName(winnerId);
       finalWinnerVotes = votosB;
       finalLoserVotes = votosA;
     } else {

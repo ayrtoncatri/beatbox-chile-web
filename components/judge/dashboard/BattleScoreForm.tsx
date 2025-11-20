@@ -10,6 +10,7 @@ import { useFormStatus } from 'react-dom';
 import toast from 'react-hot-toast';
 import { submitBulkScores } from '@/app/judge/actions'; 
 import { SubmitScorePayload } from '@/lib/schemas/judging';
+import { WinnerRevealModal } from '@/components/judge/ui/WinnerRevealModal';
 
 // --- Tipos de Props ---
 // Importante: participantA ahora puede ser null en la DB, aunque en la UI de evaluación
@@ -39,33 +40,54 @@ function DeclareWinnerButton({ battleId, canDeclare }: { battleId: string, canDe
   const [state, dispatch] = useActionState(declareBattleWinner, initialState);
   const { pending } = useFormStatus();
 
+  // Estados para el Modal Visual
+  const [showModal, setShowModal] = useState(false);
+  const [finalWinnerName, setFinalWinnerName] = useState('');
+
   useEffect(() => {
-    if (state.success) toast.success(`${state.success}`);
-    else if (state.error) toast.error(state.error);
-  }, [state.success, state.error]);
+    if (state.success) {
+      // 1. Guardamos el nombre para mostrarlo
+      setFinalWinnerName(state.winnerName || 'Ganador Indefinido');
+      // 2. Abrimos el Modal con Animación
+      setShowModal(true);
+      // 3. Toast de respaldo
+      toast.success(`${state.success}`, { duration: 4000 });
+    } else if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.success, state.error, state.winnerName]);
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <form action={dispatch} className="flex gap-2 items-center">
-        <input type="hidden" name="battleId" value={battleId} />
-        
-        {!canDeclare && (
-            <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-amber-400/10 text-amber-200 border border-amber-400/20">
-                <LockClosedIcon className="w-3 h-3" /> Requiere envío de puntajes
-            </span>
-        )}
+    <>
+        {/* --- EL MODAL VA AQUÍ (Renderizado condicional o siempre montado con AnimatePresence dentro) --- */}
+        <WinnerRevealModal 
+            isOpen={showModal} 
+            onClose={() => setShowModal(false)} 
+            winnerName={finalWinnerName}
+        />
 
-        <button
-          type="submit"
-          disabled={!canDeclare || pending}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 via-purple-600 to-sky-600
-            px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-900/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          <TrophyIcon className="w-5 h-5" />
-          {pending ? 'Declarando...' : 'Declarar Ganador'}
-        </button>
-      </form>
-    </div>
+        <div className="flex flex-col items-end gap-2">
+          <form action={dispatch} className="flex gap-2 items-center">
+            <input type="hidden" name="battleId" value={battleId} />
+            
+            {!canDeclare && (
+                <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-amber-400/10 text-amber-200 border border-amber-400/20">
+                    <LockClosedIcon className="w-3 h-3" /> Requiere envío de puntajes
+                </span>
+            )}
+
+            <button
+              type="submit"
+              disabled={!canDeclare || pending}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 via-purple-600 to-sky-600
+                px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-900/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <TrophyIcon className="w-5 h-5" />
+              {pending ? 'Declarando...' : 'Declarar Ganador'}
+            </button>
+          </form>
+        </div>
+    </>
   );
 }
 
