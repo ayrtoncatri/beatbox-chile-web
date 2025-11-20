@@ -2,14 +2,14 @@ import Image from "next/image";
 
 const noticias = [
   {
-    title: "Ganadores Wildcard Categoria Solo",
-    excerpt: "¡Ya están los ganadores de las wildcards categoria solo!",
-    img: "Ganadores-Wildcard.webp"
+    title: "Clasificados Categoria Solo",
+    excerpt: "¡Ya están los clasificados para la categoria solo!",
+    img: "clasificados-solo.webp"
   },
   {
-    title: "Ganadores Wildcard Categoria Tag Team",
-    excerpt: "¡Ya están los ganadores de las wildcards categoria Tag Team!",
-    img: "Ganadores-Wildcard-tt.webp"
+    title: "Clasificados Categoria Tag Team",
+    excerpt: "¡Ya están los clasificados para la categoria Tag Team!",
+    img: "clasificados-tagteam.webp"
   },
 ];
 

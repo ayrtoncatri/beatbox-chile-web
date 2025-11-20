@@ -50,7 +50,7 @@ function EventoCard({ evento }: { evento: any }) {
       <div className="relative h-48 w-full">
         {/* Imagen del Evento */}
         <Image
-          src={evento.image || '/liga-nacional.png'} // <-- ¡Asegúrate de tener una imagen fallback!
+          src={evento.image || '/liga-nacional.webp'} // <-- ¡Asegúrate de tener una imagen fallback!
           alt={evento.nombre}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-110"
