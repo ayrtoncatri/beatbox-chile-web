@@ -59,59 +59,58 @@ export async function declareBattleWinner(
       },
     });
 
-    if (!battle || !battle.participantBId) {
-      return { error: 'Batalla incompleta o no encontrada.' };
+    // --- CORRECCIÓN AQUÍ: Validamos que existan AMBOS participantes ---
+    // Como ahora en la DB son opcionales, aquí debemos ser estrictos:
+    // No se puede declarar ganador si falta alguno de los dos.
+    if (!battle || !battle.participantAId || !battle.participantBId || !battle.participantA || !battle.participantB) {
+      return { error: 'Batalla incompleta (faltan participantes) o no encontrada.' };
     }
     
+    // === VALIDACIÓN DE QUÓRUM DE JUECES ===
+    const totalAssignedJudges = await prisma.judgeAssignment.count({
+        where: {
+            eventoId: battle.eventoId,
+            categoriaId: battle.categoriaId,
+            phase: battle.phase
+        }
+    });
+
     const judgeScores = await prisma.score.groupBy({
-      by: ['judgeId', 'participantId'], // <--- CAMBIO CLAVE
+      by: ['judgeId', 'participantId'],
       where: {
         battleId: battleId,
-        status: ScoreStatus.SUBMITTED, // Solo puntajes finales
+        status: ScoreStatus.SUBMITTED,
       },
       _sum: {
-        totalScore: true, // Suma R1 + R2 para ese juez/participante
+        totalScore: true,
       },
     });
 
-    // 4. Mapear puntajes y contar VOTOS
-    type JudgeScoreGroup = (typeof judgeScores)[0];
-    const judgeIds = [...new Set(judgeScores.map((s) => s.judgeId))];
-    const totalJudges = judgeIds.length;
+    const votingJudgesIds = [...new Set(judgeScores.map((s) => s.judgeId))];
+    const currentVotesCount = votingJudgesIds.length;
 
-    if (totalJudges < 2) {
-      // Regla: Mínimo 2 jueces para declarar ganador
-      return {
-        error: `Solo ${totalJudges} juez(es) han enviado puntajes finales.`,
-      };
+    if (currentVotesCount < totalAssignedJudges && currentVotesCount < 3) {
+        return {
+            error: `Faltan votos. Han votado ${currentVotesCount} de ${totalAssignedJudges} jueces. Se requieren al menos 3.`
+        };
     }
+
+    // ---------------------------------------------------------
 
     let votosA = 0;
     let votosB = 0;
 
-    // Iteramos por cada juez que haya votado
-    for (const judgeId of judgeIds) {
-      // Obtenemos el puntaje total de este juez para el Participante A
-      const scoreA =
-        judgeScores.find(
-          (s) =>
-            s.judgeId === judgeId && s.participantId === battle.participantAId
+    for (const judgeId of votingJudgesIds) {
+      const scoreA = judgeScores.find(
+          (s) => s.judgeId === judgeId && s.participantId === battle.participantAId
         )?._sum.totalScore || 0;
 
-      // Obtenemos el puntaje total de este juez para el Participante B
-      const scoreB =
-        judgeScores.find(
-          (s) =>
-            s.judgeId === judgeId && s.participantId === battle.participantBId
+      const scoreB = judgeScores.find(
+          (s) => s.judgeId === judgeId && s.participantId === battle.participantBId
         )?._sum.totalScore || 0;
 
-      // Comparamos y asignamos el voto
-      if (scoreA > scoreB) {
-        votosA++;
-      } else if (scoreB > scoreA) {
-        votosB++;
-      }
-      // Si (scoreA === scoreB), es un empate para ese juez. No se suma voto.
+      if (scoreA > scoreB) votosA++;
+      else if (scoreB > scoreA) votosB++;
     }
 
     // 5. Decidir ganador por VOTOS
@@ -121,42 +120,85 @@ export async function declareBattleWinner(
     let finalLoserVotes: number;
 
     if (votosA > votosB) {
-      // <--- Lógica de victoria actualizada
-      winnerId = battle.participantAId;
-      winnerName =
-        battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
+      // TypeScript ya sabe que participantAId existe por la validación inicial, 
+      // pero battle.participantA podría ser null según el tipo autogenerado.
+      // Hacemos un check de seguridad extra o usamos '!' si estamos seguros.
+      if (!battle.participantA) return { error: 'Error en datos de Participante A' };
+
+      winnerId = battle.participantAId!;
+      winnerName = battle.participantA.inscripciones[0]?.nombreArtistico || 'Participante A';
       finalWinnerVotes = votosA; 
       finalLoserVotes = votosB;
+
     } else if (votosB > votosA) {
-      // <--- Lógica de victoria actualizada
-      winnerId = battle.participantBId;
-      winnerName =
-        battle.participantB?.inscripciones[0]?.nombreArtistico || 'Participante B';
-      finalWinnerVotes = votosA; // Guardamos el recuento de A
-      finalLoserVotes = votosB;
+      if (!battle.participantB) return { error: 'Error en datos de Participante B' };
+
+      winnerId = battle.participantBId!;
+      winnerName = battle.participantB.inscripciones[0]?.nombreArtistico || 'Participante B';
+      finalWinnerVotes = votosB;
+      finalLoserVotes = votosA;
     } else {
-      // Empate en VOTOS (ej. 1-1, o 0-0 si todos empataron)
       return {
-        error: `¡Empate en votos! (${votosA} a ${votosB}). Se requiere un sistema de réplica (Replica).`,
+        error: `¡Empate en votos! (${votosA} a ${votosB}). Se requiere desempate (Réplica).`,
       };
     }
 
-    // 6. Actualizar la Batalla con el Ganador
-    await prisma.battle.update({
-      where: { id: battleId },
-      data: {
-        winnerId: winnerId,
-        winnerVotes: finalWinnerVotes,
-        loserVotes: finalLoserVotes,
-        // TODO: En fases posteriores, aquí actualizarías 'nextBattleId'
-      },
+    // 6. Actualizar la Batalla y AVANZAR AL GANADOR
+    await prisma.$transaction(async (tx) => {
+        // A. Cerrar batalla actual
+        await tx.battle.update({
+            where: { id: battleId },
+            data: {
+                winnerId: winnerId,
+                winnerVotes: finalWinnerVotes,
+                loserVotes: finalLoserVotes,
+            },
+        });
+
+        // B. Mover al GANADOR a la siguiente batalla
+        if (battle.nextBattleId) {
+            const nextBattle = await tx.battle.findUnique({ where: { id: battle.nextBattleId } });
+            if (nextBattle) {
+                const isOddBattle = battle.orderInRound % 2 !== 0;
+                const updateData = isOddBattle ? { participantAId: winnerId } : { participantBId: winnerId };
+                await tx.battle.update({
+                    where: { id: battle.nextBattleId },
+                    data: updateData
+                });
+            }
+        }
+
+        // C. Si es SEMIFINAL, mover al PERDEDOR al Tercer Lugar
+        if (battle.phase === RoundPhase.SEMIFINAL) {
+            const thirdPlaceBattle = await tx.battle.findFirst({
+                where: {
+                    eventoId: battle.eventoId,
+                    categoriaId: battle.categoriaId,
+                    phase: RoundPhase.TERCER_LUGAR
+                }
+            });
+
+            if (thirdPlaceBattle) {
+                // El perdedor es el ID que NO es el winnerId
+                // Como ya validamos al inicio que A y B existen, podemos usarlos directo.
+                const loserId = (winnerId === battle.participantAId) ? battle.participantBId! : battle.participantAId!;
+                
+                const isOddBattle = battle.orderInRound % 2 !== 0;
+                const updateData = isOddBattle ? { participantAId: loserId } : { participantBId: loserId };
+                
+                await tx.battle.update({
+                    where: { id: thirdPlaceBattle.id },
+                    data: updateData
+                });
+            }
+        }
     });
 
     revalidatePath('/judge/dashboard');
     revalidatePath(`/admin/eventos/${battle.eventoId}`);
 
     return { 
-      success: 'Ganador declarado.', 
+      success: 'Ganador declarado y avanzado.', 
       winnerName: winnerName 
     };
 

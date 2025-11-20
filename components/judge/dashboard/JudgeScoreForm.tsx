@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useCallback } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client'
-import { InformationCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { debounce } from 'lodash'
 import toast from 'react-hot-toast'
 import LiteYouTubeEmbed from 'react-lite-youtube-embed';
 import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
+import { CheckCircleIcon } from '@heroicons/react/24/solid' 
 
 import {
   submitScoreSchema,
@@ -42,6 +42,7 @@ interface JudgeScoreFormProps {
   assignment: FullJudgeAssignment
   criterios: Criterio[]
   existingScore: FullScore
+  onDataChange?: (participantId: string, data: SubmitScorePayload | null, isValid: boolean) => void
 }
 
 function getYouTubeVideoId(url: string): string | null {
@@ -66,11 +67,25 @@ export function JudgeScoreForm({
   assignment,
   criterios,
   existingScore,
+  onDataChange
 }: JudgeScoreFormProps) {
 
   const [isPending, startTransition] = useTransition()
   const [total, setTotal] = useState(0)
+  
+  // Estado local inicial
   const [formStatus, setFormStatus] = useState(existingScore?.status || ScoreStatus.DRAFT)
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+
+  // === NUEVO: Sincronización de Estado ===
+  // Si el padre (JudgePanel) nos manda un existingScore nuevo (ej: después del Bulk Submit),
+  // actualizamos el estado local para reflejar que ya está SUBMITTED.
+  useEffect(() => {
+    if (existingScore?.status && existingScore.status !== formStatus) {
+      setFormStatus(existingScore.status)
+    }
+  }, [existingScore, formStatus])
+  // ======================================
 
   const videoId = getYouTubeVideoId(wildcard.youtubeUrl);
   
@@ -91,66 +106,87 @@ export function JudgeScoreForm({
         )
         return {
           criterioId: c.id,
-          value: existingDetail?.value ?? 0,
+          value: existingDetail?.value ?? undefined, 
         }
       }),
     },
   })
 
-  // 2. CÁLCULO DE TOTAL
   const watchedScores = useWatch({ control: form.control, name: 'scores' })
+  const watchedNotes = useWatch({ control: form.control, name: 'notes' })
+
+  const isFormComplete = watchedScores.every(s => typeof s.value === 'number' && !isNaN(s.value));
+
+  // AUTOSAVE (Debounce 2.5s)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedDraftSave = useCallback(
+    debounce(async (payload: SubmitScorePayload) => {
+      if (formStatus === ScoreStatus.SUBMITTED) return
+      setIsAutoSaving(true)
+      const res = await submitScore({ ...payload, status: ScoreStatus.DRAFT })
+      setIsAutoSaving(false)
+      if (!res.success) console.error("Error autosave:", res.error)
+    }, 2500), 
+    [formStatus]
+  )
 
   useEffect(() => {
+    // a) Total
     const newTotal = watchedScores.reduce((acc, current) => {
         const val = isNaN(Number(current.value)) ? 0 : Number(current.value);
         return acc + val;
     }, 0)
     setTotal(newTotal)
-  }, [watchedScores])
+
+    // b) Lógica de Estado y Comunicación
+    // IMPORTANTE: Si ya está SUBMITTED (por sincronización o acción manual), no hacemos nada de esto
+    if (formStatus === ScoreStatus.SUBMITTED) return;
+
+    if (isFormComplete) {
+        const currentPayload: SubmitScorePayload = {
+            ...form.getValues(),
+            status: ScoreStatus.SUBMITTED 
+        }
+
+        if (onDataChange) {
+            onDataChange(wildcard.userId, currentPayload, true);
+        }
+
+        debouncedDraftSave({ ...currentPayload, status: ScoreStatus.DRAFT })
+
+    } else {
+        if (onDataChange) {
+            onDataChange(wildcard.userId, null, false);
+        }
+    }
+
+  }, [watchedScores, watchedNotes, form, wildcard.userId, onDataChange, debouncedDraftSave, formStatus, isFormComplete])
 
 
-  // 3. AUTOSAVE
-  useEffect(() => {
-    const debouncedSave = debounce(async (payload: SubmitScorePayload) => {
-      if (formStatus === ScoreStatus.SUBMITTED) return
-      startTransition(async () => {
-        await submitScore({ ...payload, status: ScoreStatus.DRAFT })
-      })
-    }, 2000)
-
-    const subscription = form.watch((data) => {
-      const result = submitScoreSchema.safeParse(data)
-      if (result.success) {
-        debouncedSave(result.data)
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [form, formStatus, startTransition])
-
-
-  // 4. SUBMIT FINAL
   const onSubmit = (data: SubmitScorePayload) => {
     if (formStatus === ScoreStatus.SUBMITTED) return
-
-    const loadingToast = toast.loading('Enviando puntaje...');
+    const loadingToast = toast.loading('Enviando...');
     startTransition(async () => {
       const result = await submitScore({ ...data, status: ScoreStatus.SUBMITTED })
       if (result.success) {
         setFormStatus(ScoreStatus.SUBMITTED)
-        toast.success('Puntaje enviado correctamente', { id: loadingToast })
+        toast.success('Enviado', { id: loadingToast })
+        if (onDataChange) onDataChange(wildcard.userId, null, false); 
       } else {
-        toast.error(typeof result.error === 'string' ? result.error : 'Error al enviar', { id: loadingToast })
+        toast.error('Error', { id: loadingToast })
       }
     })
   }
 
-  const participantName = wildcard.nombreArtistico || `${wildcard.user.profile?.nombres} ${wildcard.user.profile?.apellidoPaterno}`
+  const participantName = wildcard.nombreArtistico || `${wildcard.user.profile?.nombres || ''} ${wildcard.user.profile?.apellidoPaterno || ''}`
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full transition-all space-y-6 md:space-y-8">
+    <form onSubmit={form.handleSubmit(onSubmit)} className={`w-full transition-all space-y-6 md:space-y-8 ${formStatus === ScoreStatus.SUBMITTED ? 'opacity-60 grayscale-[0.5]' : ''}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-blue-50">
+        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-blue-50 flex items-center gap-3">
           {participantName}
+          {isAutoSaving && <span className="text-xs font-normal text-blue-400 animate-pulse">Guardando...</span>}
+          {formStatus === ScoreStatus.SUBMITTED && <span className="text-xs font-bold bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">ENVIADO</span>}
         </h3>
       </div>
 
@@ -163,8 +199,6 @@ export function JudgeScoreForm({
       <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3 lg:grid-cols-6">
         {criterios.map((criterio, index) => {
             const error = form.formState.errors.scores?.[index]?.value;
-            
-            // Desestructuramos el register para inyectar nuestra propia lógica de onChange
             const { onChange, ...restRegister } = form.register(`scores.${index}.value`, { 
                 valueAsNumber: true,
                 min: { value: 0, message: 'Mín 0' },
@@ -182,32 +216,19 @@ export function JudgeScoreForm({
                     <input
                       type="number"
                       id={`scores.${index}.value`}
-                      min={0}
-                      max={criterio.maxScore}
                       disabled={formStatus === ScoreStatus.SUBMITTED}
-                      // Inyectamos las propiedades del register
                       {...restRegister}
-                      // Lógica Custom para "Hard Cap"
                       onChange={(e) => {
                           let val = parseInt(e.target.value);
-                          
-                          // Si es NaN (borró todo), dejamos que el input esté vacío temporalmente
-                          if (isNaN(val)) {
-                             onChange(e);
-                             return;
-                          }
-
-                          // VALIDACIÓN ESTRICTA EN TIEMPO REAL
+                          if (isNaN(val)) { onChange(e); return; }
                           if (val > criterio.maxScore) {
-                              val = criterio.maxScore; // Lo bajamos al máximo
-                              e.target.value = val.toString(); // Actualizamos visualmente
-                              toast.error(`El máximo para ${criterio.name} es ${criterio.maxScore}`, { duration: 1500, position: 'bottom-center' });
+                              val = criterio.maxScore;
+                              e.target.value = val.toString();
+                              toast.error(`Máximo: ${criterio.maxScore}`, { duration: 1000, position: 'bottom-center', style: { background: '#333', color: '#fff', fontSize: '12px'} });
                           } else if (val < 0) {
                               val = 0;
                               e.target.value = "0";
                           }
-
-                          // Pasamos el evento modificado a React Hook Form
                           onChange(e);
                       }}
                       onFocus={(e) => e.target.select()} 
@@ -215,26 +236,23 @@ export function JudgeScoreForm({
                         block w-full rounded-xl border bg-[#0c0c12] text-center text-2xl font-bold text-white shadow-sm p-3
                         focus:ring-2 focus:outline-none transition-all duration-200
                         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-                        disabled:bg-neutral-800 disabled:text-neutral-500
+                        disabled:bg-neutral-900/50 disabled:text-neutral-500 disabled:border-transparent
                         ${error 
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
-                            : 'border-white/10 focus:border-fuchsia-500 focus:ring-fuchsia-500/20 hover:border-white/20'
+                            : (formStatus === ScoreStatus.SUBMITTED || isFormComplete)
+                                ? 'border-green-500/40 text-green-400 bg-green-500/5'
+                                : 'border-white/10 focus:border-fuchsia-500 focus:ring-fuchsia-500/20 hover:border-white/20'
                         }
                       `}
                     />
                 </div>
-                {error && (
-                    <div className="absolute -bottom-5 left-0 w-full text-center text-xs text-red-400 font-medium animate-pulse">
-                        {error.message}
-                    </div>
-                )}
               </div>
             )
         })}
 
-        <div className="flex flex-col justify-center items-center rounded-2xl bg-gradient-to-br from-white/5 to-white/0 p-4 text-center lg:col-start-6 border border-white/10 backdrop-blur-sm">
+        <div className={`flex flex-col justify-center items-center rounded-2xl p-4 text-center lg:col-start-6 border backdrop-blur-sm transition-colors duration-300 ${isFormComplete ? 'border-green-500/30 bg-green-500/5' : 'border-white/10 bg-gradient-to-br from-white/5 to-white/0'}`}>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-200/60 mb-1">Total</span>
-          <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-fuchsia-400">
+          <span className={`text-5xl font-black text-transparent bg-clip-text ${isFormComplete ? 'bg-gradient-to-r from-green-400 to-emerald-400' : 'bg-gradient-to-r from-blue-400 to-fuchsia-400'}`}>
             {total}
           </span>
         </div>
@@ -244,22 +262,45 @@ export function JudgeScoreForm({
         <label className="block text-sm font-semibold text-blue-100/90 mb-2">Feedback (Privado)</label>
         <textarea
           {...form.register('notes')}
-          rows={2}
+          rows={1}
           disabled={formStatus === ScoreStatus.SUBMITTED}
-          className="block w-full rounded-xl border border-white/10 bg-[#0c0c12] text-blue-50 shadow-sm p-3 focus:border-fuchsia-500/50 focus:ring-2 focus:ring-fuchsia-500/20 disabled:bg-neutral-800 resize-none"
-          placeholder="Comentarios técnicos..."
+          className="block w-full rounded-xl border border-white/10 bg-[#0c0c12] text-blue-50 shadow-sm p-3 focus:border-fuchsia-500/50 focus:ring-2 focus:ring-fuchsia-500/20 disabled:bg-neutral-800 resize-none text-sm"
+          placeholder="Opcional..."
         />
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button
-          type="submit"
-          disabled={isPending || formStatus === ScoreStatus.SUBMITTED}
-          className={`relative overflow-hidden rounded-full px-8 py-3 text-sm font-bold text-white shadow-lg transition-all 
-          ${formStatus === ScoreStatus.SUBMITTED ? 'cursor-not-allowed bg-green-600' : 'bg-gradient-to-r from-fuchsia-600 to-sky-600 hover:shadow-fuchsia-500/25'}`}
-          >
-          {isPending ? 'Guardando...' : formStatus === ScoreStatus.SUBMITTED ? '✔ Enviado' : 'Confirmar Puntaje'}
-        </button>
+        {formStatus === ScoreStatus.SUBMITTED ? (
+             // CASO: YA ENVIADO (Desde servidor o local) -> Bloqueado
+             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-bold">
+                <CheckCircleIcon className="w-5 h-5" /> Puntaje Enviado
+             </div>
+        ) : isFormComplete ? (
+             // CASO: LISTO (Pero no enviado) -> Botón oculto, badge de "Listo"
+             <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                 <div className="flex items-center gap-2 text-green-400 bg-green-400/10 px-4 py-2 rounded-full border border-green-400/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+                    <CheckCircleIcon className="w-5 h-5" /> 
+                    <span className="text-sm font-bold">Listo para Envío Masivo</span>
+                 </div>
+                 
+                 <button
+                   type="submit"
+                   disabled={isPending}
+                   className="text-xs text-white/30 hover:text-white/80 transition-colors underline decoration-dotted underline-offset-4"
+                 >
+                    Enviar solo este
+                 </button>
+             </div>
+        ) : (
+             // CASO: INCOMPLETO -> Botón visible
+             <button
+               type="submit"
+               disabled={isPending}
+               className="relative overflow-hidden rounded-full px-8 py-3 text-sm font-bold text-white shadow-lg transition-all bg-[#1a1a24] border border-white/10 hover:border-white/30 hover:bg-[#252530]"
+               >
+               {isPending ? 'Guardando...' : 'Confirmar Individualmente'}
+             </button>
+        )}
       </div>
     </form>
   )

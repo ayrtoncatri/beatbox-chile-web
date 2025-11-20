@@ -16,14 +16,34 @@ interface ActionState {
 
 // --- (1) CORRECCIÓN DEL SCHEMA ---
 const BracketSchema = z.object({
-  eventoId: z.string().cuid('Evento no válido'),
-  categoriaId: z.string().cuid('Categoría no válida'),
-  phase: z.nativeEnum(RoundPhase),
-  // (Permitimos 2, 4, 8, 16, 32)
-  participantCount: z.enum(['2', '4', '8', '16', '32'], {
-    message: 'Debe seleccionar un número válido de participantes (2, 4, 8, 16, o 32)',
-  }).transform(Number),
+  eventoId: z.string().cuid(),
+  categoriaId: z.string().cuid(),
+  phase: z.nativeEnum(RoundPhase), // Fase INICIAL (ej: OCTAVOS)
+  participantCount: z.coerce.number().int().positive(), // ej: 16
 });
+
+const PHASE_SIZE_MAP: Record<string, number> = {
+  [RoundPhase.FINAL]: 2,
+  [RoundPhase.SEMIFINAL]: 4,
+  [RoundPhase.CUARTOS]: 8,
+  [RoundPhase.OCTAVOS]: 16,
+  [RoundPhase.TERCER_LUGAR]: 2,
+  // Si agregas DIECISEISAVOS en tu schema, añádelo aquí con valor 32
+};
+
+function getSeedingOrder(size: number): number[] {
+  if (size === 2) return [1, 2];
+
+  const prevOrder = getSeedingOrder(size / 2);
+  const currentOrder: number[] = [];
+
+  for (const x of prevOrder) {
+    currentOrder.push(x);
+    currentOrder.push(size + 1 - x);
+  }
+
+  return currentOrder;
+}
 
 /**
  * Acción principal que genera las llaves de batalla
@@ -34,183 +54,154 @@ export async function generateBrackets(
   formData: FormData
 ): Promise<ActionState> {
   
-  let log: string[] = ['Iniciando generación de llaves...'];
+  let log: string[] = ['Iniciando generación de árbol de torneo...'];
 
-  // --- 1. Seguridad (Sin cambios) ---
+  // 1. Seguridad
   const session = await getServerSession(authOptions);
   const userRoles = (session?.user as any)?.roles || [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
-    return { error: 'No autorizado. Se requiere ser administrador.', log };
+    return { error: 'No autorizado.', log };
   }
-  log.push(`Admin verificado: ${session.user.email}`);
 
-  // --- 2. Validación de Inputs (Ahora acepta 2 y 4) ---
-  const validatedFields = BracketSchema.safeParse({
+  // 2. Validación de Inputs
+  const rawData = {
     eventoId: formData.get('eventoId'),
     categoriaId: formData.get('categoriaId'),
     phase: formData.get('phase'),
     participantCount: formData.get('participantCount'),
-  });
+  };
+
+  const validatedFields = BracketSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
     return { error: validatedFields.error.issues[0].message, log };
   }
   
-  const { eventoId, categoriaId, phase, participantCount } = validatedFields.data;
-  log.push(`Generando llaves de ${phase} para ${participantCount} participantes...`);
-
-  // (Validación de lógica de negocio - sin cambios)
-  if (phase === RoundPhase.PRELIMINAR || phase === RoundPhase.WILDCARD) {
-    return { error: 'No se pueden generar llaves para PRELIMINAR o WILDCARD.', log };
-  }
+  const { eventoId, categoriaId, phase: startPhase, participantCount } = validatedFields.data;
+  log.push(`Configuración: ${startPhase} con ${participantCount} participantes.`);
 
   try {
-    // --- 3. Verificar si ya existen llaves (Sin cambios) ---
-    const existingBattles = await prisma.battle.count({
-      where: { eventoId, categoriaId, phase }
+    // 3. Obtener Ranking de Clasificación (Showcase)
+    // Necesitamos los participantes ordenados por puntaje TOTAL para aplicar el seeding correcto
+    log.push('Obteniendo ranking de clasificación...');
+    
+    // Usamos groupBy para obtener la suma total de los puntajes SUBMITTED
+    const rankingScores = await prisma.score.groupBy({
+      by: ['participantId'],
+      where: { 
+        eventoId, 
+        categoriaId, 
+        phase: RoundPhase.PRELIMINAR, // Asumimos que el seeding viene de la Preliminar
+        status: ScoreStatus.SUBMITTED 
+      },
+      _sum: { totalScore: true }, 
+      orderBy: { _sum: { totalScore: 'desc' } },
     });
-    if (existingBattles > 0) {
-      return { error: `Error: Ya existen ${existingBattles} batallas para la fase ${phase} de este evento.`, log };
+
+    if (rankingScores.length < participantCount) {
+      return { 
+        error: `Insuficientes participantes clasificados. Se requieren ${participantCount}, hay ${rankingScores.length}.`, 
+        log 
+      };
     }
 
-    // --- (2) CORRECCIÓN DE LÓGICA DE DATOS ---
-    // (Reemplazamos la lógica antigua que SOLO buscaba en PRELIMINAR)
+    // Extraemos solo los IDs de los clasificados en orden (Seed 1, Seed 2, ...)
+    const qualifiedIds = rankingScores.slice(0, participantCount).map(r => r.participantId);
+    log.push(`Clasificados seleccionados: ${qualifiedIds.length}`);
 
-    let participants: string[] = []; // Array de IDs de participantes a emparejar
-    let sourcePhase: RoundPhase | null = null; // De dónde vienen los participantes
+    // 4. Calcular Orden de Seeds (Emparejamientos)
+    // El algoritmo nos da índices base 1 (1, 16, 8...). Restamos 1 para usar en el array.
+    const seedIndices = getSeedingOrder(participantCount);
+    // seededParticipants es el array FINAL ordenado para las batallas (ej: [User1, User16, User8, User9...])
+    const seededParticipants = seedIndices.map(seedIndex => qualifiedIds[seedIndex - 1]);
 
-    // Determinar la fase de origen
-    switch (phase) {
-      case RoundPhase.OCTAVOS:
-        sourcePhase = RoundPhase.PRELIMINAR; // Viene del ranking
-        break;
-      case RoundPhase.CUARTOS:
-        // Puede venir de OCTAVOS (si hubo) o PRELIMINAR (si es Top 8)
-        const octavosDone = await prisma.battle.count({ where: { eventoId, categoriaId, phase: RoundPhase.OCTAVOS }});
-        sourcePhase = octavosDone > 0 ? RoundPhase.OCTAVOS : RoundPhase.PRELIMINAR;
-        break;
-      case RoundPhase.SEMIFINAL:
-        sourcePhase = RoundPhase.CUARTOS; // Debe venir de ganadores de Cuartos
-        break;
-      case RoundPhase.FINAL:
-        sourcePhase = RoundPhase.SEMIFINAL; // Debe venir de ganadores de Semifinal
-        break;
-      case RoundPhase.TERCER_LUGAR:
-        sourcePhase = RoundPhase.SEMIFINAL; // Debe venir de PERDEDORES de Semifinal
-        break;
-    }
-
-    if (!sourcePhase) {
-      return { error: `Fase de origen no determinada para ${phase}.`, log };
-    }
-    
-    // --- 4. Obtener la lista de participantes ---
-    
-    if (sourcePhase === RoundPhase.PRELIMINAR) {
-      // Lógica original: Obtener ranking de Showcase
-      log.push(`Obteniendo ranking de ${sourcePhase}...`);
-      const ranking = await prisma.score.groupBy({
-        by: ['participantId'],
-        where: { eventoId, categoriaId, phase: sourcePhase, status: ScoreStatus.SUBMITTED },
-        _avg: { totalScore: true },
-        orderBy: { _avg: { totalScore: 'desc' } },
-      });
-      log.push(`Ranking de ${sourcePhase} encontrado: ${ranking.length} participantes evaluados.`);
-
-      if (ranking.length < participantCount) {
-        return { error: `No hay suficientes participantes evaluados (${ranking.length}) para una llave de ${participantCount}.`, log };
-      }
-      participants = ranking.slice(0, participantCount).map(p => p.participantId);
-
-    } else {
-      // Nueva lógica: Obtener ganadores (o perdedores) de la fase anterior
-      log.push(`Obteniendo resultados de ${sourcePhase}...`);
-      const prevPhaseBattles = await prisma.battle.findMany({
+    // 5. Generación del Árbol en Transacción (Todo o Nada)
+    await prisma.$transaction(async (tx) => {
+      
+      // 1. Limpieza
+      log.push('Limpiando brackets existentes...');
+      await tx.battle.deleteMany({
         where: {
           eventoId,
           categoriaId,
-          phase: sourcePhase,
-        },
-        include: {
-          participantA: { select: { id: true } },
-          participantB: { select: { id: true } },
-        },
-        orderBy: { orderInRound: 'asc' }, // ¡Importante!
+          phase: { 
+            in: [RoundPhase.OCTAVOS, RoundPhase.CUARTOS, RoundPhase.SEMIFINAL, RoundPhase.FINAL, RoundPhase.TERCER_LUGAR] 
+          }
+        }
       });
 
-      if (prevPhaseBattles.length === 0) {
-        return { error: `No se encontraron batallas de la fase anterior (${sourcePhase}).`, log };
-      }
-      
-      if (phase === RoundPhase.TERCER_LUGAR) {
-        // Lógica especial para 3er Lugar: buscar perdedores
-        const winners = new Set(prevPhaseBattles.map(b => b.winnerId).filter(Boolean));
-        const participantsInPhase = new Set(prevPhaseBattles.flatMap(b => [b.participantAId, b.participantBId].filter(Boolean) as string[]));
-        
-        participants = Array.from(participantsInPhase).filter(id => !winners.has(id));
-        log.push(`Perdedores de ${sourcePhase} encontrados: ${participants.length}`);
+      // 2. Rondas a crear
+      const roundsToCreate: RoundPhase[] = [RoundPhase.FINAL];
+      if (startPhase !== RoundPhase.FINAL) roundsToCreate.push(RoundPhase.SEMIFINAL);
+      if (startPhase === RoundPhase.CUARTOS || startPhase === RoundPhase.OCTAVOS) roundsToCreate.push(RoundPhase.CUARTOS);
+      if (startPhase === RoundPhase.OCTAVOS) roundsToCreate.push(RoundPhase.OCTAVOS);
 
-      } else {
-        // Lógica normal: buscar ganadores
-        participants = prevPhaseBattles.map(b => b.winnerId).filter(Boolean) as string[];
-        log.push(`Ganadores de ${sourcePhase} encontrados: ${participants.length}`);
-      }
+      let nextRoundBattles: { id: string }[] = [];
 
-      if (participants.length !== participantCount) {
-        return { error: `Se esperaban ${participantCount} participantes de ${sourcePhase}, pero se encontraron ${participants.length}. ¿Declaraste a todos los ganadores?`, log };
-      }
-    }
+      // 3. Bucle de creación
+      for (const currentPhase of roundsToCreate) {
+        const roundSize = PHASE_SIZE_MAP[currentPhase]; 
+        const battlesCount = roundSize / 2; 
+        const currentRoundBattleIds: { id: string }[] = [];
 
-    // --- 6. Generar los Emparejamientos (Seeds) ---
-    const battlesToCreate: Prisma.BattleCreateManyInput[] = [];
-    const numBattles = participantCount / 2;
-    
-    if (sourcePhase === RoundPhase.PRELIMINAR) {
-      // Lógica de Ranking (1º vs Último)
-      log.push(`Generando ${numBattles} emparejamientos (1vN, 2vN-1...)...`);
-      for (let i = 0; i < numBattles; i++) {
-        const participantAId = participants[i];
-        const participantBId = participants[participantCount - 1 - i];
-        
-        battlesToCreate.push({
-          eventoId, categoriaId, phase,
-          orderInRound: i + 1,
-          participantAId: participantAId,
-          participantBId: participantBId,
-        });
-      }
-    } else {
-      // Lógica de Llaves (1v2, 3v4) - "Ganador Q1 vs Ganador Q2", etc.
-      log.push(`Generando ${numBattles} emparejamientos (1v2, 3v4...)...`);
-      for (let i = 0; i < numBattles; i++) {
-        const participantAId = participants[i * 2];
-        const participantBId = participants[i * 2 + 1];
-        
-        if (!participantAId || !participantBId) {
-          return { error: 'Error de lógica al emparejar ganadores.', log };
+        log.push(`Creando fase ${currentPhase}...`);
+
+        for (let i = 0; i < battlesCount; i++) {
+          const nextBattleId = currentPhase !== RoundPhase.FINAL 
+            ? nextRoundBattles[Math.floor(i / 2)]?.id 
+            : undefined;
+
+          // --- CORRECCIÓN CRÍTICA AQUÍ ---
+          // Solo asignamos participantes si es la fase de inicio (startPhase).
+          // Para fases futuras, pA y pB se quedan como undefined (null en DB).
+          let pA = undefined;
+          let pB = undefined;
+
+          if (currentPhase === startPhase) {
+            pA = seededParticipants[i * 2];
+            pB = seededParticipants[i * 2 + 1];
+          }
+
+          const battle = await tx.battle.create({
+            data: {
+              eventoId,
+              categoriaId,
+              phase: currentPhase,
+              orderInRound: i + 1,
+              nextBattleId: nextBattleId,
+              // Ahora pasamos undefined si no hay nadie, Prisma pondrá NULL
+              participantAId: pA, 
+              participantBId: pB, 
+            },
+            select: { id: true }
+          });
+          
+          currentRoundBattleIds.push(battle);
         }
+        nextRoundBattles = currentRoundBattleIds;
+      }
 
-        battlesToCreate.push({
-          eventoId, categoriaId, phase,
-          orderInRound: i + 1,
-          participantAId: participantAId,
-          participantBId: participantBId,
+      // 4. Tercer Lugar (Vacío inicialmente, a menos que empecemos en 3er lugar)
+      if (startPhase !== RoundPhase.FINAL) {
+        await tx.battle.create({
+            data: {
+                eventoId,
+                categoriaId,
+                phase: RoundPhase.TERCER_LUGAR,
+                orderInRound: 1,
+                participantAId: undefined, // Vacío hasta que lleguen perdedores
+                participantBId: undefined  // Vacío hasta que lleguen perdedores
+            }
         });
       }
-    }
-
-    // --- 7. Crear las Batallas en la Base de Datos ---
-    const result = await prisma.battle.createMany({
-      data: battlesToCreate,
     });
 
-    log.push(`¡Éxito! Se crearon ${result.count} batallas en la base de datos.`);
-    
+    log.push('¡Árbol de torneo generado exitosamente!');
     revalidatePath(`/admin/eventos/${eventoId}`);
-    return { success: `Llaves de ${phase} generadas exitosamente.`, log };
+    return { success: `Se generaron todas las llaves desde ${startPhase} hasta la FINAL (incluyendo 3er Lugar).`, log };
 
-  } catch (error) {
-    console.error('Error al generar llaves:', error);
-    return { error: 'Error del servidor al generar las llaves.', log };
+  } catch (error: any) {
+    console.error('Error generando brackets:', error);
+    return { error: 'Error interno: ' + (error.message || error), log };
   }
 }
