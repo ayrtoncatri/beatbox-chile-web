@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -33,7 +34,7 @@ interface MobileMenuProps {
 
   isClient: boolean;
   status: "loading" | "authenticated" | "unauthenticated";
-  user: any;          // puedes tiparlo con Session["user"] si quieres
+  user: any; // puedes tiparlo con Session["user"] si quieres
   isAdmin: boolean;
   isJudge: boolean;
   userName: string | null;
@@ -51,12 +52,25 @@ export function MobileMenu({
   userName,
   handleLogout,
 }: MobileMenuProps) {
-  // Si está cerrado, no pintamos nada
-  if (!open) return null;
+  // 🔹 Control interno para permitir animación de salida
+  const [shouldRender, setShouldRender] = useState(open);
+
+  // Cuando open pasa a true, montamos el menú
+  useEffect(() => {
+    if (open) setShouldRender(true);
+  }, [open]);
+
+  // Si no debería renderizarse (menú cerrado y animación ya terminó), no pintamos nada
+  if (!shouldRender) return null;
 
   return (
     <MobileMenuPortal>
-      <AnimatePresence>
+      <AnimatePresence
+        // Cuando termina la animación de salida, desmontamos el contenido
+        onExitComplete={() => {
+          if (!open) setShouldRender(false);
+        }}
+      >
         {open && (
           <>
             {/* FONDO OSCURECIDO GLOBAL */}
@@ -65,7 +79,7 @@ export function MobileMenu({
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.95 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
               className="fixed inset-0 bg-black z-[9998] md:hidden"
               onClick={() => setOpen(false)}
             />
@@ -76,7 +90,7 @@ export function MobileMenu({
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.28 }}
+              transition={{ type: "tween", duration: 0.25 }}
               className="fixed top-0 right-0 h-full w-4/5 max-w-xs bg-[#0c0c12]/95 border-l border-red-800/40 z-[9999] shadow-2xl shadow-red-900/40 flex flex-col p-8 overflow-y-auto pb-10 backdrop-blur-sm md:hidden"
             >
               <button
@@ -96,6 +110,7 @@ export function MobileMenu({
                       key={item.label}
                       initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 30 }}
                       transition={{ delay: 0.1 + idx * 0.06 }}
                     >
                       <Link
@@ -116,6 +131,7 @@ export function MobileMenu({
                         key={subItem.href}
                         initial={{ opacity: 0, x: 30 }}
                         animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 30 }}
                         transition={{ delay: 0.1 + idx * 0.06 }}
                       >
                         <Link
@@ -171,8 +187,8 @@ export function MobileMenu({
 
                     <button
                       onClick={() => {
-                        setOpen(false);
                         handleLogout();
+                        setOpen(false);
                       }}
                       className="flex items-center gap-3 text-xl text-red-400 font-black hover:text-red-300"
                     >
