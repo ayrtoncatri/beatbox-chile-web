@@ -8,43 +8,48 @@ export const dynamic = "force-dynamic";
 
 export default async function PerfilPage() {
   const session = await getServerSession(authOptions);
+  
   if (!session?.user?.email) {
     return <div className="text-center mt-10 text-red-400">Debes iniciar sesión para ver tu perfil.</div>;
   }
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: {
-      profile: {
-        include: {
-          comuna: { include: { region: true } }
+
+  // 1. Cargamos todo en paralelo: Usuario, Regiones y Comunas
+  const [user, regiones, comunas] = await Promise.all([
+    prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        profile: {
+          include: {
+            comuna: { include: { region: true } }
+          }
+        },
+        wildcards: {
+          include: {
+            evento: {
+              select: {
+                nombre: true,
+                wildcardDeadline: true 
+              }
+            }
+          },
+          orderBy: { createdAt: "desc" } 
         }
       },
-      wildcards: {
-        include: {
-          evento: {
-            select: {
-              nombre: true, // Para saber a qué evento pertenece
-              wildcardDeadline: true // ¡Esta es la fecha que necesitamos!
-            }
-          }
-        },
-        orderBy: { createdAt: "desc" } 
-      }
-    },
-  });
+    }),
+    prisma.region.findMany({ orderBy: { id: "asc" } }), // Necesario para el Select
+    prisma.comuna.findMany({ orderBy: { name: "asc" } }) // Necesario para el Select
+  ]);
 
   if (!user) {
     return <div className="text-center mt-10 text-red-400">Usuario no encontrado.</div>;
   }
 
-  // Adaptar datos para el formulario
   const perfil = user.profile;
-  const region = perfil?.comuna?.region?.name ?? "";
-  const comuna = perfil?.comuna?.name ?? "";
-  const edad = perfil?.birthDate ? calcularEdad(perfil.birthDate) : "";
+  // Nota: Pasamos birthDate como string ISO para el input type="date"
+  const birthDateISO = perfil?.birthDate ? new Date(perfil.birthDate).toISOString().split('T')[0] : ""; 
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-blue-950 to-neutral-900 py-10">
       <PerfilForm
         user={{
           email: user.email,
@@ -52,25 +57,20 @@ export default async function PerfilPage() {
           nombres: perfil?.nombres ?? "",
           apellidoPaterno: perfil?.apellidoPaterno ?? "",
           apellidoMaterno: perfil?.apellidoMaterno ?? "",
-          region,
-          comuna,
-          edad,
-          wildcards: user.wildcards,
+          // Datos para visualización actual
+          regionName: perfil?.comuna?.region?.name ?? "", 
+          comunaName: perfil?.comuna?.name ?? "",
+          // Datos para edición (IDs)
           comunaId: perfil?.comunaId ?? undefined,
+          regionId: perfil?.comuna?.regionId ?? undefined, // Importante para pre-seleccionar
+          birthDate: birthDateISO,
+          
+          wildcards: user.wildcards,
         }}
+        // 2. Pasamos los catálogos al componente cliente
+        regiones={regiones}
+        comunas={comunas}
       />
     </main>
   );
-}
-
-// Utilidad para calcular edad desde birthDate
-function calcularEdad(birthDate: Date) {
-  const birth = new Date(birthDate);
-  const today = new Date();
-  let edad = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    edad--;
-  }
-  return edad;
 }

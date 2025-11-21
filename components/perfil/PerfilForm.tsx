@@ -1,512 +1,269 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
-import {
-  DPARegion,
-  DPAComuna,
-  fetchRegiones,
-  fetchComunasByRegionCode,
-  normalize,
-} from "@/lib/cl-geo";
 import toast from "react-hot-toast";
+import { updatePerfil } from "@/app/perfil/actions"; // Tu action existente
+import { useRouter } from "next/navigation";
+import { PencilSquareIcon, XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 
-type UserLike = {
+// Tipos recibidos desde la DB
+type Region = { id: number; name: string };
+type Comuna = { id: number; name: string; regionId: number };
+
+// --- CORRECCIÓN 1: Definición de Tipos Completa ---
+// Esto arregla el error en page.tsx (regionName does not exist...)
+export type UserLike = {
   email: string;
   image?: string | null;
   nombres?: string | null;
   apellidoPaterno?: string | null;
   apellidoMaterno?: string | null;
-  region?: string | null;
-  comuna?: string | null;
-  comunaId?: number;
+  regionName?: string; // <--- Agregado
+  comunaName?: string; // <--- Agregado
+  comunaId?: number | null;
+  regionId?: number; 
+  birthDate?: string; 
   edad?: number | string | null;
   wildcards?: any[];
 };
 
-type PerfilFormState = {
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  region: string;
-  comuna: string;
-  comunaId?: number;
-  birthDate?: string;
-  edad: string;
-};
+interface PerfilFormProps {
+  user: UserLike;
+  regiones: Region[];
+  comunas: Comuna[];
+}
 
-export default function PerfilForm({ user }: { user: UserLike }) {
+export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps) {
+  const router = useRouter();
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<PerfilFormState>({
-    nombres: user.nombres || "",
-    apellidoPaterno: user.apellidoPaterno || "",
-    apellidoMaterno: user.apellidoMaterno || "",
-    region: user.region || "",
-    comuna: user.comuna || "",
-    comunaId: user.comunaId,
-    birthDate: "",
-    edad: user.edad ? String(user.edad) : "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [regiones, setRegiones] = useState<DPARegion[]>([]);
-  const [comunas, setComunas] = useState<DPAComuna[]>([]);
-  const [loadingRegiones, setLoadingRegiones] = useState(true);
-  const [loadingComunas, setLoadingComunas] = useState(false);
-  const [errorGeo, setErrorGeo] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setErrorGeo(null);
-      try {
-        setLoadingRegiones(true);
-        const regs = await fetchRegiones();
-        if (!alive) return;
-        setRegiones(regs);
-
-        // Usar los valores iniciales del usuario en lugar del estado del formulario
-        const initialRegion = user.region || "";
-        const initialComuna = user.comuna || "";
-
-        if (initialRegion) {
-          // Buscar la región con múltiples estrategias de normalización
-          const r = regs.find(
-            (x) => 
-              normalize(x.nombre) === normalize(initialRegion) ||
-              x.nombre === initialRegion ||
-              normalize(x.nombre).includes(normalize(initialRegion)) ||
-              normalize(initialRegion).includes(normalize(x.nombre))
-          );
-          
-          if (r) {
-            setLoadingComunas(true);
-            const cms = await fetchComunasByRegionCode(r.codigo);
-            if (!alive) return;
-            setComunas(cms);
-            
-            // Verificar que la comuna existe en la lista cargada
-            if (initialComuna) {
-              const comunaExists = cms.some(
-                (c) => 
-                  normalize(c.nombre) === normalize(initialComuna) ||
-                  c.nombre === initialComuna ||
-                  normalize(c.nombre).includes(normalize(initialComuna)) ||
-                  normalize(initialComuna).includes(normalize(c.nombre))
-              );
-              
-              if (!comunaExists) {
-                // Si la comuna no existe, intentar mantener la región pero limpiar la comuna
-                setForm((f) => ({ ...f, comuna: "", comunaId: undefined }));
-              } else {
-                // Asegurar que el formulario tenga los valores correctos
-                const foundComuna = cms.find(
-                  (c) => 
-                    normalize(c.nombre) === normalize(initialComuna) ||
-                    c.nombre === initialComuna
-                );
-                if (foundComuna) {
-                  setForm((f) => ({
-                    ...f,
-                    region: r.nombre,
-                    comuna: foundComuna.nombre,
-                    comunaId: Number(foundComuna.codigo),
-                  }));
-                }
-              }
-            } else {
-              // Si hay región pero no comuna, asegurar que la región esté en el formulario
-              setForm((f) => ({ ...f, region: r.nombre }));
-            }
-          } else {
-            // Si no se encuentra la región, mantener los valores pero mostrar advertencia
-            console.warn(`Región "${initialRegion}" no encontrada en la lista de regiones`);
-            // No resetear los valores, solo mantenerlos como están
-          }
-        }
-      } catch {
-        if (!alive) return;
-        setErrorGeo("No se pudieron cargar las regiones. Intenta más tarde.");
-      } finally {
-        if (alive) {
-          setLoadingRegiones(false);
-          setLoadingComunas(false);
-        }
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [user.region, user.comuna, user.comunaId]);
-
-  const handleChange = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-
-    if (name === "region") {
-      setForm((f) => ({ ...f, region: value, comuna: "" }));
-
-      const selected = regiones.find((r) => r.nombre === value);
-      if (selected) {
-        setLoadingComunas(true);
-        setErrorGeo(null);
-        try {
-          const cms = await fetchComunasByRegionCode(selected.codigo);
-          setComunas(cms);
-        } catch {
-          setComunas([]);
-          setErrorGeo("No se pudieron cargar las comunas. Intenta más tarde.");
-        } finally {
-          setLoadingComunas(false);
-        }
-      } else {
-        setComunas([]);
-      }
-      return;
-    }
-
-    if (name === "comuna") {
-      const selectedComuna = comunas.find((c) => c.nombre === value);
-      setForm((f) => ({
-        ...f,
-        comuna: value,
-        comunaId: selectedComuna ? Number(selectedComuna.codigo) : undefined,
-      }));
-      return;
-    }
-
-    setForm((f) => ({ ...f, [name]: value }));
-
-    // Validación en tiempo real de edad
-    if (name === "edad") {
-      const edadNum = parseInt(value, 10);
-      let error = "";
-      if (isNaN(edadNum)) error = "La edad debe ser un número válido";
-      else if (edadNum < 10) error = "La edad mínima es 10 años";
-      else if (edadNum > 80) error = "La edad máxima es 80 años";
-      setErrors((prev) => ({ ...prev, edad: error }));
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleCancel = () => {
-    // Restaurar valores originales
-    setForm({
-      nombres: user.nombres || "",
-      apellidoPaterno: user.apellidoPaterno || "",
-      apellidoMaterno: user.apellidoMaterno || "",
-      region: user.region || "",
-      comuna: user.comuna || "",
-      comunaId: user.comunaId,
-      birthDate: "",
-      edad: user.edad ? String(user.edad) : "",
-    });
-    setErrors({});
-    setIsEditing(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-
-    // Validar edad antes de enviar
-    const edadNum = parseInt(form.edad, 10);
-    if (isNaN(edadNum) || edadNum < 10 || edadNum > 80) {
-      const errorMsg = "Edad fuera de rango permitido";
-      setErrors({ edad: errorMsg });
-      toast.error(errorMsg);
-      return;
-    }
-
-    const loadingToast = toast.loading("Actualizando perfil...");
-    try {
-      const res = await fetch("/api/user/update", {
-        method: "POST",
-        body: JSON.stringify({
-          nombres: form.nombres,
-          apellidoPaterno: form.apellidoPaterno,
-          apellidoMaterno: form.apellidoMaterno,
-          comunaId: form.comunaId,
-          birthDate: calcularBirthDateDesdeEdad(edadNum),
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Perfil actualizado correctamente", { id: loadingToast });
-        setIsEditing(false); // Volver al estado inicial después de guardar
-      } else {
-        const errorMsg = data?.error || "Error al actualizar perfil";
-        toast.error(errorMsg, { id: loadingToast });
-      }
-    } catch {
-      toast.error("Error de red al actualizar", { id: loadingToast });
-    }
-  };
-
-  const avatarName =
-    (form.nombres ? form.nombres.split(" ")[0] : "") +
-    (form.apellidoPaterno ? " " + form.apellidoPaterno : "");
-
-  const comunasDisponibles = useMemo(
-    () => comunas.map((c) => c.nombre),
-    [comunas]
+  // Estados para Selects
+  const [selectedRegionId, setSelectedRegionId] = useState<string>(
+    user.regionId ? user.regionId.toString() : ""
+  );
+  const [selectedComunaId, setSelectedComunaId] = useState<string>(
+    user.comunaId ? user.comunaId.toString() : ""
   );
 
+  const comunasFiltradas = useMemo(() => {
+    if (!selectedRegionId) return [];
+    return comunas.filter((c) => c.regionId === Number(selectedRegionId));
+  }, [selectedRegionId, comunas]);
+
+  // Manejo del Guardado
+  const handleSubmit = async (formData: FormData) => {
+    const loadingId = toast.loading("Guardando cambios...");
+    
+    // --- CORRECCIÓN 2: Adaptación a tu actions.ts ---
+    // Tu action devuelve { ok: boolean }, no { success: string }
+    const result = await updatePerfil(null, formData);
+
+    // Usamos 'result?.ok' en lugar de 'result?.success'
+    if (result && result.ok) {
+      toast.success("Perfil actualizado", { id: loadingId });
+      setIsEditing(false); 
+      router.refresh();    
+    } else {
+      // Tu action devuelve el error en 'result.error'
+      toast.error(result?.error || "Error al guardar", { id: loadingId });
+    }
+  };
+
+  const avatarName = (user.nombres?.[0] || "") + (user.apellidoPaterno?.[0] || "");
+
   return (
-    <div className="w-full">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md mx-auto bg-gradient-to-br from-blue-900/80 via-neutral-900/90 to-blue-950/80 rounded-3xl shadow-2xl border border-blue-800/40 backdrop-blur-lg p-8 flex flex-col gap-6 items-center"
-      >
-        <div className="flex flex-col items-center gap-2 w-full">
-          <Image
-            src={
-              user.image ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                avatarName || user.email || "U"
-              )}&background=3b82f6&color=fff&size=128`
-            }
-            alt="Imagen de perfil"
-            width={112}
-            height={112}
-            className="rounded-full object-cover border-4 border-blue-700 shadow-lg transition-all"
-            priority
-          />
-          <span className="text-blue-100 font-semibold text-lg mt-2 break-all text-center">
-            {user.email}
-          </span>
+    <div className="w-full max-w-3xl mx-auto space-y-8 p-4">
+      
+      {/* --- TARJETA PRINCIPAL --- */}
+      <div className="relative w-full bg-[#0f172a] rounded-3xl shadow-2xl border border-blue-900/30 p-8">
+        
+        {/* Avatar y Cabecera */}
+        <div className="flex flex-col items-center gap-4 mb-8">
+           <div className="relative group">
+             <Image
+                src={user.image || `https://ui-avatars.com/api/?name=${avatarName}&background=3b82f6&color=fff&size=128`}
+                alt="Perfil"
+                width={128}
+                height={128}
+                className="rounded-full object-cover border-4 border-blue-600 shadow-lg"
+             />
+           </div>
+           <div className="text-center">
+             <h2 className="text-2xl font-bold text-white">{user.nombres || "Usuario"} {user.apellidoPaterno}</h2>
+             <span className="text-blue-400 text-sm font-medium">{user.email}</span>
+           </div>
         </div>
 
-        <div className="flex flex-col gap-3 w-full">
-          <input
-            name="nombres"
-            value={form.nombres}
-            onChange={handleChange}
-            placeholder="Nombres"
-            disabled={!isEditing}
-            className="w-full rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-
-          <div className="flex flex-col md:flex-row gap-2 w-full">
-            <input
-              name="apellidoPaterno"
-              value={form.apellidoPaterno}
-              onChange={handleChange}
-              placeholder="Apellido paterno"
-              disabled={!isEditing}
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            />
-            <input
-              name="apellidoMaterno"
-              value={form.apellidoMaterno}
-              onChange={handleChange}
-              placeholder="Apellido materno"
-              disabled={!isEditing}
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            />
+        {/* FORMULARIO */}
+        <form action={handleSubmit} className="flex flex-col gap-6">
+          
+          {/* Datos Personales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Nombres</label>
+                <input
+                    name="nombres"
+                    defaultValue={user.nombres || ""}
+                    disabled={!isEditing}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+             </div>
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Apellido Paterno</label>
+                <input
+                    name="apellidoPaterno"
+                    defaultValue={user.apellidoPaterno || ""}
+                    disabled={!isEditing}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-2 w-full">
-            <select
-              name="region"
-              value={form.region}
-              onChange={handleChange}
-              disabled={!isEditing || loadingRegiones}
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {loadingRegiones ? "Cargando regiones..." : "Selecciona región"}
-              </option>
-              {regiones.map((r) => (
-                <option key={r.codigo} value={r.nombre}>
-                  {r.nombre}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="comuna"
-              value={form.comuna}
-              onChange={handleChange}
-              disabled={
-                !isEditing ||
-                !form.region ||
-                loadingComunas ||
-                comunasDisponibles.length === 0
-              }
-              className="w-full md:w-1/2 rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {!form.region
-                  ? "Primero elige una región"
-                  : loadingComunas
-                  ? "Cargando comunas..."
-                  : comunasDisponibles.length
-                  ? "Selecciona comuna"
-                  : "Sin comunas disponibles"}
-              </option>
-              {comunasDisponibles.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Apellido Materno</label>
+                <input
+                    name="apellidoMaterno"
+                    defaultValue={user.apellidoMaterno || ""}
+                    disabled={!isEditing}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+             </div>
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Fecha Nacimiento</label>
+                <input
+                    type="date"
+                    name="birthDate"
+                    defaultValue={user.birthDate || ""}
+                    disabled={!isEditing}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed icon-invert"
+                    style={{ colorScheme: 'dark' }} 
+                />
+             </div>
           </div>
 
-          <div className="w-full">
-            <input
-              name="edad"
-              value={form.edad}
-              onChange={handleChange}
-              placeholder="Edad"
-              type="number"
-              min={10}
-              max={80}
-              required
-              disabled={!isEditing}
-              className={`w-full rounded-lg bg-neutral-800/80 border px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 transition disabled:opacity-60 disabled:cursor-not-allowed ${
-                errors.edad
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-blue-800/30 focus:ring-blue-500"
-              }`}
-            />
-            {errors.edad && (
-              <p className="text-red-400 text-sm mt-1">{errors.edad}</p>
+          {/* Ubicación */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Región</label>
+                <select
+                    name="regionId_display" // Nombre dummy, no se envía directo
+                    value={selectedRegionId}
+                    onChange={(e) => {
+                        setSelectedRegionId(e.target.value);
+                        setSelectedComunaId(""); 
+                    }}
+                    disabled={!isEditing}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+                >
+                    <option value="">Selecciona Región</option>
+                    {regiones.map(r => (
+                        <option key={r.id} value={r.id} className="bg-gray-900">{r.name}</option>
+                    ))}
+                </select>
+             </div>
+             <div>
+                <label className="text-xs uppercase tracking-wider text-gray-500 ml-1 mb-1.5 block font-bold">Comuna</label>
+                <select
+                    name="comunaId"
+                    value={selectedComunaId}
+                    onChange={(e) => setSelectedComunaId(e.target.value)}
+                    disabled={!isEditing || !selectedRegionId}
+                    className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+                >
+                    <option value="">Selecciona Comuna</option>
+                    {comunasFiltradas.map(c => (
+                        <option key={c.id} value={c.id} className="bg-gray-900">{c.name}</option>
+                    ))}
+                </select>
+             </div>
+          </div>
+
+          {/* BOTONES DE ACCIÓN */}
+          <div className="pt-4 border-t border-white/5 mt-2">
+            {!isEditing ? (
+                <button
+                    type="button"
+                    onClick={() => setIsEditing(true)} 
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/30 transition-all flex items-center justify-center gap-2"
+                >
+                    <PencilSquareIcon className="w-5 h-5" />
+                    Editar Perfil
+                </button>
+            ) : (
+                <div className="flex gap-3">
+                    <button
+                        type="button"
+                        onClick={() => {
+                           setIsEditing(false);
+                           // Aquí podrías resetear los valores si quisieras
+                        }}
+                        className="flex-1 py-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                        <XMarkIcon className="w-5 h-5" />
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        className="flex-1 py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg shadow-green-900/30 transition-all flex items-center justify-center gap-2"
+                    >
+                        <CheckIcon className="w-5 h-5" />
+                        Guardar Cambios
+                    </button>
+                </div>
             )}
           </div>
-        </div>
 
-        {isEditing ? (
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
-            <button
-              type="submit"
-              className="flex-1 rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Guardar cambios
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="flex-1 rounded-lg bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700 transition-all text-white py-2 font-bold shadow-md border border-gray-500/30 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              Cancelar
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleEdit}
-            className="w-full rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            Editar
-          </button>
-        )}
+        </form>
+      </div>
 
-        {errorGeo && <p className="text-center text-red-300">{errorGeo}</p>}
-      </form>
-
+      {/* --- SECCIÓN WILDCARDS --- */}
       {user.wildcards && user.wildcards.length > 0 && (
-        <div className="w-full max-w-md mx-auto mt-8 bg-neutral-800/70 rounded-xl p-6 shadow-lg border border-blue-800/30">
-          <h3 className="text-blue-200 font-bold mb-4 text-lg">Editar Wildcard</h3>
-          {user.wildcards.map((wc: any) => (
-            <WildcardEditForm key={wc.id} wildcard={wc} />
-          ))}
+        <div className="w-full bg-[#1a1a1a] rounded-3xl border border-white/10 p-8 shadow-xl">
+          <h3 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
+             <span className="text-2xl">🎥</span> Tus Wildcards Enviadas
+          </h3>
+          <div className="space-y-4">
+            {user.wildcards.map((wc: any) => (
+              <WildcardItem key={wc.id} wildcard={wc} />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function WildcardEditForm({ wildcard }: { wildcard: any }) {
-  const [nombreArtistico, setNombreArtistico] = useState(
-    wildcard.nombreArtistico || ""
-  );
-  const [youtubeUrl, setYoutubeUrl] = useState(wildcard.youtubeUrl || "");
+// Componente visual para mostrar el estado de la Wildcard
+function WildcardItem({ wildcard }: { wildcard: any }) {
+  return (
+    <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-white/10 hover:bg-black/40">
+        <div className="space-y-1">
+            <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-blue-400 uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded">
+                    {wildcard.evento?.nombre || "Evento"}
+                </span>
+            </div>
+            <p className="text-white font-semibold text-lg">{wildcard.nombreArtistico}</p>
+            {wildcard.youtubeUrl && (
+                <a href={wildcard.youtubeUrl} target="_blank" rel="noreferrer" className="text-xs text-gray-500 hover:text-blue-300 transition-colors underline underline-offset-2">
+                    Ver Video
+                </a>
+            )}
+        </div>
 
-  // 1. Leemos la fecha límite que cargamos desde la página
-  // El 'wildcard.evento' ahora existe gracias al Paso 1
-  const deadline = wildcard.evento?.wildcardDeadline
-    ? new Date(wildcard.evento.wildcardDeadline)
-    : null;
-  
-  // 2. Verificamos si la edición está permitida
-  // (La wildcard también debe estar 'PENDING', como chequea tu API)
-  const isEditingAllowed =
-    (!deadline || new Date() < deadline) && wildcard.status === "PENDING";
-  
-  // 3. Mensaje de por qué está deshabilitado
-  const disabledMessage =
-    wildcard.status !== "PENDING"
-      ? "Tu wildcard ya fue revisada."
-      : "La fecha límite para editar ya pasó.";
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    const loadingToast = toast.loading("Actualizando wildcard...");
-    const res = await fetch("/api/wildcard", {
-      method: "PUT",
-      body: JSON.stringify({ id: wildcard.id, nombreArtistico, youtubeUrl }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    // 4. Mejoramos el manejo de mensajes
-    if (res.ok) {
-      toast.success("Wildcard actualizada correctamente", { id: loadingToast });
-    } else {
-      // Mostramos el error real que envía el backend
-      const data = await res.json();
-      const errorMsg = data.error || "Error al actualizar wildcard";
-      toast.error(errorMsg, { id: loadingToast });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      {wildcard.evento?.nombre && (
-        <p className="text-sm text-center text-blue-300 -mb-1">
-          Evento: <span className="font-semibold">{wildcard.evento.nombre}</span>
-        </p>
-      )}
-      <input
-        value={nombreArtistico}
-        onChange={(e) => setNombreArtistico(e.target.value)}
-        placeholder="Nombre artístico"
-        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={!isEditingAllowed} // 5. Deshabilitar input
-      />
-  _    <input
-        value={youtubeUrl}
-        onChange={(e) => setYoutubeUrl(e.target.value)}
-        placeholder="Link del video (YouTube)"
-        className="rounded-lg bg-neutral-900/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={!isEditingAllowed} // 6. Deshabilitar input
-      />
-      <button
-        type="submit"
-        className="rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-500"
-        disabled={!isEditingAllowed} // 7. Deshabilitar botón
-      >
-        {isEditingAllowed ? "Guardar cambios" : "Edición cerrada"}
-      </button>
-      
-      {/* 8. Mensaje claro de por qué está deshabilitado */}
-      {!isEditingAllowed && (
-        <p className="text-center text-yellow-400 text-xs mt-2">
-          {disabledMessage}
-        </p>
-      )}
-    </form>
-  );
-}
-
-// Utilidad para calcular birthDate desde edad (aprox. al 1 de enero)
-function calcularBirthDateDesdeEdad(edad: number) {
-  const hoy = new Date();
-  return new Date(hoy.getFullYear() - edad, 0, 1).toISOString();
+        <div className="flex items-center">
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
+                wildcard.status === 'APPROVED' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                wildcard.status === 'REJECTED' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+            }`}>
+                {wildcard.status === 'PENDING' ? 'EN REVISIÓN' : 
+                 wildcard.status === 'APPROVED' ? 'APROBADO' : 'RECHAZADO'}
+            </span>
+        </div>
+    </div>
+  )
 }
