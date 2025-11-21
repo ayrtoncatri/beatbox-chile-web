@@ -43,7 +43,7 @@ export default function JudgeTopbar({ user }: Props) {
             <Link href="/" className="group relative inline-flex items-center">
               <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-fuchsia-500/20 via-purple-500/20 to-sky-500/20 blur-md transition group-hover:blur-lg" />
               <Image
-                src="/logo-beatboxchile.webp"
+                src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp"
                 alt="Beatbox Chile"
                 width={30}
                 height={30}

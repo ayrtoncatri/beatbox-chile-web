@@ -36,7 +36,7 @@ export default async function EventBracketPage({
          * 2. La imagen del muro
          * (Usamos _ en lugar de espacios para Tailwind)
         */
-        [background-image:radial-gradient(ellipse_at_center,_rgba(10,15,26,0.4)_0%,_rgba(10,10,10,1)_70%),_url('/new-banner-bbx.webp')]
+        [background-image:radial-gradient(ellipse_at_center,_rgba(10,15,26,0.4)_0%,_rgba(10,10,10,1)_70%),_url('https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744752/new-banner-bbx_ymgg2x.webp')]
         
         /*          * Aplicamos 'cover' a AMBAS imágenes (gradiente e imagen)
         */

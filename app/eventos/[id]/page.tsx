@@ -202,7 +202,7 @@ export default async function EventoPage({ params }: { params: Promise<{ id: str
       <div className="relative w-full h-[80vh] min-h-[600px] z-10">
         <div className="absolute inset-0">
             <Image
-                src={evento.image || '/beatbox-chile-campeonato.webp'}
+                src={evento.image || 'https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746159/beatbox-chile-campeonato_xr2nsd.webp'}
                 alt={evento.nombre}
                 fill
                 className="object-cover"

@@ -107,7 +107,7 @@ export default function Header() {
           <div className="flex items-center justify-center gap-2 md:gap-3">
             <Link href="/">
               <Image
-                src="/logo-beatboxchile.webp"
+                src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp"
                 alt="Logo Beatbox Chile"
                 width={60}
                 height={60}

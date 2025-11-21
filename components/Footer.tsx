@@ -47,7 +47,7 @@ export default function Footer() {
                 {/* --- 2. Aquí está el componente Image --- */}
                 <Image
                   // El 'src' es la ruta RELATIVA a la carpeta 'public'
-                  src="/ISOTIPO.webp" 
+                  src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp" 
                   alt="Logo Beatbox Chile"
                   // Debes definir el tamaño real de tu logo (o el tamaño que quieres que renderice)
                   width={250} // Ejemplo: 250px de ancho
