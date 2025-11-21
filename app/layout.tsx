@@ -11,9 +11,6 @@ import Mascota from '@/components/mascota/Mascota';
 export const metadata: Metadata = {
   title: 'Beatbox Chile',
   description: 'Comunidad oficial de Beatbox en Chile',
-  icons: {
-    icon: '/ISOTIPO-DEGRADADO.png',
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

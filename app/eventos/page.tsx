@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import Image from 'next/image';
 
+export const revalidate = 60;
+
 // Esta función se ejecuta en el servidor para obtener todos los eventos
 async function getEventosPublicados() {
   const eventos = await prisma.evento.findMany({
@@ -50,7 +52,7 @@ function EventoCard({ evento }: { evento: any }) {
       <div className="relative h-48 w-full">
         {/* Imagen del Evento */}
         <Image
-          src={evento.image || '/liga-nacional.webp'} // <-- ¡Asegúrate de tener una imagen fallback!
+          src={evento.image || 'https://res.cloudinary.com/dfd1byvwn/image/upload/v1763747284/liga-nacional_zfqux3.webp'} // <-- ¡Asegúrate de tener una imagen fallback!
           alt={evento.nombre}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-110"
