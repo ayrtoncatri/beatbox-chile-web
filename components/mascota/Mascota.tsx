@@ -340,7 +340,7 @@ const Mascota: React.FC = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-blue-500 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors relative">
                     {!imageError ? (
                         <Image
-                            src="/mascotabtx.webp"
+                            src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746365/mascotabtx_ym0hyc.webp"
                             alt="Mascota"
                             width={48} height={48}                // tamaño base (md)
                             sizes="(max-width: 640px) 32px, (max-width: 768px) 40px, 48px"
@@ -378,7 +378,7 @@ const Mascota: React.FC = () => {
                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                                 {!imageError ? (
                                     <Image
-                                        src="/mascotabtx.webp"
+                                        src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746365/mascotabtx_ym0hyc.webp"
                                         alt="Mascota"
                                         width={20} height={20}
                                         sizes="20px"
@@ -507,7 +507,7 @@ const Mascota: React.FC = () => {
                                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                                                 {!imageError ? (
                                                     <Image
-                                                        src="/mascotabtx.webp"
+                                                        src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746365/mascotabtx_ym0hyc.webp"
                                                         alt="Mascota"
                                                         width={20} height={20}
                                                         sizes="20px"
@@ -563,7 +563,7 @@ const Mascota: React.FC = () => {
                                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                                             {!imageError ? (
                                                 <Image
-                                                    src="/mascotabtx.webp"
+                                                    src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746365/mascotabtx_ym0hyc.webp"
                                                     alt="Mascota"
                                                     width={20} height={20}
                                                     sizes="20px"
