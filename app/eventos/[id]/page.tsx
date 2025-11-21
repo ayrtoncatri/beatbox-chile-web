@@ -8,13 +8,13 @@ import CompraTicketsForm from '@/components/compra-entradas/CompraTicketsForm';
 import { checkEventHasBattles } from '@/app/actions/public-data';
 import { 
     MapPinIcon, 
+    CalendarDaysIcon, 
     TicketIcon, 
     MicrophoneIcon,
     ClockIcon,
     ExclamationCircleIcon
 } from '@heroicons/react/24/solid';
 
-// --- (1) Función de Carga de Datos (Next.js 15 Await) ---
 async function getEvento(id: string) {
   const evento = await prisma.evento.findUnique({
     where: { id },
@@ -40,7 +40,7 @@ async function getEvento(id: string) {
   return evento;
 }
 
-// --- Componentes UI (Con más transparencia para el fondo nuevo) ---
+// --- COMPONENTES UI REDISEÑADOS ---
 
 function WildcardInscripcion({ evento }: { evento: any }) {
   const ahora = new Date();
@@ -51,15 +51,13 @@ function WildcardInscripcion({ evento }: { evento: any }) {
     wildcardStatus = deadline > ahora ? 'abierto' : 'cerrado';
   }
 
-  // Hacemos el fondo más translúcido (bg-black/40) para ver las luces de atrás
-  const containerClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-2xl transition-all hover:border-white/20 group hover:bg-black/50";
+  const containerClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c12]/80 backdrop-blur-xl p-6 shadow-2xl transition-all hover:border-white/20 group";
 
+  // 1. ABIERTO
   if (wildcardStatus === 'abierto' && deadline) {
     return (
       <div className={containerClass}>
-        {/* Efecto de borde superior brillante */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent" />
-        
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-600" />
         <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Inscripciones Abiertas
@@ -81,25 +79,22 @@ function WildcardInscripcion({ evento }: { evento: any }) {
     );
   }
 
+  // 2. CERRADO
   if (wildcardStatus === 'cerrado') {
       return (
-        <div className={`${containerClass} border-white/5`}>
-             <div className="flex flex-col items-center text-center gap-3 opacity-60">
-                 <ExclamationCircleIcon className="w-8 h-8 text-yellow-500" />
-                 <div>
-                    <h3 className="text-lg font-black text-gray-300 uppercase tracking-tight">Inscripciones Cerradas</h3>
-                    <p className="text-xs text-gray-500 mt-1">El plazo ha finalizado.</p>
-                 </div>
-             </div>
+        <div className={`${containerClass} opacity-70 flex flex-col items-center text-center py-8`}>
+             <ExclamationCircleIcon className="w-8 h-8 text-yellow-500 mb-3 opacity-80" />
+             <h3 className="text-lg font-black text-yellow-500 uppercase tracking-tight">Inscripciones Cerradas</h3>
+             <p className="text-xs text-gray-400 mt-1 max-w-[200px]">El plazo para enviar videos ha finalizado.</p>
         </div>
       )
   }
 
+  // 3. NO DISPONIBLE
   return (
-    <div className={`${containerClass} border-white/5`}>
-         <div className="flex flex-col items-center text-center py-4 opacity-40">
-             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-tight">Wildcard No Disponible</h3>
-         </div>
+    <div className={`${containerClass} opacity-50 flex flex-col items-center text-center py-6`}>
+         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-tight">Wildcard No Disponible</h3>
+         <p className="text-[10px] text-gray-600 mt-1">Clasificación online deshabilitada.</p>
     </div>
   );
 }
@@ -108,22 +103,25 @@ function CompraEntradasSeccion({ evento }: { evento: any }) {
   const isTicketed = evento.isTicketed && evento.ticketTypes.length > 0;
   const esEventoPasado = new Date(evento.fecha) < new Date();
 
-  const containerClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-2xl transition-all hover:border-white/20 hover:bg-black/50";
+  const containerClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c12]/80 backdrop-blur-xl p-6 shadow-2xl transition-all hover:border-white/20";
 
+  // CASO 1: FINALIZADO
   if (esEventoPasado) {
       return (
         <div className={`${containerClass} opacity-50 grayscale flex flex-col items-center text-center py-8`}>
              <h3 className="text-xl font-black text-gray-400 uppercase tracking-tight">Evento Finalizado</h3>
+             <p className="text-xs text-gray-500 mt-1">Venta cerrada.</p>
         </div>
       )
   }
 
+  // CASO 2: ACTIVO
   if (isTicketed) {
     return (
       <div className={containerClass}>
-         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent" />
+         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-600" />
          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
                 <TicketIcon className="w-6 h-6 text-green-400" />
             </div>
             <div>
@@ -136,12 +134,14 @@ function CompraEntradasSeccion({ evento }: { evento: any }) {
     );
   }
 
+  // CASO 3: NO DISPONIBLE
   return (
-    <div className={`${containerClass} flex flex-col items-center text-center py-8 border-white/5`}>
-         <div className="p-3 bg-white/5 rounded-full mb-3 opacity-50">
+    <div className={`${containerClass} flex flex-col items-center text-center py-8 opacity-70`}>
+         <div className="p-3 bg-white/5 rounded-full mb-3">
              <TicketIcon className="w-6 h-6 text-gray-500" />
          </div>
-         <h3 className="text-lg font-bold text-gray-500 uppercase tracking-tight">Venta No Disponible</h3>
+         <h3 className="text-lg font-bold text-gray-400 uppercase tracking-tight">Venta No Disponible</h3>
+         <p className="text-xs text-gray-600 mt-1 px-4">Próximamente más información sobre entradas.</p>
     </div>
   );
 }
@@ -152,22 +152,19 @@ async function BracketLink({ eventoId }: { eventoId: string }) {
 
   return (
     <Link href={`/eventos/${eventoId}/bracket`} className="group relative block w-full mt-8">
-        {/* Efecto Neon Detrás */}
-        <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-blue-600 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
         
-        <div className="relative flex items-center justify-between bg-[#101015] border border-white/20 p-5 rounded-2xl group-hover:border-white/40 transition-all group-hover:translate-x-1">
+        <div className="relative flex items-center justify-between bg-[#13131a] border border-white/10 p-5 rounded-2xl hover:border-blue-500/50 transition-all group-hover:translate-x-1">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-fuchsia-500/20 to-blue-500/20 rounded-xl border border-white/10">
+                <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
                     <span className="text-xl">🏆</span>
                 </div>
                 <div>
-                    <h3 className="text-lg font-black text-white uppercase italic tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-blue-200 transition-all">
-                        Ver Brackets
-                    </h3>
+                    <h3 className="text-lg font-black text-white uppercase italic tracking-tight">Ver Brackets</h3>
                     <p className="text-xs text-blue-200/60 font-medium mt-0.5">Seguimiento en vivo</p>
                 </div>
             </div>
-            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/20 transition-all">
+            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all">
                 <span className="text-lg text-gray-400 group-hover:text-white">→</span>
             </div>
         </div>
