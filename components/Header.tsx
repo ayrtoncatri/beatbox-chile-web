@@ -7,6 +7,9 @@ import {
   FaBars,
   FaUserCircle,
   FaChevronDown,
+  FaCog,
+  FaGavel,
+  FaSignOutAlt,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButtons from "@/components/home/AuthButtons";
@@ -213,7 +216,56 @@ export default function Header() {
                       transition={{ duration: 0.18, ease: "easeOut" }}
                       className="absolute top-full right-0 mt-3 w-64 max-h-[70vh] overflow-auto rounded-xl border border-white/10 bg-[#0c0c12]/95 backdrop-blur-xl shadow-2xl shadow-blue-900/40"
                     >
-                      {/* ... tu dropdown igual que antes ... */}
+                      {/* Cabecera */}
+                    <div className="px-3.5 py-3 border-b border-white/10">
+                      <p className="text-sm font-semibold text-white truncate">{userName}</p>
+                      <p className="text-xs text-blue-300/80 truncate">{user.email}</p>
+                    </div>
+
+                    {/* Grupo principal */}
+                    <div className="p-2.5 space-y-1.5">
+                      <Link
+                        href="/perfil"
+                        className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-blue-900/30"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <FaUserCircle className="w-4 h-4 text-blue-300" />
+                        <span>Mi Perfil</span>
+                      </Link>
+
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-blue-900/30"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <FaCog className="w-4 h-4 text-blue-300" />
+                          <span>Panel Admin</span>
+                        </Link>
+                      )}
+
+                      {isJudge && (
+                        <Link
+                          href="/judge/dashboard"
+                          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-purple-900/30"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <FaGavel className="w-4 h-4 text-purple-300" />
+                          <span>Panel Juez</span>
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Logout separado visualmente */}
+                    <div className="px-2.5 py-2 border-t border-white/10">
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30"
+                      >
+                        <FaSignOutAlt className="w-4 h-4 text-red-300" />
+                        <span>Cerrar Sesión</span>
+                      </button>
+                    </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
