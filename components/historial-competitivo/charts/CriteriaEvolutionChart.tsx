@@ -37,24 +37,23 @@ interface CriteriaEvolutionChartProps {
   historyData: SerializedHistoryResult[];
 }
 
-// --- (4) Lógica de Negocio ---
+// --- (4) Lógica de Negocio y Colores (Adaptado a Rojo, Azul y Cyan) ---
 // Define los criterios que quieres rastrear en el gráfico
-// IMPORTANTE: Estos strings deben coincidir EXACTAMENTE con los 'name' en tu tabla 'Criterio'
 const CRITERIA_TO_TRACK = ['Originalidad', 'Técnica', 'Musicalidad']; 
 
-// Define los colores para cada línea (estilo profesional)
+// Define los colores para cada línea (COLORES CARACTERÍSTICOS)
 const CRITERIA_COLORS: { [key: string]: { border: string; bg: string } } = {
   'Originalidad': {
-    border: 'rgba(59, 130, 246, 1)', // blue-500
-    bg: 'rgba(59, 130, 246, 0.2)',
+    border: 'rgba(45, 212, 191, 1)', // Cyan-400 (Innovación/Tech)
+    bg: 'rgba(45, 212, 191, 0.15)',
   },
   'Técnica': {
-    border: 'rgba(239, 68, 68, 1)', // red-500
-    bg: 'rgba(239, 68, 68, 0.2)',
+    border: 'rgba(239, 68, 68, 1)', // Red-500 (Poder/Rojo Chile)
+    bg: 'rgba(239, 68, 68, 0.15)',
   },
   'Musicalidad': {
-    border: 'rgba(22, 163, 74, 1)', // green-600
-    bg: 'rgba(22, 163, 74, 0.2)',
+    border: 'rgba(59, 130, 246, 1)', // Blue-500 (Estructura/Azul Chile)
+    bg: 'rgba(59, 130, 246, 0.15)',
   },
 };
 
@@ -65,7 +64,7 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
     }
 
     const groupedByParticipation = groupBy(historyData, 
-      (score) => `${score.evento.nombre} (${formatPhase(score.phase)})`
+      (score) => `${score.evento.nombre.toUpperCase()} (${formatPhase(score.phase)})`
     );
 
     const participations = Object.entries(groupedByParticipation)
@@ -81,7 +80,6 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
     const datasets = CRITERIA_TO_TRACK.map(criterionName => {
       
       const dataPoints = participations.map(participation => {
-
         
         // Obtenemos TODOS los 'details' de todos los jueces para este criterio
         const criteriaDetails = participation.scores
@@ -107,8 +105,8 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
         fill: true, // Rellena el área bajo la línea
         tension: 0.3, // Curva suave
         pointBackgroundColor: colors.border,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 5, // Puntos más grandes para visibilidad
+        pointHoverRadius: 8,
       };
     });
 
@@ -116,7 +114,7 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
 
   }, [historyData]);
 
-  // --- (6) Opciones de Estilo (Dark Mode) ---
+  // --- (6) Opciones de Estilo (Dark Mode & Tech) ---
   const options = {
     responsive: true,
     maintainAspectRatio: false, // CLAVE para que llene el div 'h-96'
@@ -124,29 +122,35 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
       legend: {
         position: 'top' as const,
         labels: { 
-          color: '#D1D5DB', // text-gray-300
-          font: { size: 12 }
+          color: '#FFFFFF', // Blanco puro
+          font: { size: 13, weight: 'bold' as const } // Texto de leyenda agresivo
         }
       },
       tooltip: {
         mode: 'index' as const,
         intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: { size: 14, weight: 'bold' as const },
-        bodyFont: { size: 12 },
-        padding: 10,
-        cornerRadius: 6,
+        backgroundColor: 'rgba(10, 10, 25, 0.9)', // Darker blue tooltip
+        titleFont: { size: 15, weight: 'bold' as const }, 
+        bodyFont: { size: 13, family: 'monospace' }, // Fuente mono para datos
+        padding: 12,
+        cornerRadius: 4,
       }
     },
     scales: {
       y: {
         beginAtZero: true,
-        max: 40, // Asumimos que 40 es el máximo (de Originalidad)
-        ticks: { color: '#9CA3AF' }, // text-gray-400
-        grid: { color: '#374151' } // text-gray-700
+        max: 40, // Asumimos que 40 es el máximo
+        ticks: { 
+            color: '#93C5FD', // light blue (blue-300) 
+            font: { family: 'monospace' } // Datos del eje en fuente mono
+        }, 
+        grid: { color: 'rgba(55, 65, 81, 0.3)' } // Grid sutil
       },
       x: {
-        ticks: { color: '#9CA3AF' }, // text-gray-400
+        ticks: { 
+            color: '#93C5FD', // light blue (blue-300)
+            font: { size: 10, weight: 'bold' as const } 
+        },
         grid: { display: false } // Ocultar grid vertical
       }
     }
@@ -154,8 +158,8 @@ export function CriteriaEvolutionChart({ historyData }: CriteriaEvolutionChartPr
 
   if (!chartData || chartData.datasets.every(ds => ds.data.every(d => d === null))) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400">
-        No hay suficientes datos de criterios para mostrar la evolución.
+      <div className="h-full flex items-center justify-center text-white/50 font-black italic">
+        No hay suficientes datos de criterios para mostrar la evolución del atleta.
       </div>
     );
   }

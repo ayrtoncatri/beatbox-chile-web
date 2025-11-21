@@ -85,8 +85,10 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
 
   const [nombre, setNombre] = useState(evento?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(evento?.descripcion ?? "");
+  
+  // CORRECCIÓN 1: Usar .slice(0, 16) para mantener formato YYYY-MM-DDTHH:MM
   const [fecha, setFecha] = useState(
-    evento?.fecha ? new Date(evento.fecha).toISOString().split("T")[0] : ""
+    evento?.fecha ? new Date(evento.fecha).toISOString().slice(0, 16) : ""
   );
 
   const [wildcardDeadline, setWildcardDeadline] = useState(
@@ -123,7 +125,10 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
     if (evento) {
       setNombre(evento.nombre);
       setDescripcion(evento.descripcion ?? "");
-      setFecha(new Date(evento.fecha).toISOString().split("T")[0]);
+      
+      // CORRECCIÓN 2: Usar .slice(0, 16) aquí también
+      setFecha(evento.fecha ? new Date(evento.fecha).toISOString().slice(0, 16) : "");
+      
       setReglas(evento.reglas);
       setImage(evento.image ?? "");
       setIsPublished(evento.isPublished);
@@ -340,7 +345,7 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
             <input
               className="w-full border border-blue-700/50 rounded-lg px-3 py-2 text-sm bg-blue-950/50 text-white"
               name="fecha"
-              type="date"
+              type="datetime-local"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
               required

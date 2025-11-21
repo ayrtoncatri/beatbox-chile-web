@@ -14,7 +14,6 @@ function isStrongPassword(password: string) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(password);
 }
 function sanitize(input: string) {
-  // Remueve caracteres peligrosos básicos
   return input.replace(/[<>"'`\\]/g, "");
 }
 
@@ -70,7 +69,6 @@ export default function RegisterPage() {
       });
 
       if (res.ok) {
-        // Éxito: Redirigir al login
         router.push("/auth/login?registered=1");
       } else {
         const data = await res.json();
@@ -80,144 +78,176 @@ export default function RegisterPage() {
       setError("Error de red. Por favor, intente de nuevo.");
     }
 
-    setLoading(false); // Detener la carga
+    setLoading(false);
   };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-black via-blue-950 to-neutral-900">
+    <main className="min-h-screen flex flex-col justify-center items-center
+                     bg-gradient-to-b from-black via-blue-950 to-neutral-900">
+
+      {/* CONTENEDOR PRINCIPAL (Igual Login) */}
       <form
         onSubmit={handleRegister}
-        className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-blue-900/80 via-neutral-900/90 to-blue-950/80 p-8 text-center shadow-2xl border border-blue-800/40 backdrop-blur-lg"
+        className="w-full max-w-md mx-auto rounded-3xl
+                   bg-gradient-to-b from-[#0b0b11]/95 via-[#0d0d14]/95 to-[#09090f]/95
+                   p-10 text-center shadow-[0_0_40px_rgba(255,0,70,0.15)]
+                   border border-red-600/20 backdrop-blur-2xl"
         autoComplete="off"
       >
-        <h2 className="text-3xl font-extrabold text-blue-100 mb-6 drop-shadow">
-          Registrarse
+        {/* TÍTULO IGUAL AL LOGIN */}
+        <h2 className="mb-8 text-4xl font-black italic uppercase tracking-wide text-white">
+          Registro <span className="text-red-500">Autorizado</span>
         </h2>
-        
+
+        {/* Google Button — Idéntico a Login */}
         <button
           type="button"
           onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="mb-6 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-700 hover:bg-blue-800 transition py-2 font-semibold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mb-8 w-full flex items-center justify-center gap-3
+                     rounded-xl bg-[#111827]/70 hover:bg-[#1e293b]/70
+                     transition py-3 font-black italic uppercase tracking-wider
+                     text-white shadow-lg border border-blue-500/30"
         >
-          <span>Registrarse con Google</span>
-          <Image
-            src="/icons8-google.svg"
-            alt="Google Logo"
-            width={22}
-            height={22}
-            className="inline-block"
-          />
+          <span>Continuar con Google</span>
+          <Image src="/icons8-google.svg" alt="Google Logo" width={24} height={24} />
         </button>
 
-        <div className="flex flex-col gap-3 mb-2">
+        {/* CAMPOS DE REGISTRO */}
+        <div className="flex flex-col gap-4 mb-4">
           <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-gray-100 placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3
+                       text-white placeholder:text-white/40
+                       focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             name="nombres"
             type="text"
             placeholder="Nombres"
             required
-            maxLength={50}
-            autoComplete="off"
             disabled={loading}
           />
+
           <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3
+                       text-white placeholder:text-white/40
+                       focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             name="apellidoPaterno"
             type="text"
             placeholder="Apellido paterno"
             required
-            maxLength={50}
-            autoComplete="off"
             disabled={loading}
           />
+
           <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3
+                       text-white placeholder:text-white/40
+                       focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             name="apellidoMaterno"
             type="text"
-            placeholder="Apellido materno"
-            maxLength={50}
-            autoComplete="off"
+            placeholder="Apellido materno (opcional)"
             disabled={loading}
           />
+
           <input
-            className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3
+                       text-white placeholder:text-white/40
+                       focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             name="email"
             type="email"
-            placeholder="Correo"
+            placeholder="Correo electrónico"
             required
-            maxLength={100}
-            autoComplete="off"
             disabled={loading}
           />
+
+          {/* Password */}
           <div className="relative">
             <input
-              className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 pr-10 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3 pr-12
+                         text-white placeholder:text-white/40
+                         focus:outline-none focus:ring-2 focus:ring-red-500 transition"
               name="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
+              placeholder="Contraseña de acceso"
               required
-              minLength={8}
-              autoComplete="new-password"
               disabled={loading}
             />
             <button
               type="button"
-              tabIndex={-1}
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100 disabled:opacity-50"
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              disabled={loading}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-200 transition"
             >
               {showPassword ? (
-                // Ojo abierto
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeWidth="2"
+                    d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                </svg>
               ) : (
-                // Ojo cerrado
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><path stroke="currentColor" strokeWidth="2" d="m1 1 22 22"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeWidth="2"
+                    d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06"/>
+                  <path stroke="currentColor" strokeWidth="2" d="M1 1l22 22"/>
+                </svg>
               )}
             </button>
           </div>
+
+          {/* Confirm Password */}
           <div className="relative">
             <input
-              className="rounded-lg bg-neutral-800/80 border border-blue-800/30 px-4 py-2 pr-10 text-white placeholder:text-blue-200 placeholder:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="rounded-xl bg-[#0f0f15]/80 border border-white/10 px-4 py-3 pr-12
+                         text-white placeholder:text-white/40
+                         focus:outline-none focus:ring-2 focus:ring-red-500 transition"
               name="confirmPassword"
               type={showConfirm ? "text" : "password"}
               placeholder="Confirmar contraseña"
               required
-              minLength={8}
-              autoComplete="new-password"
+              disabled={loading}
             />
             <button
               type="button"
-              tabIndex={-1}
-              onClick={() => setShowConfirm((v) => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-100"
-              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-200 transition"
             >
               {showConfirm ? (
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeWidth="2"
+                    d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                </svg>
               ) : (
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><path stroke="currentColor" strokeWidth="2" d="m1 1 22 22"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeWidth="2"
+                    d="M17.94 17.94C16.11 19.25 14.13 20 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.06"/>
+                  <path stroke="currentColor" strokeWidth="2" d="M1 1l22 22"/>
+                </svg>
               )}
             </button>
           </div>
         </div>
+
+        {/* Botón Crear Cuenta */}
         <button
           type="submit"
-          className="w-full rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 transition-all text-white py-2 font-bold shadow-md border border-blue-400/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          disabled={loading}
+          className="w-full rounded-xl bg-gradient-to-r from-red-600 to-fuchsia-600
+                     hover:from-red-700 hover:to-fuchsia-700 transition-all py-3
+                     font-black italic uppercase tracking-wider text-white shadow-xl
+                     shadow-red-900/40 focus:ring-2 focus:ring-fuchsia-400/50"
         >
-          Registrarme
+          Crear Cuenta
         </button>
-        {error && <p className="text-red-400 mt-4 font-semibold">{error}</p>}
+
+        {/* Mensaje de Error */}
+        {error && <p className="text-red-400 mt-4 font-black italic">{error}</p>}
       </form>
 
-      <p className="text-blue-200/90 mt-6">
+      {/* Enlace Login */}
+      <p className="mt-6 text-blue-200 text-sm">
         ¿Ya tienes cuenta?{" "}
         <Link
           href="/auth/login"
-          className="font-bold text-blue-400 hover:text-blue-300 transition"
+          className="font-black italic text-cyan-300 hover:text-cyan-100 transition"
         >
-          Inicia sesión
+          Inicia sesión <span className="text-red-400">aquí</span>.
         </Link>
       </p>
     </main>

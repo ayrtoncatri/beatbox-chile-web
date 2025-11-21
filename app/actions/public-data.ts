@@ -46,6 +46,17 @@ export type SerializedHistoryResult = Omit<FullScoreHistory, 'createdAt' | 'upda
   evento: Omit<FullScoreHistory['evento'], 'fecha' | 'wildcardDeadline'> & {
     fecha: string;
     wildcardDeadline: string | null;
+    venue: { // ESTO ES CLAVE
+            name: string | null;
+            address: {
+                comuna: {
+                    name: string;
+                    region: {
+                        name: string;
+                    } | null; // o sin | null, dependiendo si es obligatorio
+                } | null;
+            } | null;
+        } | null;
   };
 };
 
@@ -57,6 +68,9 @@ export interface AggregatedHistoryRow {
   categoryName: string;
   phase: RoundPhase;
   finalScore: number;
+  venueName: string;
+  comunaName: string | null;
+  regionName: string | null;
 }
 
 
@@ -354,7 +368,27 @@ export async function getCompetitorHistory(userId: string): Promise<SerializedHi
       status: 'SUBMITTED' // Solo mostrar puntajes finales
     },
     include: {
-      evento: { include: { tipo: true } }, // Contexto del evento
+      evento: { 
+        include: { 
+          tipo: true,
+          venue: { 
+            select: { 
+              name: true,
+              address: {
+                include: {
+                  comuna: { 
+                    include: {
+                      region: { 
+                        select: { name: true }
+                      }
+                    }
+                  }
+                }
+              }
+            } 
+          }
+        } 
+      }, // Contexto del evento
       categoria: true, // Contexto de categoría
       details: { include: { criterio: true } }, // Detalle granular
     },
@@ -390,6 +424,11 @@ export async function aggregateHistoryForTable(
   const aggregatedRows: AggregatedHistoryRow[] = Object.values(groupedByParticipation).map(scoresInGroup => {
     // Todos los scores en este grupo comparten evento, fase y categoría
     const firstScore = scoresInGroup[0];
+
+    const venueName = firstScore.evento.venue?.name || 'Sin lugar';
+    // Accedemos a la cadena: evento -> venue -> address -> comuna -> name
+    const comunaName = firstScore.evento.venue?.address?.comuna?.name || 'N/A';
+    const regionName = firstScore.evento.venue?.address?.comuna?.region?.name || 'N/A';
     
     // Calculamos el promedio de la nota total de todos los jueces
     const averageScore = meanBy(scoresInGroup, 'totalScore');
@@ -400,7 +439,10 @@ export async function aggregateHistoryForTable(
       eventDate: firstScore.evento.fecha, // Ya es string ISO
       categoryName: firstScore.categoria.name,
       phase: firstScore.phase,
-      finalScore: parseFloat(averageScore.toFixed(2)), // Redondeamos
+      finalScore: parseFloat(averageScore.toFixed(2)),
+      venueName: venueName, 
+      comunaName: comunaName,
+      regionName: regionName,
     };
   });
   
