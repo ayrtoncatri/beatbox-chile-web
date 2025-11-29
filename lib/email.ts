@@ -10,7 +10,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Beatbox Chile <no-reply@beatboxchile.cl', // Si aún no verificas dominio, usa este remitente de prueba
+      from: 'Beatbox Chile <no-reply@beatboxchile.cl>', // Si aún no verificas dominio, usa este remitente de prueba
       to: email,
       subject: 'Restablece tu contraseña - Beatbox Chile',
       html: `
