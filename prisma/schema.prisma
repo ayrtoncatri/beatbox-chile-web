@@ -17,7 +17,7 @@ datasource db {
 
 model Role {
   id        String    @id @default(cuid())
-  name      String    @unique          // "admin", "judge", "user", etc.
+  name      String    @unique          
   users     UserRole[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -25,7 +25,7 @@ model Role {
 
 model EventType {
   id        String   @id @default(cuid())
-  name      String   @unique           // "Liga", "Exhibición", "Batalla", etc.
+  name      String   @unique           
   events    Evento[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -33,7 +33,7 @@ model EventType {
 
 model Categoria {
   id          String   @id @default(cuid())
-  name        String   @unique // "SOLO", "LOOPSTATION", "TAG_TEAM"
+  name        String   @unique 
   description String?
   createdAt   DateTime @default(now())
 
@@ -49,14 +49,12 @@ model Categoria {
   battles       Battle[]
 }
 
-// === NUEVO: Criterios de Evaluación (Dinámico por Categoría) ===
-// (Originalidad, Musicalidad, etc., con sus rangos)
 model Criterio {
   id          String    @id @default(cuid())
-  name        String // "Originalidad", "Musicalidad", "Composition", etc.
-  description String? // El texto del tooltip para el juez
+  name        String 
+  description String?
   minScore    Int       @default(0)
-  maxScore    Int // 40, 20, 5 (según la rúbrica)
+  maxScore    Int 
   
   categoriaId String
   categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
@@ -84,10 +82,10 @@ enum RoundPhase {
   FINAL
 }
 
-// === NUEVO: Estado del puntaje (para autosave) ===
+
 enum ScoreStatus {
-  DRAFT     // Guardado automático (autosave)
-  SUBMITTED // Envío final del juez
+  DRAFT     
+  SUBMITTED 
 }
 
 /* =========================
@@ -95,13 +93,13 @@ enum ScoreStatus {
    ========================= */
 
 model Region {
-  id        Int      @id               // Puedes cargar IDs oficiales (1..16)
+  id        Int      @id               
   name      String   @unique
   comunas   Comuna[]
 }
 
 model Comuna {
-  id        Int      @id               // ID oficial si lo deseas
+  id        Int      @id               
   name      String
   regionId  Int
   region    Region   @relation(fields: [regionId], references: [id], onDelete: Restrict)
@@ -170,6 +168,7 @@ model User {
   battlesAsParticipantA Battle[] @relation("ParticipantA")
   battlesAsParticipantB Battle[] @relation("ParticipantB")
   battlesWon            Battle[] @relation("Winner")
+  passwordResetTokens PasswordResetToken[]
 }
 
 model UserProfile {
@@ -179,7 +178,7 @@ model UserProfile {
   nombres          String?
   apellidoPaterno  String?
   apellidoMaterno  String?
-  birthDate        DateTime?     // en UI calculas edad si la necesitas
+  birthDate        DateTime?    
   comunaId         Int?
   comuna           Comuna? @relation(fields: [comunaId], references: [id], onDelete: SetNull)
 
@@ -232,9 +231,9 @@ model Evento {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  categories    CompetitionCategory[] // Qué categorías tiene este evento
-  assignments   JudgeAssignment[]     // Qué jueces están asignados
-  scores        Score[]               // Qué puntajes se han emitido
+  categories    CompetitionCategory[] 
+  assignments   JudgeAssignment[]    
+  scores        Score[]               
   
   battles       Battle[]
 
@@ -282,7 +281,7 @@ model Wildcard {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  //@@unique([userId, eventoId])   // 1 wildcard por usuario por evento
+
   @@unique([userId, eventoId, categoriaId])
 
   @@index([eventoId])
@@ -300,7 +299,7 @@ model Puntaje {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, eventoId])   // permite upsert por compuesta
+  @@unique([userId, eventoId])   
   @@index([eventoId])
 }
 
@@ -313,8 +312,8 @@ model TicketType {
   eventId    String
   event      Evento   @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  name       String               // "General", "VIP", etc.
-  price      Int                  // CLP (usa Decimal si prefieres)
+  name       String               
+  price      Int                  
   currency   String   @default("CLP")
   capacity   Int?
   isActive   Boolean  @default(true)
@@ -324,7 +323,7 @@ model TicketType {
 
   items      CompraItem[]
 
-  @@unique([eventId, name])       // no repetir el nombre dentro del evento
+  @@unique([eventId, name])       
   @@index([eventId])
 }
 
@@ -333,7 +332,6 @@ model Compra {
   userId     String
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // ancla opcional para filtrar por evento en dashboards
   eventoId   String?
   evento     Evento?   @relation("EventoCompras", fields: [eventoId], references: [id], onDelete: SetNull)
 
@@ -358,8 +356,8 @@ model CompraItem {
   ticketType    TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
 
   quantity      Int
-  unitPrice     Int        // snapshot del precio
-  subtotal      Int        // quantity * unitPrice
+  unitPrice     Int        
+  subtotal      Int        
 
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -414,7 +412,6 @@ model Mensaje {
    NUEVO: Módulo de Evaluación
    ========================= */
 
-// === NUEVO: Define qué categorías y cupos tiene un Evento ===
 model CompetitionCategory {
   id            String  @id @default(cuid())
   eventoId      String
@@ -423,17 +420,16 @@ model CompetitionCategory {
   categoriaId   String
   categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
   
-  wildcardSlots Int     @default(0) // Cupos de clasificados desde Wildcard
+  wildcardSlots Int     @default(0) 
   
-  @@unique([eventoId, categoriaId]) // Un evento solo puede tener una vez la categoría "SOLO"
+  @@unique([eventoId, categoriaId]) 
   @@index([categoriaId])
 }
 
-// === NUEVO: Asignación de un Juez (User) a una tarea de evaluación ===
 model JudgeAssignment {
   id          String   @id @default(cuid())
   
-  judgeId     String // FK a User.id (debe tener Rol "judge")
+  judgeId     String 
   judge       User     @relation("JudgeAssignments", fields: [judgeId], references: [id], onDelete: Cascade)
   
   eventoId    String
@@ -442,15 +438,13 @@ model JudgeAssignment {
   categoriaId String
   categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
   
-  phase       RoundPhase // A qué ronda está asignado (e.g., WILDCARD, CUARTOS)
+  phase       RoundPhase 
 
   @@unique([judgeId, eventoId, categoriaId, phase])
   @@index([eventoId])
   @@index([judgeId])
 }
 
-// === NUEVO: La evaluación general de UN juez a UN participante en UNA ronda ===
-// Esta es la "Nota total del juez" del Excel
 model Score {
   id            String   @id @default(cuid())
   
@@ -461,26 +455,23 @@ model Score {
   categoriaId   String
   categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
   
-  phase         RoundPhase // WILDCARD, CUARTOS, etc.
+  phase         RoundPhase 
   
-  // Quién evalúa
   judgeId       String
   judge         User     @relation("JudgeScores", fields: [judgeId], references: [id], onDelete: Cascade)
   
-  // A quién evalúan (el competidor)
   participantId String
   participant   User     @relation("ParticipantScores", fields: [participantId], references: [id], onDelete: Cascade)
   
-  // Resultado
-  totalScore    Int      @default(0) // Suma de los criterios (Cálculo Regla 1)
-  notes         String?  // Comentarios privados del juez
-  status        ScoreStatus @default(DRAFT) // Para autosave
+  totalScore    Int      @default(0)
+  notes         String?  
+  status        ScoreStatus @default(DRAFT) 
 
-  // Enlace opcional a la batalla
+
   battleId      String?
   battle        Battle?  @relation(fields: [battleId], references: [id], onDelete: SetNull)
   
-  // Para manejar los 2 rounds de 1:30
+
   roundNumber   Int      @default(1)
   
   createdAt     DateTime @default(now())
@@ -607,4 +598,16 @@ model Battle {
   @@index([participantAId])
   @@index([participantBId])
   @@index([winnerId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -137,6 +137,17 @@ export default function LoginClient({
             </button>
           </div>
 
+          {/* 🔥 LINK: OLVIDÉ CONTRASEÑA */}
+          <div className="flex justify-center -mt-2">
+            <button
+              type="button"
+              onClick={() => router.push("/auth/forgot-password")}
+              className="text-xs font-medium text-gray-400 hover:text-cyan-300 transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+
           {/* BOTÓN PRINCIPAL */}
           <button
             type="submit"
