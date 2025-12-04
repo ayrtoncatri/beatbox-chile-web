@@ -196,7 +196,7 @@ export default function Historia() {
                             {/* DESCRIPCIÓN */}
                             <div className="pt-6 border-t border-white/5">
                                 <p className="text-gray-400 leading-relaxed text-sm md:text-base max-w-xl mx-auto italic">
-                                    "{edicion.descripcion}"
+                                    {edicion.descripcion}
                                 </p>
                             </div>
 
