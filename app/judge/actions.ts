@@ -152,85 +152,122 @@ export async function submitBulkScores(
       return { success: false, error: validation.error.format() }
     }
     const dataList = validation.data
-
     if (dataList.length === 0) return { success: true, count: 0 }
 
     // 2. Auth
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return { success: false, error: 'No autorizado' }
+    if (!session?.user?.id) {
+      return { success: false, error: 'No autorizado' }
+    }
     const judgeId = session.user.id
 
-    // 3. Transacción Atómica
-    // Ejecutamos todas las operaciones de BD secuencialmente pero en una sola transacción.
-    // Si una falla, todas fallan (evita estados corruptos).
-    await prisma.$transaction(async (tx) => {
-      for (const data of dataList) {
-        // Recalcular Total (Seguridad Backend)
-        const criterios = await tx.criterio.findMany({
-            where: { categoriaId: data.categoriaId },
-            select: { id: true, maxScore: true }
-        })
-        
-        let totalScore = 0
-        for (const s of data.scores) {
-            const crit = criterios.find(c => c.id === s.criterioId)
-            if (crit) {
-                // Cap de seguridad
-                const safeValue = Math.min(s.value, crit.maxScore)
-                totalScore += safeValue
-            }
+    // 3. Cargar TODOS los criterios necesarios en una sola query (fuera de la tx)
+    const categoriaIds = Array.from(
+      new Set(dataList.map((d) => d.categoriaId))
+    )
+
+    const criteriosAll = await prisma.criterio.findMany({
+      where: { categoriaId: { in: categoriaIds } },
+      select: { id: true, maxScore: true, categoriaId: true },
+    })
+
+    // Map de categoriaId -> lista de criterios
+    const criteriosPorCategoria = new Map<
+      string,
+      { id: string; maxScore: number }[]
+    >()
+
+    for (const c of criteriosAll) {
+      const list = criteriosPorCategoria.get(c.categoriaId) ?? []
+      list.push({ id: c.id, maxScore: c.maxScore })
+      criteriosPorCategoria.set(c.categoriaId, list)
+    }
+
+    // 4. Construir todas las operaciones de upsert en memoria
+    const operations = dataList.map((data) => {
+      const criterios = criteriosPorCategoria.get(data.categoriaId)
+      if (!criterios) {
+        throw new Error(
+          `No hay criterios configurados para la categoría ${data.categoriaId}`
+        )
+      }
+
+      let totalScore = 0
+
+      // normalizamos los detalles y calculamos el total
+      const detailsData = data.scores.map((s) => {
+        const crit = criterios.find((c) => c.id === s.criterioId)
+        if (!crit) {
+          throw new Error(
+            `Criterio ${s.criterioId} no válido para la categoría ${data.categoriaId}`
+          )
         }
 
-        // Upsert Individual dentro de la transacción
-        await tx.score.upsert({
-          where: {
-            eventoId_categoriaId_phase_judgeId_participantId_roundNumber: {
-              eventoId: data.eventoId,
-              categoriaId: data.categoriaId,
-              phase: data.phase,
-              judgeId: judgeId,
-              participantId: data.participantId,
-              roundNumber: data.roundNumber || 1,
-            },
-          },
-          create: {
+        const safeValue = Math.min(s.value, crit.maxScore)
+        totalScore += safeValue
+
+        return {
+          criterioId: s.criterioId,
+          value: safeValue,
+        }
+      })
+
+      const roundNumber = data.roundNumber || 1
+
+      // Devolvemos el PrismaPromise que se ejecutará dentro de la transacción
+      return prisma.score.upsert({
+        where: {
+          eventoId_categoriaId_phase_judgeId_participantId_roundNumber: {
             eventoId: data.eventoId,
             categoriaId: data.categoriaId,
             phase: data.phase,
-            judgeId: judgeId,
+            judgeId,
             participantId: data.participantId,
-            roundNumber: data.roundNumber || 1,
-            battleId: data.battleId,
-            totalScore,
-            notes: data.notes,
-            status: ScoreStatus.SUBMITTED, // FORZAMOS SUBMITTED (Ahora sí funcionará)
-            details: {
-              create: data.scores.map(s => ({
-                criterioId: s.criterioId,
-                value: s.value
-              }))
-            }
+            roundNumber,
           },
-          update: {
-            totalScore,
-            notes: data.notes,
-            status: ScoreStatus.SUBMITTED, // FORZAMOS SUBMITTED
-            battleId: data.battleId,
-            details: {
-              deleteMany: {}, // Borramos detalles previos
-              create: data.scores.map(s => ({
-                criterioId: s.criterioId,
-                value: s.value
-              }))
-            }
-          }
-        })
-      }
+        },
+        create: {
+          eventoId: data.eventoId,
+          categoriaId: data.categoriaId,
+          phase: data.phase,
+          judgeId,
+          participantId: data.participantId,
+          roundNumber,
+          battleId: data.battleId,
+          totalScore,
+          notes: data.notes,
+          status: ScoreStatus.SUBMITTED, // forzamos SUBMITTED
+          details: {
+            // un solo batch insert para los detalles
+            createMany: {
+              data: detailsData,
+            },
+          },
+        },
+        update: {
+          totalScore,
+          notes: data.notes,
+          status: ScoreStatus.SUBMITTED,
+          battleId: data.battleId,
+          roundNumber,
+          details: {
+            // borramos detalles previos y volvemos a crear en batch
+            deleteMany: {},
+            createMany: {
+              data: detailsData,
+            },
+          },
+        },
+      })
     })
 
+    // 5. Ejecutamos TODO en UNA sola transacción atómica
+    // Timeout < 10s porque estás en Hobby. 9000ms deja margen.
+    await prisma.$transaction(operations)
+
+    // 6. Revalidar el dashboard
     revalidatePath('/judge/dashboard')
     return { success: true, count: dataList.length }
-
   } catch (error) {
     console.error('Bulk Submit Error:', error)
     return { success: false, error: 'Error procesando el envío masivo.' }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition, useCallback } from 'react'
+import { useEffect, useState, useTransition, useCallback, useMemo  } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client'
@@ -119,48 +119,75 @@ export function JudgeScoreForm({
 
   // AUTOSAVE (Debounce 2.5s)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedDraftSave = useCallback(
+  const debouncedDraftSave = useMemo(
+  () =>
     debounce(async (payload: SubmitScorePayload) => {
-      if (formStatus === ScoreStatus.SUBMITTED) return
-      setIsAutoSaving(true)
-      const res = await submitScore({ ...payload, status: ScoreStatus.DRAFT })
-      setIsAutoSaving(false)
-      if (!res.success) console.error("Error autosave:", res.error)
-    }, 2500), 
-    [formStatus]
-  )
+      try {
+        setIsAutoSaving(true)
+        const res = await submitScore({ ...payload, status: ScoreStatus.DRAFT })
+        if (!res.success) {
+          console.error('Error autosave:', res.error)
+        }
+      } finally {
+        setIsAutoSaving(false)
+      }
+    }, 2500),
+  []
+)
 
   useEffect(() => {
-    // a) Total
-    const newTotal = watchedScores.reduce((acc, current) => {
-        const val = isNaN(Number(current.value)) ? 0 : Number(current.value);
-        return acc + val;
-    }, 0)
-    setTotal(newTotal)
+  // a) Total
+  const newTotal = watchedScores.reduce((acc, current) => {
+    const val = isNaN(Number(current.value)) ? 0 : Number(current.value)
+    return acc + val
+  }, 0)
+  setTotal(newTotal)
 
-    // b) Lógica de Estado y Comunicación
-    // IMPORTANTE: Si ya está SUBMITTED (por sincronización o acción manual), no hacemos nada de esto
-    if (formStatus === ScoreStatus.SUBMITTED) return;
+  // Si ya está SUBMITTED, cancelamos cualquier autosave pendiente y salimos
+  if (formStatus === ScoreStatus.SUBMITTED) {
+    debouncedDraftSave.cancel()
+    return
+  }
 
-    if (isFormComplete) {
-        const currentPayload: SubmitScorePayload = {
-            ...form.getValues(),
-            status: ScoreStatus.SUBMITTED 
-        }
+  // b) Lógica de estado + comunicación con el padre
+  if (isFormComplete) {
+    const currentValues = form.getValues()
 
-        if (onDataChange) {
-            onDataChange(wildcard.userId, currentPayload, true);
-        }
-
-        debouncedDraftSave({ ...currentPayload, status: ScoreStatus.DRAFT })
-
-    } else {
-        if (onDataChange) {
-            onDataChange(wildcard.userId, null, false);
-        }
+    // Payload que el padre usará para el envío masivo (SUBMITTED)
+    const payloadForParent: SubmitScorePayload = {
+      ...currentValues,
+      status: ScoreStatus.SUBMITTED,
     }
 
-  }, [watchedScores, watchedNotes, form, wildcard.userId, onDataChange, debouncedDraftSave, formStatus, isFormComplete])
+    // Payload que usará el autosave (DRAFT)
+    const payloadForDraft: SubmitScorePayload = {
+      ...currentValues,
+      status: ScoreStatus.DRAFT,
+    }
+
+    if (onDataChange) {
+      onDataChange(wildcard.userId, payloadForParent, true)
+    }
+
+    // Guardado automático en DRAFT
+    debouncedDraftSave(payloadForDraft)
+  } else {
+    // Formulario incompleto -> no está listo para envío masivo
+    if (onDataChange) {
+      onDataChange(wildcard.userId, null, false)
+    }
+    debouncedDraftSave.cancel()
+  }
+}, [
+  watchedScores,
+  watchedNotes,
+  form,
+  wildcard.userId,
+  onDataChange,
+  formStatus,
+  isFormComplete,
+  debouncedDraftSave,
+])
 
 
   const onSubmit = (data: SubmitScorePayload) => {
