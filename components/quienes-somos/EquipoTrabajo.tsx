@@ -7,11 +7,42 @@ import {
   CameraIcon, 
   PaintBrushIcon, 
   MicrophoneIcon,
-  SparklesIcon 
+  CodeBracketIcon, 
+  CpuChipIcon 
 } from "@heroicons/react/24/solid";
 
-// Datos del Staff Operativo/Creativo
 const equipo = [
+  {
+    nombre: "Ayrton Catri",
+    cargo: "Desarrollador Web Beatbox Chile",
+    descripcion: "Arquitecto de la infraestructura digital de Beatbox Chile. Responsable de la implementación de nuevas funcionalidades, optimización de la plataforma y escalabilidad del ecosistema web para la comunidad.",
+    tags: ["Fullstack", "NextJS", "UI/UX"],
+    icon: <CodeBracketIcon className="w-5 h-5" />,
+    image: "",
+    color: "text-red-500",
+    bg: "bg-red-500"
+  },
+  {
+    nombre: "Alexander Pizarro",
+    cargo: "Desarrollador Web Beatbox Chile",
+    descripcion: "Especialista en desarrollo front-end y experiencia de usuario. Trabaja en la integración de datos y en asegurar que la plataforma sea una herramienta eficiente tanto para competidores como para el staff.",
+    tags: ["Frontend", "React", "Web App"],
+    icon: <CpuChipIcon className="w-5 h-5" />,
+    image: "",
+    color: "text-blue-500",
+    bg: "bg-blue-500"
+  },
+  {
+    nombre: "Benjamín Ascencio Donoso",
+    cargo: "Diseñador Gráfico Independiente",
+    descripcion: "Creativo visual enfocado en la estética urbana y competitiva. Colabora en la creación de piezas gráficas de alto impacto que definen la cara visual de los torneos y actividades oficiales.",
+    tags: ["Arte Digital", "Ilustración", "Layout"],
+    icon: <PaintBrushIcon className="w-5 h-5" />,
+    image: "",
+    color: "text-purple-500",
+    bg: "bg-purple-500"
+  },
+  // --- STAFF ORIGINAL ---
   {
     nombre: "Simón Yáñez Huaracán",
     cargo: "Director Equipo Audiovisual",
@@ -49,36 +80,39 @@ const equipo = [
     tags: ["Host", "Clown", "Actor"],
     icon: <MicrophoneIcon className="w-5 h-5" />,
     image: "",
-    color: "text-amber-400", // Un toque distinto para el Host/Clown
+    color: "text-amber-400",
     bg: "bg-amber-500"
   },
 ];
 
 const container = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
 const item = {
-  hidden: { opacity: 0, scale: 0.9 },
-  show: { opacity: 1, scale: 1 }
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
 };
 
 export default function EquipoTrabajo() {
   return (
-    <section className="relative z-10 max-w-7xl mx-auto px-4 py-16">
+    <section className="relative z-10 max-w-7xl mx-auto px-4 py-20">
       
-      {/* Título de Sección */}
-      <div className="flex flex-col items-center mb-12 space-y-2">
-        <div className="h-1 w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4" />
-        <h3 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white/90">
-          Staff <span className="text-white/40">Profesional</span>
+      {/* Título de Sección con Estilo mejorado */}
+      <div className="flex flex-col items-center mb-16 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          </span>
+          <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Crew 2026</span>
+        </div>
+        <h3 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white mb-4">
+          Staff <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Profesional</span>
         </h3>
-        <p className="text-white/50 font-medium tracking-wider uppercase text-xs">
-          Producción • Audiovisual • Escena
+        <p className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs">
+          Producción • Tecnología • Creatividad
         </p>
       </div>
 
@@ -88,65 +122,61 @@ export default function EquipoTrabajo() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, margin: "-50px" }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {equipo.map((miembro, i) => (
           <motion.div
             key={i}
             variants={item}
-            className="group relative bg-[#0c0c12]/60 backdrop-blur-md border border-white/5 hover:border-white/20 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]"
+            className="group relative bg-[#0c0c12]/40 backdrop-blur-xl border border-white/5 hover:border-white/20 rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2"
           >
-            {/* Imagen Header */}
-            <div className="relative h-48 w-full overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent z-10" />
-              
-              {/* Lógica de Imagen con Fallback */}
-              {miembro.image && miembro.image !== "" ? (
-                <Image 
-                  src={miembro.image} 
-                  alt={miembro.nombre}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  onError={(e) => {
-                    // Si falla la carga, ocultamos la imagen rota para que se vea el fondo/fallback si lo hubiera
-                    e.currentTarget.style.display = 'none';
-                    // Opcional: podrías forzar un estado aquí si quisieras manejarlo más robusto, 
-                    // pero para este caso el display none dejará ver el fondo del div.
-                  }}
-                />
-              ) : (
-                // Fallback Visual: Silueta cuando no hay foto
-                <div className="w-full h-full flex items-center justify-center bg-white/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16 text-white/10 group-hover:text-white/20 transition-colors">
-                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
-                  </svg>
+            {/* Círculo de luz de fondo (Hover) */}
+            <div className={`absolute -top-10 -right-10 w-32 h-32 ${miembro.bg} opacity-0 group-hover:opacity-10 blur-[50px] transition-opacity duration-500`} />
+
+            {/* Header: Imagen con Máscara */}
+            <div className="relative h-56 w-full overflow-hidden p-4">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-white/[0.03] border border-white/5">
+                {miembro.image ? (
+                  <Image 
+                    src={miembro.image} 
+                    alt={miembro.nombre}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className={`absolute inset-0 bg-gradient-to-b ${miembro.bg}/20 to-transparent`} />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-20 h-20 text-white/5 group-hover:text-white/10 transition-colors">
+                      <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                
+                {/* Badge Icono */}
+                <div className={`absolute bottom-3 right-3 z-20 p-2.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 ${miembro.color}`}>
+                  {miembro.icon}
                 </div>
-              )}
-              
-              {/* Badge Icono (MANTENIDO) */}
-              <div className={`absolute top-3 right-3 z-20 p-2 rounded-lg ${miembro.bg}/20 backdrop-blur-md border border-white/10 text-white`}>
-                {miembro.icon}
               </div>
             </div>
 
-            {/* Contenido Textual */}
-            <div className="p-5 relative z-20 -mt-6">
-              <h4 className="text-lg font-black italic uppercase text-white leading-tight mb-1">
+            {/* Contenido */}
+            <div className="px-6 pb-8">
+              <h4 className="text-xl font-black italic uppercase text-white leading-tight mb-1 group-hover:text-blue-400 transition-colors">
                 {miembro.nombre}
               </h4>
-              <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${miembro.color}`}>
+              <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${miembro.color}`}>
                 {miembro.cargo}
               </p>
               
-              <p className="text-xs text-white/60 leading-relaxed mb-4 line-clamp-4 group-hover:line-clamp-none transition-all">
+              <p className="text-[13px] text-gray-400 leading-relaxed mb-6 font-medium">
                 {miembro.descripcion}
               </p>
 
-              {/* Tags Footer */}
-              <div className="flex flex-wrap gap-1.5 border-t border-white/5 pt-3">
+              {/* Tags con Estilo Capsule */}
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5">
                 {miembro.tags.map((tag, j) => (
-                  <span key={j} className="text-[9px] uppercase font-bold px-2 py-1 bg-white/5 rounded text-white/30 group-hover:text-white/60 transition-colors">
-                    #{tag}
+                  <span key={j} className="text-[9px] uppercase font-black px-2.5 py-1 bg-white/5 rounded-full text-gray-500 group-hover:text-white group-hover:bg-white/10 transition-all">
+                    {tag}
                   </span>
                 ))}
               </div>
@@ -154,7 +184,6 @@ export default function EquipoTrabajo() {
           </motion.div>
         ))}
       </motion.div>
-
     </section>
   );
 }
