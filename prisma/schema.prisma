@@ -71,6 +71,17 @@ enum SuggestionStatus {
   descartada
 }
 
+enum PublicationType {
+  blog
+  noticia
+}
+
+enum PublicationStatus {
+  borrador
+  publicado
+  archivado
+}
+
 enum RoundPhase {
   WILDCARD
   PRELIMINAR
@@ -405,6 +416,24 @@ model Mensaje {
   email     String
   mensaje   String
   createdAt DateTime @default(now())
+}
+
+model Publicacion {
+  id          String            @id @default(cuid())
+  titulo      String
+  descripcion String?
+  tipo        PublicationType
+  fecha       DateTime
+  estado      PublicationStatus @default(borrador)
+  url         String?
+  autor       String
+  imagenes    String[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([tipo])
+  @@index([estado])
+  @@index([fecha])
 }
 
 /* =========================
