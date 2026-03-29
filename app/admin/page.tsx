@@ -7,6 +7,7 @@ import { UserIcon,
   ChatBubbleLeftRightIcon, 
   ClipboardDocumentListIcon,
   TrophyIcon,
+  NewspaperIcon,
 }
 from "@heroicons/react/24/outline";
 import {
@@ -29,6 +30,7 @@ export default async function AdminDashboardPage() {
     comprasAgg,
     sugerencias,
     inscripciones,
+    publicaciones,
     comprasPorMes,
   ] = await Promise.all([
     prisma.user.count(),
@@ -42,6 +44,7 @@ export default async function AdminDashboardPage() {
     prisma.compra.aggregate({ _sum: { total: true }, _count: { _all: true } }),
     prisma.sugerencia.count(),
     prisma.inscripcion.count(),
+    prisma.publicacion.count(),
     // Compras por mes (últimos 6 meses)
     prisma.$queryRawUnsafe<{ mes: string; total: number }[]>(`
       SELECT TO_CHAR("createdAt", 'YYYY-MM') as mes, SUM(total)::int as total
@@ -100,6 +103,15 @@ export default async function AdminDashboardPage() {
       text: "text-emerald-700",
     },
     {
+      label: "Publicaciones",
+      icon: <NewspaperIcon className="w-7 h-7 text-blue-300" />,
+      color: "from-fuchsia-100 to-fuchsia-50",
+      href: "/admin/publicaciones",
+      value: publicaciones,
+      bgIcon: "bg-fuchsia-50",
+      text: "text-fuchsia-700",
+    },
+    {
       label: "Compras",
       icon: <ShoppingCartIcon className="w-7 h-7 text-blue-300" />,
       color: "from-orange-100 to-orange-50",
@@ -137,7 +149,7 @@ export default async function AdminDashboardPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
         <p className="mt-2 text-base text-blue-100">
-          Bienvenido al panel de administración. Usa la navegación para gestionar usuarios, wildcards, eventos, compras y sugerencias.
+          Bienvenido al panel de administración. Usa la navegación para gestionar usuarios, wildcards, eventos, publicaciones, compras y sugerencias.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
