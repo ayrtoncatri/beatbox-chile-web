@@ -6,6 +6,7 @@ import PublicacionesRow from "@/components/publicaciones/PublicacionesRow";
 import { prisma } from "@/lib/prisma";
 import { PublicationStatus, PublicationType, Publicacion } from "@prisma/client";
 import type { Metadata } from "next";
+import MissionVisionValues from "@/components/home/MissionVisionValues";
 
 export const metadata: Metadata = {
   title: "Inicio | Beatbox Chile",
@@ -69,6 +70,8 @@ export default async function HomePage() {
 
       <PublicacionesRow title="Blog" tipo="blog" />
       <PublicacionesRow title="Noticias" tipo="noticia" />
+
+      <MissionVisionValues />
 
       <NoticiasList />
       <Historia />
