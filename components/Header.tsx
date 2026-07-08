@@ -90,36 +90,44 @@ export default function Header() {
     const isActive = href && pathname?.startsWith(href);
 
     const baseClass =
-      "font-black italic uppercase tracking-wider transition px-3 py-2 rounded-lg focus:outline-none relative";
+      "font-black italic uppercase tracking-wider transition-colors duration-300 px-4 py-2 rounded-xl focus:outline-none relative text-sm";
 
     if (isActive) {
-      return `${baseClass} bg-red-600/40 text-white shadow-inner shadow-red-500/20 border border-red-500/50`;
+      return `${baseClass} text-[#00F0FF] bg-[#00F0FF]/10 border-l-4 border-[#FF0055]`;
     } else {
-      return `${baseClass} text-white/90 hover:text-blue-400 hover:bg-blue-900/30`;
+      return `${baseClass} text-[#FFFFFF] hover:text-[#00F0FF] hover:bg-[#FFFFFF]/5`;
     }
   };
 
   return (
     <>
-      <header className="w-full bg-gradient-to-r from-blue-950/70 via-red-950/70 to-blue-950/70 backdrop-blur-lg border-b border-blue-700/20 py-4 shadow-xl shadow-black/50 sticky top-0 z-[1300]">
-        <nav className="max-w-7xl mx-auto px-4 flex items-center justify-around gap-2">
+      {/* TOP BAR INSTITUCIONAL - FONDO NEGRO SÓLIDO */}
+      <div className="w-full bg-[#000000] py-2 border-b border-[#333333] z-[1301] relative flex justify-center items-center">
+        <span className="text-[9px] md:text-[11px] font-black tracking-[0.4em] uppercase text-[#FFFFFF] text-center px-4">
+          Asociación Nacional de Beatbox Profesional
+        </span>
+      </div>
+
+      {/* HEADER PRINCIPAL - DEGRADADO LIMPIO (Azul Marino a Azul Eléctrico) */}
+      <header className="w-full bg-gradient-to-r from-[#0B132B] to-[#152554] border-b border-[#00F0FF]/20 py-3 shadow-lg sticky top-0 z-[1300]">
+        
+        <nav className="max-w-[1400px] mx-auto px-4 flex items-center justify-between lg:justify-around gap-2 relative">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-2 md:gap-3">
-            <Link href="/">
+          <div className="flex items-center justify-center shrink-0">
+            <Link href="/" className="relative group">
               <Image
                 src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp"
-                alt="Logo Beatbox Chile"
-                width={60}
-                height={60}
-                className="md:w-[60px] md:h-[60px] rounded-full border-2 border-cyan-400 shadow-xl shadow-cyan-900/40 transition-all duration-300 hover:shadow-red-400/40"
+                alt="Logo Asociación"
+                width={55}
+                height={55}
+                className="relative w-[45px] h-[45px] md:w-[55px] md:h-[55px] rounded-full border-2 border-[#FFFFFF]/20 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:border-[#00F0FF]"
                 priority
-                style={{ cursor: "pointer" }}
               />
             </Link>
           </div>
 
           {/* Nav desktop */}
-          <ul className="hidden md:flex gap-3 md:gap-4 lg:gap-6 justify-center items-center flex-wrap max-w-full">
+          <ul className="hidden lg:flex gap-1 xl:gap-3 justify-center items-center flex-1">
             {navItems.map((item) => (
               <li
                 key={item.label}
@@ -134,14 +142,14 @@ export default function Header() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 bg-[#0c0c12]/95 border border-white/10 shadow-lg shadow-blue-900/40 z-10 w-48 py-2 rounded-lg backdrop-blur-lg"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-[#0B132B] border border-[#00F0FF]/30 shadow-2xl z-10 w-56 py-2 rounded-xl"
                   >
-                    <ul className="text-center">
+                    <ul className="flex flex-col">
                       {item.subItems.map((subItem) => (
-                        <li key={subItem.href} className="text-center">
+                        <li key={subItem.href}>
                           <Link
                             href={subItem.href}
-                            className="text-white font-black italic uppercase tracking-tight hover:text-blue-400 transition px-4 py-2 block text-center"
+                            className="text-[#FFFFFF] font-black italic uppercase tracking-tight hover:text-[#00F0FF] hover:bg-[#FFFFFF]/5 transition-colors px-4 py-2.5 block text-sm border-l-4 border-transparent hover:border-[#FF0055]"
                           >
                             {subItem.label}
                           </Link>
@@ -151,19 +159,17 @@ export default function Header() {
                   </motion.div>
                 )}
 
-                {item.subItems && (
+                {item.subItems ? (
                   <span
                     className={
                       getLinkClasses(item.href) +
-                      " cursor-pointer flex items-center gap-1"
+                      " cursor-pointer flex items-center gap-1.5 group"
                     }
                   >
                     {item.label}
-                    <FaChevronDown size={10} className="text-white/50" />
+                    <FaChevronDown size={10} className="text-[#FFFFFF]/50 group-hover:text-[#00F0FF] transition-colors" />
                   </span>
-                )}
-
-                {!item.subItems && (
+                ) : (
                   <Link href={item.href!} className={getLinkClasses(item.href)}>
                     {item.label}
                   </Link>
@@ -173,37 +179,37 @@ export default function Header() {
           </ul>
 
           {/* Perfil / auth desktop */}
-          <div className="hidden md:flex items-center gap-1 md:gap-2">
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             {!isClient || status === "loading" ? (
-              <div className="animate-pulse bg-blue-900/60 rounded-full w-24 h-8"></div>
+              <div className="animate-pulse bg-[#FFFFFF]/10 rounded-xl w-32 h-10"></div>
             ) : user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   aria-expanded={isProfileOpen}
-                  className="group flex items-center gap-2 rounded-full border border-blue-400/50 bg-[#0c0c12]/80 px-3 py-1.5 text-sm text-white/90 hover:bg-blue-900/30 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="group flex items-center gap-2.5 rounded-xl border border-[#FFFFFF]/20 bg-[#FFFFFF]/5 px-3 py-1.5 text-sm text-[#FFFFFF] hover:bg-[#FFFFFF]/10 hover:border-[#00F0FF] transition-colors focus:outline-none"
                 >
                   {user.image ? (
                     <Image
                       src={user.image}
                       alt="Avatar"
-                      width={24}
-                      height={24}
-                      className="rounded-full object-cover ring-1 ring-white/40"
+                      width={28}
+                      height={28}
+                      className="rounded-full object-cover ring-2 ring-[#00F0FF]/50"
                     />
                   ) : (
-                    <FaUserCircle size={20} className="text-blue-400" />
+                    <FaUserCircle size={24} className="text-[#FFFFFF]/70 group-hover:text-[#00F0FF] transition-colors" />
                   )}
 
-                  <span className="max-w-[8rem] truncate hidden lg:inline font-black italic tracking-tight">
+                  <span className="max-w-[8rem] truncate hidden xl:inline font-bold tracking-wide text-xs">
                     {userName}
                   </span>
 
                   <FaChevronDown
-                    size={12}
-                    className={`transition-transform ${
-                      isProfileOpen ? "rotate-180" : ""
-                    } text-white/70 group-hover:text-white`}
+                    size={10}
+                    className={`transition-transform duration-300 ${
+                      isProfileOpen ? "rotate-180 text-[#00F0FF]" : "text-[#FFFFFF]/50"
+                    }`}
                   />
                 </button>
 
@@ -213,59 +219,59 @@ export default function Header() {
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute top-full right-0 mt-3 w-64 max-h-[70vh] overflow-auto rounded-xl border border-white/10 bg-[#0c0c12]/95 backdrop-blur-xl shadow-2xl shadow-blue-900/40"
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute top-full right-0 mt-3 w-64 rounded-xl border border-[#00F0FF]/30 bg-[#0B132B] shadow-2xl z-50 overflow-hidden"
                     >
                       {/* Cabecera */}
-                    <div className="px-3.5 py-3 border-b border-white/10">
-                      <p className="text-sm font-semibold text-white truncate">{userName}</p>
-                      <p className="text-xs text-blue-300/80 truncate">{user.email}</p>
-                    </div>
+                      <div className="px-4 py-3 bg-[#FFFFFF]/5 border-b border-[#FFFFFF]/10">
+                        <p className="text-sm font-bold text-[#FFFFFF] truncate">{userName}</p>
+                        <p className="text-xs text-[#FFFFFF]/50 truncate mt-0.5">{user.email}</p>
+                      </div>
 
-                    {/* Grupo principal */}
-                    <div className="p-2.5 space-y-1.5">
-                      <Link
-                        href="/perfil"
-                        className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-blue-900/30"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <FaUserCircle className="w-4 h-4 text-blue-300" />
-                        <span>Mi Perfil</span>
-                      </Link>
-
-                      {isAdmin && (
+                      {/* Grupo principal */}
+                      <div className="p-2 space-y-1">
                         <Link
-                          href="/admin"
-                          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-blue-900/30"
+                          href="/perfil"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#FFFFFF] hover:text-[#00F0FF] hover:bg-[#FFFFFF]/5 transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
-                          <FaCog className="w-4 h-4 text-blue-300" />
-                          <span>Panel Admin</span>
+                          <FaUserCircle className="w-4 h-4 text-[#00F0FF]" />
+                          <span className="font-medium">Mi Perfil</span>
                         </Link>
-                      )}
 
-                      {isJudge && (
-                        <Link
-                          href="/judge/dashboard"
-                          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-blue-100 hover:bg-purple-900/30"
-                          onClick={() => setIsProfileOpen(false)}
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#FFFFFF] hover:text-[#00F0FF] hover:bg-[#FFFFFF]/5 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <FaCog className="w-4 h-4 text-[#FF0055]" />
+                            <span className="font-medium">Panel Admin</span>
+                          </Link>
+                        )}
+
+                        {isJudge && (
+                          <Link
+                            href="/judge/dashboard"
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#FFFFFF] hover:text-[#00F0FF] hover:bg-[#FFFFFF]/5 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <FaGavel className="w-4 h-4 text-[#FF0055]" />
+                            <span className="font-medium">Panel Juez</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Logout */}
+                      <div className="p-2 border-t border-[#FFFFFF]/10 bg-[#000000]/30">
+                        <button
+                          onClick={handleLogout}
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#FF0055] hover:bg-[#FF0055]/10 transition-colors"
                         >
-                          <FaGavel className="w-4 h-4 text-purple-300" />
-                          <span>Panel Juez</span>
-                        </Link>
-                      )}
-                    </div>
-
-                    {/* Logout separado visualmente */}
-                    <div className="px-2.5 py-2 border-t border-white/10">
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30"
-                      >
-                        <FaSignOutAlt className="w-4 h-4 text-red-300" />
-                        <span>Cerrar Sesión</span>
-                      </button>
-                    </div>
+                          <FaSignOutAlt className="w-4 h-4" />
+                          <span>Cerrar Sesión</span>
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -277,11 +283,11 @@ export default function Header() {
 
           {/* BOTÓN HAMBURGUESA MOBILE */}
           <button
-            className="md:hidden p-2 text-white/90 hover:text-red-400 focus:outline-none"
+            className="lg:hidden p-2 text-[#FFFFFF] hover:text-[#00F0FF] focus:outline-none transition-colors"
             onClick={() => setOpen(!open)}
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
           >
-            <FaBars size={28} />
+            <FaBars size={26} />
           </button>
         </nav>
       </header>

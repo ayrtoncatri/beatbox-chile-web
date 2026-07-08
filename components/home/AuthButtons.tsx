@@ -7,7 +7,7 @@ import {
   Cog6ToothIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
-  UserPlusIcon, // 👈 nuevo icono
+  UserPlusIcon,
 } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 
@@ -33,8 +33,8 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
       <div
         className="inline-flex flex-col md:flex-row items-center justify-center
                    gap-2 md:gap-3 px-3 py-2 rounded-xl
-                   bg-gradient-to-r from-[#0c0c12]/80 to-blue-900/60
-                   shadow-lg border border-white/10 backdrop-blur-md"
+                   bg-[#0B132B] border border-[#00F0FF]/30 
+                   shadow-lg"
       >
         {/* Avatar */}
         <Image
@@ -44,22 +44,22 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   (user?.nombres || "") +
                     (user?.apellidoPaterno ? " " + user.apellidoPaterno : "")
-                )}&background=1e3a8a&color=fff&size=128`
+                )}&background=0B132B&color=fff&size=128`
           }
           alt="Foto de perfil"
           width={28}
           height={28}
-          className="rounded-full border-2 border-cyan-400 shadow-lg shadow-cyan-900/50 object-cover"
+          className="rounded-full border border-[#00F0FF] object-cover"
         />
 
-        <span className="flex flex-col items-center md:items-start justify-center text-white/90 font-medium text-xs md:text-sm whitespace-nowrap">
-          Hola,{" "}
+        <span className="flex flex-col items-center md:items-start justify-center text-[#FFFFFF] font-medium text-xs whitespace-nowrap">
+          <span className="text-[10px] uppercase tracking-wider text-[#FFFFFF]/50">Socio activo</span>
           <Link
             href="/perfil"
-            className="font-black italic text-cyan-400 tracking-tight flex items-center gap-1 hover:text-cyan-300 transition"
+            className="font-bold text-[#FFFFFF] flex items-center gap-1 hover:text-[#00F0FF] transition-colors"
             onClick={() => setOpen?.(false)}
           >
-            <UserCircleIcon className="w-4 h-4 inline-block text-cyan-400" />
+            <UserCircleIcon className="w-3.5 h-3.5 hidden md:inline-block text-[#00F0FF]" />
             {user?.nombres} {user?.apellidoPaterno}
           </Link>
         </span>
@@ -67,30 +67,30 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
         {user?.role === "admin" && (
           <Link
             href="/admin"
-            className="flex items-center gap-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white
-                       px-3 py-1 rounded-lg font-black italic uppercase tracking-wider text-[11px]
-                       shadow border border-fuchsia-400/40 transition whitespace-nowrap"
+            className="flex items-center gap-1 bg-[#FFFFFF]/10 hover:bg-[#FFFFFF]/20 text-[#FFFFFF]
+                       px-3 py-1.5 rounded-lg font-black italic uppercase tracking-wider text-[10px]
+                       border border-[#FFFFFF]/20 transition-colors whitespace-nowrap ml-2"
             title="Ir al panel de administración"
             onClick={() => setOpen?.(false)}
           >
-            <Cog6ToothIcon className="w-4 h-4" />
-            Dashboard
+            <Cog6ToothIcon className="w-3.5 h-3.5 text-[#FF0055]" />
+            Admin
           </Link>
         )}
 
         <button
-          className="bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600
-                     text-white px-3 py-1 rounded-lg font-black italic uppercase tracking-wider
-                     text-[11px] shadow-md border border-red-400/30
-                     focus:outline-none focus:ring-2 focus:ring-red-400 whitespace-nowrap
-                     inline-flex items-center gap-1"
+          className="bg-[#FF0055]/10 hover:bg-[#FF0055] text-[#FF0055] hover:text-[#FFFFFF]
+                     px-3 py-1.5 rounded-lg font-black italic uppercase tracking-wider
+                     text-[10px] border border-[#FF0055]
+                     focus:outline-none transition-colors whitespace-nowrap
+                     inline-flex items-center gap-1 md:ml-1"
           onClick={() => {
             toast.success("Cerrando sesión...");
             signOut({ callbackUrl: "/" });
           }}
         >
-          <ArrowRightOnRectangleIcon className="w-4 h-4" />
-          <span className="hidden sm:inline">Cerrar sesión</span>
+          <ArrowRightOnRectangleIcon className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Salir</span>
         </button>
       </div>
     );
@@ -98,55 +98,40 @@ export default function AuthButtons({ setOpen }: { setOpen?: (open: boolean) => 
 
   // --- ESTADO NO AUTENTICADO (LOGIN/REGISTER) ---
   return (
-    <div
-      className="inline-flex items-center justify-center
-                 gap-2 md:gap-3 px-2 sm:px-3 py-1.5 rounded-xl
-                 bg-gradient-to-r from-blue-950/70 via-red-950/40 to-blue-950/70
-                 shadow-xl border border-white/10 backdrop-blur-md"
-    >
-      {/* Botón 1: Entrar (Login) */}
+    <div className="inline-flex items-center justify-center gap-3">
+      {/* Botón 1: Entrar (Secundario) - Transparente con borde texturizado */}
       <button
         aria-label="Entrar"
         className="flex items-center justify-center gap-2
-                  px-3 sm:px-4 py-1.5
-                  min-w-[100px]
-                  bg-gradient-to-r from-red-600 to-fuchsia-600
-                  hover:from-red-700 hover:to-fuchsia-700
-                  text-white rounded-lg
-                  font-black italic uppercase tracking-wider
-                  text-xs sm:text-sm
-                  shadow-md shadow-red-900/50 border border-red-400/30
-                  focus:outline-none focus:ring-2 focus:ring-red-400
-                  transition-all hover:scale-[1.02]"
+                   px-5 py-2 min-w-[100px]
+                   bg-transparent text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#0B132B]
+                   rounded-lg font-black italic uppercase tracking-widest
+                   text-xs border border-[#FFFFFF]/70
+                   transition-colors duration-300"
         onClick={() => {
           setOpen?.(false);
           router.push("/auth/login");
         }}
       >
-        <ArrowRightOnRectangleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+        <ArrowRightOnRectangleIcon className="w-4 h-4" />
         <span>Entrar</span>
       </button>
 
-      {/* Botón 2: Crear cuenta (Registro) */}
+      {/* Botón 2: Ser Socio (Llamado a la Acción Principal) - Rojo Eléctrico Sólido */}
       <button
         aria-label="Crear cuenta"
         className="flex items-center justify-center gap-2
-                  px-3 sm:px-4 py-1.5
-                  min-w-[100px]
-                  bg-white/10 text-blue-400 hover:bg-white/20
-                  rounded-lg border border-blue-400/50
-                  font-black italic uppercase tracking-wider
-                  text-xs sm:text-sm
-                  shadow-md transition
-                  focus:outline-none focus:ring-2 focus:ring-blue-400
-                  hover:scale-[1.02]"
+                   px-5 py-2 min-w-[100px]
+                   bg-[#FF0055] text-[#FFFFFF] hover:bg-[#D40047]
+                   rounded-lg font-black italic uppercase tracking-widest
+                   text-xs transition-colors duration-300 shadow-[0_4px_15px_rgba(255,0,85,0.4)]"
         onClick={() => {
           setOpen?.(false);
           router.push('/auth/register');
         }}
       >
-        <UserPlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>Crear Cuenta</span>
+        <UserPlusIcon className="w-4 h-4" />
+        <span>Ser Socio</span>
       </button>
     </div>
   );
