@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import type { PrivacyRequestStatus, Prisma } from "@prisma/client";
 
 import { ensureAdminApi } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
-const statuses = new Set([
+const statuses = new Set<PrivacyRequestStatus>([
   "RECEIVED",
   "IDENTITY_PENDING",
   "IN_PROGRESS",
@@ -21,9 +22,14 @@ export async function GET(req: Request) {
   const page = Math.max(1, Number(searchParams.get("page") || 1));
   const requestedPageSize = Number(searchParams.get("pageSize") || 20);
   const pageSize = Math.min(100, Math.max(1, Number.isNaN(requestedPageSize) ? 20 : requestedPageSize));
-  const status = requestedStatus && statuses.has(requestedStatus) ? requestedStatus : undefined;
+  const status =
+    requestedStatus && statuses.has(requestedStatus as PrivacyRequestStatus)
+      ? (requestedStatus as PrivacyRequestStatus)
+      : undefined;
 
-  const where = status ? { status } : undefined;
+  const where: Prisma.PrivacyRequestWhereInput | undefined = status
+    ? { status }
+    : undefined;
   const [total, requests] = await Promise.all([
     prisma.privacyRequest.count({ where }),
     prisma.privacyRequest.findMany({
@@ -37,10 +43,14 @@ export async function GET(req: Request) {
         name: true,
         type: true,
         status: true,
+        detail: true,
         receivedAt: true,
         deadlineAt: true,
         extendedUntil: true,
         completedAt: true,
+        userId: true,
+        resolution: true,
+        rejectionReason: true,
       },
     }),
   ]);

@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
         if (!user) return null;
         if (!user?.password) return null;
         if (user.isActive === false) return null;
+        if (user.processingBlockedAt || user.anonymizedAt) return null;
 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
@@ -80,6 +81,7 @@ export const authOptions: NextAuthOptions = {
 
         if (existing) {
           if (existing.isActive === false) return false;
+          if (existing.processingBlockedAt || existing.anonymizedAt) return false;
         } else {
           const cookieStore = await cookies();
           const privacyConsent = verifyGoogleOAuthConsentToken(

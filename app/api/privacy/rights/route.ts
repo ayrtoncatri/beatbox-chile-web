@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { sendPrivacyRequestReceivedEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getRequestMetadata } from "@/lib/privacy";
 
@@ -71,6 +72,13 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      void sendPrivacyRequestReceivedEmail({
+        email: user.email,
+        requestId: ticket.id,
+        right,
+        deadlineAt,
+      });
+
       return NextResponse.json(
         {
           ok: true,
@@ -106,6 +114,13 @@ export async function POST(req: NextRequest) {
         receivedAt: true,
         deadlineAt: true,
       },
+    });
+
+    void sendPrivacyRequestReceivedEmail({
+      email,
+      requestId: ticket.id,
+      right,
+      deadlineAt,
     });
 
     return NextResponse.json(

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { ensureAdminApi } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
+
+import { ensureAdminApi } from "@/lib/permissions";
+import { prisma } from "@/lib/prisma";
+import { pseudonymizeValue } from "@/lib/privacy/pseudonym";
 
 function parseDate(value?: string) {
   if (!value) return undefined;
@@ -15,23 +17,22 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() || undefined;
   const eventId = searchParams.get("eventId") || undefined;
-  const tipo = searchParams.get("tipo") as "General" | "VIP" | null;
   const from = parseDate(searchParams.get("from") || undefined);
   const to = parseDate(searchParams.get("to") || undefined);
+  const raw = searchParams.get("raw") === "1";
 
-  const where: Prisma.CompraEntradaWhereInput = {
+  const where: Prisma.CompraWhereInput = {
     AND: [
       q
         ? {
             OR: [
-              { userNombre: { contains: q, mode: "insensitive" } },
-              { userEmail: { contains: q, mode: "insensitive" } },
-              { eventoNombre: { contains: q, mode: "insensitive" } },
+              { user: { email: { contains: q, mode: "insensitive" } } },
+              { user: { name: { contains: q, mode: "insensitive" } } },
+              { user: { profile: { nombres: { contains: q, mode: "insensitive" } } } },
             ],
           }
         : {},
       eventId ? { eventoId: eventId } : {},
-      tipo ? { tipoEntrada: tipo } : {},
       from || to
         ? {
             createdAt: {
@@ -43,20 +44,30 @@ export async function GET(req: Request) {
     ],
   };
 
-  const rows = await prisma.compraEntrada.findMany({
+  const rows = await prisma.compra.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 10000,
     select: {
       createdAt: true,
-      eventoNombre: true,
-      eventoFecha: true,
-      userNombre: true,
-      userEmail: true,
-      tipoEntrada: true,
-      cantidad: true,
-      precioUnitario: true,
       total: true,
+      status: true,
+      evento: { select: { nombre: true, fecha: true } },
+      user: {
+        select: {
+          email: true,
+          name: true,
+          profile: { select: { nombres: true, apellidoPaterno: true } },
+        },
+      },
+      items: {
+        select: {
+          quantity: true,
+          unitPrice: true,
+          subtotal: true,
+          ticketType: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -70,23 +81,40 @@ export async function GET(req: Request) {
     "cantidad",
     "precioUnitario",
     "total",
+    "status",
   ].join(";");
 
-  const csvLines = rows.map((r) =>
-    [
+  const csvLines = rows.flatMap((r) => {
+    const comprador =
+      [r.user.profile?.nombres, r.user.profile?.apellidoPaterno].filter(Boolean).join(" ")
+      || r.user.name
+      || "";
+    const email = r.user.email;
+    const base = [
       r.createdAt.toISOString(),
-      r.eventoNombre,
-      r.eventoFecha.toISOString(),
-      r.userNombre,
-      r.userEmail,
-      r.tipoEntrada,
-      r.cantidad,
-      r.precioUnitario,
-      r.total,
-    ]
-      .map((v) => String(v).replaceAll(/[\r\n]+/g, " ").replaceAll(";", ","))
-      .join(";")
-  );
+      r.evento?.nombre ?? "",
+      r.evento?.fecha?.toISOString() ?? "",
+      raw ? comprador : pseudonymizeValue(comprador, "name"),
+      raw ? email : pseudonymizeValue(email, "email"),
+    ];
+
+    if (r.items.length === 0) {
+      return [[...base, "", "", "", r.total, r.status].join(";")];
+    }
+
+    return r.items.map((item) =>
+      [
+        ...base,
+        item.ticketType.name,
+        item.quantity,
+        item.unitPrice,
+        item.subtotal,
+        r.status,
+      ]
+        .map((v) => String(v).replaceAll(/[\r\n]+/g, " ").replaceAll(";", ","))
+        .join(";"),
+    );
+  });
 
   const now = new Date();
   const fecha = now.toLocaleDateString("es-CL").replace(/\//g, "-");

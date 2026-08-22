@@ -14,6 +14,7 @@ import {
   TrophyIcon,
   GlobeAltIcon,
   NewspaperIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 import { usePathname } from "next/navigation";
@@ -40,6 +41,7 @@ const navLinks = [
   { href: "/admin/publicaciones", label: "Publicaciones", icon: <NewspaperIcon className="w-5 h-5" /> },
   { href: "/admin/compras", label: "Compras", icon: <ShoppingCartIcon className="w-5 h-5" /> },
   { href: "/admin/sugerencias", label: "Sugerencias", icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> },
+  { href: "/admin/privacidad", label: "Privacidad", icon: <ShieldCheckIcon className="w-5 h-5" /> },
 ];
 
 export default function MobileSidebar() {

@@ -1,8 +1,15 @@
 # Canal de ejercicio de derechos - Beatbox Chile
 
 Fecha: 2026-08-22
-Canal principal: API de privacidad del sistema
-Canal alternativo: [COMPLETAR correo privacidad]
+Canal principal: `/privacidad/derechos` (formulario) y API `/api/privacy/rights`
+Canal admin: `/admin/privacidad`
+Canal alternativo: privacidad@[COMPLETAR dominio]
+Portabilidad autenticada: `GET /api/privacy/export`
+
+## Ejecucion tecnica
+- `PATCH /api/admin/privacy/requests/{id}` con `action: FULFILL` ejecuta el derecho (acceso/portabilidad/rectificacion/supresion/bloqueo/oposicion/revocacion) via `lib/privacy/fulfill-request.ts`.
+- La supresion anonimiza PII y conserva compras/evidencias con causal documentada en el mapa PII.
+
 Actualizacion de implementacion: 2026-08-21
 
 ## Derechos cubiertos
