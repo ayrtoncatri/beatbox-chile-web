@@ -1,6 +1,5 @@
 'use client';
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import { FaUserAlt, FaYoutube } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -10,13 +9,19 @@ interface FormularioWildcardProps {
   eventoId: string;
 }
 
+type WildcardFormValues = {
+  nombreArtistico: string;
+  categoria: string;
+  youtubeUrl: string;
+};
+
 export default function FormularioWildcard({ eventoId }: FormularioWildcardProps) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset } = useForm<WildcardFormValues>();
 
   const { data: session } = useSession();
   const router = useRouter();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: WildcardFormValues) => {
     // Validación SOLO al presionar Enviar
     if (!session) {
       toast.error("Debes registrarte o iniciar sesión antes de enviar tu wildcard.");
@@ -72,68 +77,55 @@ export default function FormularioWildcard({ eventoId }: FormularioWildcardProps
 
 
   return (
-    <section className="mt-12 relative z-10 max-w-2xl mx-auto px-4">
-      <h2 className="text-3xl font-bold mb-8 text-lime-300 drop-shadow-lg text-center">
-        Formulario de Inscripción Wildcard
-      </h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="max-w-xl mx-auto bg-gradient-to-br from-gray-900/80 via-neutral-900/80 to-lime-400/10
-                   backdrop-blur-lg border border-lime-400/20 shadow-2xl
-                   hover:shadow-lime-500/40 p-8 rounded-2xl flex flex-col gap-6
-                   transition-all duration-400"
-      >
-        <div className="flex flex-col gap-2">
-          <label className="text-lime-200 font-semibold">Nombre artístico *</label>
-          <div className="flex items-center gap-2">
-            <FaUserAlt className="text-lime-400 text-xl" />
-            <input
-              {...register("nombreArtistico", { required: true })}
-              type="text"
-              placeholder="Nombre artístico"
-              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            />
-          </div>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="flex w-full flex-col gap-5"
+    >
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-semibold text-white/85">Nombre artístico *</label>
+        <div className="flex items-center gap-2">
+          <FaUserAlt className="text-xl text-cyan-300" aria-hidden="true" />
+          <input
+            {...register("nombreArtistico", { required: true })}
+            type="text"
+            placeholder="Nombre artístico"
+            className="h-11 w-full border border-cyan-300/40 bg-black/70 px-3 text-white outline-none placeholder:text-white/40 focus-visible:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+          />
         </div>
-        <div>
-          <label className="block mb-2 text-lime-200 font-semibold">Categoría *</label>
-          <div className="flex gap-6 text-amber-50">
-            <label>
-              <input type="radio" value="SOLO" {...register("categoria", { required: true })} />
-              <span className="ml-2">SOLO</span>
-            </label>
-            <label>
-              <input type="radio" value="LOOPSTATION" {...register("categoria", { required: true })} />
-              <span className="ml-2">LOOPSTATION</span>
-            </label>
-            <label>
-              <input type="radio" value="TAG_TEAM" {...register("categoria", { required: true })} />
-              <span className="ml-2">TAG TEAM</span>
-            </label>
-          </div>
+      </div>
+      <fieldset>
+        <legend className="mb-2 text-sm font-semibold text-white/85">Categoría *</legend>
+        <div className="flex flex-wrap gap-4 text-sm text-white">
+          <label className="inline-flex min-h-11 items-center">
+            <input type="radio" value="SOLO" {...register("categoria", { required: true })} />
+            <span className="ml-2">SOLO</span>
+          </label>
+          <label className="inline-flex min-h-11 items-center">
+            <input type="radio" value="LOOPSTATION" {...register("categoria", { required: true })} />
+            <span className="ml-2">LOOPSTATION</span>
+          </label>
+          <label className="inline-flex min-h-11 items-center">
+            <input type="radio" value="TAG_TEAM" {...register("categoria", { required: true })} />
+            <span className="ml-2">TAG TEAM</span>
+          </label>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-lime-200 font-semibold">Link del video de YouTube *</label>
-          <div className="flex items-center gap-2">
-            <FaYoutube className="text-lime-400 text-xl" />
-            <input
-              {...register("youtubeUrl", { required: true })}
-              type="text"
-              placeholder="Link del video de YouTube"
-              className="w-full bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-3 rounded-xl placeholder:text-lime-200/70 outline-none transition-all"
-            />
-          </div>
+      </fieldset>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-semibold text-white/85">Link del video de YouTube *</label>
+        <div className="flex items-center gap-2">
+          <FaYoutube className="text-xl text-rose-400" aria-hidden="true" />
+          <input
+            {...register("youtubeUrl", { required: true })}
+            type="url"
+            placeholder="https://www.youtube.com/watch?v="
+            className="h-11 w-full border border-cyan-300/40 bg-black/70 px-3 text-white outline-none placeholder:text-white/40 focus-visible:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+          />
         </div>
-        <button
-          type="submit"
-          className="bg-gradient-to-r from-lime-500 via-lime-400 to-green-400
-                     text-gray-900 font-bold py-3 px-6 rounded-xl mt-4
-                     hover:scale-105 hover:shadow-lg transition-all duration-300"
-        >
-          Enviar
-        </button>
-      </form>
-    </section>
+      </div>
+      <button type="submit" className="evento-cta mt-1 w-full">
+        Enviar
+      </button>
+    </form>
   );
 }
