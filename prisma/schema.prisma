@@ -182,6 +182,9 @@ model User {
   password   String?
   image      String?
   isActive   Boolean      @default(true)
+  /// Bloqueo temporal o por derecho del titular (Art. 14 ter): suspende tratamiento no esencial.
+  processingBlockedAt DateTime?
+  anonymizedAt        DateTime?
   totpSecretEncrypted String?
   totpEnabled         Boolean      @default(false)
   totpConfirmedAt     DateTime?

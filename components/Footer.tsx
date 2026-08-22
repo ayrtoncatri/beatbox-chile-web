@@ -12,6 +12,7 @@ const navigation = [
   { label: 'Eventos', href: '/eventos' },
   { label: 'Rankings', href: '/estadisticas' },
   { label: 'Historial', href: '/historial-competitivo' },
+  { label: 'Privacidad', href: '/privacidad' },
 ];
 
 export default function Footer() {
@@ -111,9 +112,18 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="py-4 text-center sm:py-5">
+          <div className="space-y-1 py-4 text-center sm:py-5">
             <p className="text-[10px] leading-5 font-medium tracking-wide text-white/55 sm:text-xs">
               © {new Date().getFullYear()} BEATBOX CHILE. Ecosistema digital construido por dronerdev y alexanderdev.
+            </p>
+            <p className="text-[10px] text-white/45 sm:text-xs">
+              <Link href="/privacidad" className="underline-offset-2 hover:text-cyan-200 hover:underline">
+                Politica de privacidad
+              </Link>
+              {" · "}
+              <Link href="/privacidad/derechos" className="underline-offset-2 hover:text-cyan-200 hover:underline">
+                Ejercer derechos
+              </Link>
             </p>
           </div>
         </div>

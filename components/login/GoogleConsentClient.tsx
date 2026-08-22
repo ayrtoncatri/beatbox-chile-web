@@ -58,7 +58,11 @@ export default function GoogleConsentClient({ callbackUrl }: { callbackUrl: stri
             />
             <span>
               He leído y acepto el tratamiento de mis datos para crear y administrar mi cuenta,
-              conforme al aviso de privacidad.
+              conforme al{" "}
+              <Link href="/privacidad" target="_blank" className="underline text-cyan-200">
+                aviso de privacidad
+              </Link>
+              .
             </span>
           </label>
 

@@ -1,10 +1,11 @@
 # Politica de Privacidad - Beatbox Chile
 
 Ultima actualizacion: 2026-08-22
+Version publicada en app: `PRIVACY_NOTICE_VERSION` en `lib/privacy.ts` (ruta publica `/privacidad`).
 
 ## 1. Responsable del tratamiento
 Beatbox Chile ([COMPLETAR razon social], RUT [COMPLETAR], domicilio [COMPLETAR]).
-Contacto de privacidad: [COMPLETAR correo privacidad].
+Contacto de privacidad: privacidad@[COMPLETAR dominio].
 
 ## 2. Datos que tratamos
 Tratamos datos personales necesarios para operar la plataforma:
@@ -25,35 +26,29 @@ Beatbox Chile no solicita de forma ordinaria datos sensibles. Si en algun flujo 
 | Enviar recuperacion de contrasena | Ejecucion de contrato e interes legitimo de seguridad |
 | Atender solicitudes de contacto/sugerencias | Consentimiento e interes legitimo |
 | Cumplir derechos de titulares | Obligacion legal |
+| Marketing opt-in | Consentimiento Art. 12 |
 
 ## 4. Comparticion y encargados
-Podemos compartir datos con proveedores que actuan como encargados para:
-- autenticacion (Google OAuth, cuando aplica),
-- correo transaccional,
-- pasarelas de pago,
-- infraestructura tecnica.
-
-Cuando exista transferencia internacional de datos, se aplicaran mecanismos validos segun Ley 21.719, incluyendo clausulas contractuales modelo cuando corresponda.
+Ver anexo de transferencias y checklist DPA.
 
 ## 5. Conservacion
-Conservamos los datos solo por el tiempo necesario para las finalidades descritas o por el plazo exigido por ley. Luego se eliminan o anonimizan.
+Ver `21719-retencion-y-purga.md` y mapa PII.
 
 ## 6. Derechos de los titulares
-Puedes ejercer acceso, rectificacion, supresion, oposicion, portabilidad y bloqueo, ademas de revocar consentimientos.
-Canal: API de privacidad y correo de privacidad [COMPLETAR].
-Plazo de respuesta: 30 dias corridos, prorrogable una sola vez por 30 dias corridos adicionales.
+Canal: `/privacidad/derechos`, API y correo de privacidad.
+Plazo: 30 dias corridos, prorrogable una sola vez por 30 dias.
 
 ## 7. Decisiones automatizadas
-La plataforma no adopta decisiones automatizadas con efectos juridicos o significativamente equivalentes sobre titulares sin intervencion humana.
+Sin decisiones automatizadas con efectos juridicos equivalentes sin intervencion humana.
 
 ## 8. Seguridad
-Aplicamos medidas tecnicas y organizativas acordes al riesgo, incluyendo controles de acceso por rol, hashing de contrasenas, validaciones server-side y gestion de secretos por variables de entorno.
+Roles, MFA privilegiado, bcrypt, cifrado MFA, AuditLog, secretos en entorno. Ver `21719-seguridad-tecnica.md`.
 
-## 9. Cambios a esta politica
-Podemos actualizar esta politica. Publicaremos siempre la version vigente con su fecha de actualizacion.
+## 9. Cambios
+Publicamos la version vigente con fecha; los consentimientos quedan anclados a version+hash.
 
 ## 10. Reclamos
-El titular puede reclamar ante la Agencia de Proteccion de Datos Personales de Chile.
+Agencia de Proteccion de Datos Personales de Chile.
 
 ---
-DISCLAIMER: Este documento no constituye asesoria legal. Es un borrador tecnico basado en Ley 21.719 y debe validarse juridicamente antes de publicacion definitiva.
+DISCLAIMER: Este documento no constituye asesoria legal.

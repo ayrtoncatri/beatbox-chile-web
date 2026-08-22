@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkAdmin } from "@/lib/permissions";
-
+import { writeAuditLog } from "@/lib/privacy/audit";
 
 const EditUserSchema = z.object({
   id: z.string().min(1),
@@ -143,6 +143,14 @@ export async function editUser(prevState: any, formData: FormData) {
     revalidatePath("/admin/usuarios");
     revalidatePath(`/admin/usuarios/${parsed.id}`);
 
+    await writeAuditLog({
+      actorUserId: currentUserId,
+      action: "ADMIN_USER_UPDATED",
+      resourceType: "User",
+      resourceId: parsed.id,
+      metadata: { roles: newRoleIds },
+    });
+
     return { ok: true, user: updated };
   } catch (e: any) {
     // Si la transacción falla, 'e' tendrá el error
@@ -201,6 +209,14 @@ export async function toggleUserActive(prevState: any, formData: FormData) {
     // Revalidar todas las páginas relacionadas con usuarios
     revalidatePath("/admin/usuarios");
     revalidatePath(`/admin/usuarios/${parsed.id}`);
+
+    await writeAuditLog({
+      actorUserId: currentUserId,
+      action: "ADMIN_USER_TOGGLE_ACTIVE",
+      resourceType: "User",
+      resourceId: parsed.id,
+      metadata: { isActive: parsed.isActive },
+    });
 
     return { ok: true, user: updated };
   } catch (e: any) {

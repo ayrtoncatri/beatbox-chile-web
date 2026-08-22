@@ -238,7 +238,16 @@ export default function RegisterPage() {
             />
             <span>
               He leido y acepto el tratamiento de mis datos para crear y administrar mi cuenta,
-              conforme al aviso de privacidad.
+              conforme al{" "}
+              <a
+                href="/privacidad"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-cyan-200 hover:text-cyan-100"
+              >
+                aviso de privacidad
+              </a>
+              .
             </span>
           </label>
 

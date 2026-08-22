@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminApi } from "@/lib/permissions";
-import { Prisma , SuggestionStatus } from "@prisma/client";
-
+import { Prisma, SuggestionStatus } from "@prisma/client";
+import { pseudonymizeValue } from "@/lib/privacy/pseudonym";
 
 function parseDate(value?: string) {
   if (!value) return undefined;
@@ -19,8 +19,10 @@ export async function GET(req: Request) {
   const userId = searchParams.get("userId") || undefined;
   const from = parseDate(searchParams.get("from") || undefined);
   const to = parseDate(searchParams.get("to") || undefined);
+  const raw = searchParams.get("raw") === "1";
 
-  const isValidStatus = estado && Object.values(SuggestionStatus).includes(estado as SuggestionStatus);
+  const isValidStatus =
+    estado && Object.values(SuggestionStatus).includes(estado as SuggestionStatus);
 
   const where: Prisma.SugerenciaWhereInput = {
     AND: [
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
           }
         : {},
       isValidStatus ? { estado: estado as SuggestionStatus } : {},
-      userId ? { userId } : {},
+      userId ? { userId } : {},
       from || to
         ? {
             createdAt: {
@@ -48,47 +50,43 @@ export async function GET(req: Request) {
   };
 
   const rows = await prisma.sugerencia.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 10000,
-    select: {
-      createdAt: true,
-      mensaje: true,
-      estado: true,
-      user: { 
-        select: { 
-          email: true,
-          profile: {
-            select: {
-              nombres: true,
-              apellidoPaterno: true
-            }
-          }
-        } 
-      },
-    },
-  });
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 10000,
+    select: {
+      createdAt: true,
+      mensaje: true,
+      estado: true,
+      user: {
+        select: {
+          email: true,
+          profile: {
+            select: {
+              nombres: true,
+              apellidoPaterno: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
-  const header = [
-    "fecha",
-    "usuario",
-    "email",
-    "estado",
-    "mensaje",
-  ].join(";");
+  const header = ["fecha", "usuario", "email", "estado", "mensaje"].join(";");
 
   const csvLines = rows.map((r) => {
-    const userName = r.user 
+    const userName = r.user
       ? [r.user.profile?.nombres, r.user.profile?.apellidoPaterno].filter(Boolean).join(" ")
       : "";
+    const email = r.user?.email || "";
+    const mensaje = (r.mensaje || "").replaceAll(/[\r\n]+/g, " ").replaceAll(";", ",");
 
-    return [
-      r.createdAt.toISOString(),
-      userName,
-      r.user?.email || "",
-      r.estado,
-      (r.mensaje || "").replaceAll(/[\r\n]+/g, " ").replaceAll(";", ","),
-    ].join(";");
+    return [
+      r.createdAt.toISOString(),
+      raw ? userName : pseudonymizeValue(userName, "name"),
+      raw ? email : pseudonymizeValue(email, "email"),
+      r.estado,
+      raw ? mensaje : pseudonymizeValue(mensaje, "text"),
+    ].join(";");
   });
 
   const now = new Date();
