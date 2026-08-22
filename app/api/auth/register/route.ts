@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import {
+  getRequestMetadata,
+  PRIVACY_NOTICE_HASH,
+  PRIVACY_NOTICE_VERSION,
+} from "@/lib/privacy";
 
 // Utilidades OWASP
 function isValidEmail(email: string) {
@@ -17,7 +22,15 @@ function sanitize(input: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { nombres, apellidoPaterno, apellidoMaterno, email, password } = await req.json();
+    const {
+      nombres,
+      apellidoPaterno,
+      apellidoMaterno,
+      email,
+      password,
+      privacyNoticeAccepted,
+      marketingConsent,
+    } = await req.json();
 
     // Validaciones OWASP
     if (!email || !password || !nombres || !apellidoPaterno) {
@@ -28,6 +41,9 @@ export async function POST(req: NextRequest) {
     }
     if (!isStrongPassword(password)) {
       return NextResponse.json({ error: "Contraseña insegura. Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo." }, { status: 400 });
+    }
+    if (privacyNoticeAccepted !== true) {
+      return NextResponse.json({ error: "Debes aceptar el aviso de privacidad para crear una cuenta." }, { status: 400 });
     }
 
     // Sanitizar entradas
@@ -41,6 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+  const requestMetadata = getRequestMetadata(req);
 
     const userRole = await prisma.role.findUnique({ where: { name: "user" } });
     if (!userRole) {
@@ -69,6 +86,28 @@ export async function POST(req: NextRequest) {
           create: {
             roleId: userRole.id,
           },
+        },
+        privacyConsents: {
+          create: [
+            {
+              email,
+              category: "NECESSARY",
+              policyVersion: PRIVACY_NOTICE_VERSION,
+              policyHash: PRIVACY_NOTICE_HASH,
+              method: "credentials_registration",
+              ...requestMetadata,
+            },
+            ...(marketingConsent === true
+              ? [{
+                  email,
+                  category: "MARKETING" as const,
+                  policyVersion: PRIVACY_NOTICE_VERSION,
+                  policyHash: PRIVACY_NOTICE_HASH,
+                  method: "credentials_registration",
+                  ...requestMetadata,
+                }]
+              : []),
+          ],
         },
       },
       select: { id: true, email: true },

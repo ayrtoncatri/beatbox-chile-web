@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { updatePerfil } from "@/app/perfil/actions"; // Tu action existente
+import { revokeMarketingConsent, updatePerfil } from "@/app/perfil/actions"; // Tu action existente
 import { useRouter } from "next/navigation";
 import { PencilSquareIcon, XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 
@@ -24,6 +24,7 @@ export type UserLike = {
   comunaId?: number | null;
   regionId?: number; 
   birthDate?: string; 
+  marketingConsentActive?: boolean;
   edad?: number | string | null;
   wildcards?: any[];
 };
@@ -38,6 +39,7 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
   const router = useRouter();
   
   const [isEditing, setIsEditing] = useState(false);
+  const [isRevokingMarketing, startRevokingMarketing] = useTransition();
 
   // Estados para Selects
   const [selectedRegionId, setSelectedRegionId] = useState<string>(
@@ -72,6 +74,18 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
   };
 
   const avatarName = (user.nombres?.[0] || "") + (user.apellidoPaterno?.[0] || "");
+
+  const handleRevokeMarketing = () => {
+    startRevokingMarketing(async () => {
+      const result = await revokeMarketingConsent();
+      if (result.ok) {
+        toast.success("Las comunicaciones comerciales fueron desactivadas.");
+        router.refresh();
+      } else {
+        toast.error(result.error || "No fue posible actualizar tus preferencias.");
+      }
+    });
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-8 p-4">
@@ -218,6 +232,25 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
 
         </form>
       </div>
+
+      <section className="w-full bg-[#0f172a] rounded-3xl shadow-2xl border border-blue-900/30 p-8">
+        <h3 className="text-white font-bold text-xl">Preferencias de comunicaciones</h3>
+        <p className="mt-2 text-sm leading-6 text-blue-100">
+          {user.marketingConsentActive
+            ? "Actualmente aceptas recibir novedades y comunicaciones comerciales por correo."
+            : "No recibes comunicaciones comerciales por correo."}
+        </p>
+        {user.marketingConsentActive && (
+          <button
+            type="button"
+            onClick={handleRevokeMarketing}
+            disabled={isRevokingMarketing}
+            className="mt-5 rounded-xl border border-red-400/60 px-4 py-2.5 text-sm font-bold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isRevokingMarketing ? "Desactivando..." : "Dejar de recibir comunicaciones"}
+          </button>
+        )}
+      </section>
 
       {/* --- SECCIÓN WILDCARDS --- */}
       {user.wildcards && user.wildcards.length > 0 && (
