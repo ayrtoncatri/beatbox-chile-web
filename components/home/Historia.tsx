@@ -17,7 +17,7 @@ const historialCampeonato = [
     campeon: "Gustabeat-o",
     subcampeon: "Looney",
     tagTeam: null,
-    color: "from-blue-500/20",
+    color: "from-cyan-500/20",
     descripcion: `La primera edición del campeonato nacional, se realizó un 1 de Octubre del 2007 durante el evento Streetbox Fest en La Florida. Eran los inicios del beatbox competitivo en Chile y aquí aparecen los primeros exponentes que abrieron camino a lo que somos ahora.`,
   },
   {
@@ -26,7 +26,7 @@ const historialCampeonato = [
     campeon: "Creabeatbox",
     subcampeon: "Migraña",
     tagTeam: null,
-    color: "from-red-500/20",
+    color: "from-fuchsia-500/20",
     descripcion: `El 31 de Julio del 2008 se realiza la segunda edición. Creabeatbox, tras coronarse campeón, catapultó su carrera musical y colaboró con grandes del Hip-Hop Nacional.`,
   },
   {
@@ -35,7 +35,7 @@ const historialCampeonato = [
     campeon: "Mr. Androide",
     subcampeon: "Besbecko",
     tagTeam: null,
-    color: "from-purple-500/20",
+    color: "from-violet-500/20",
     descripcion: `El 19 de Octubre del 2012, primera vez organizado por los pilares de Beatbox Chile. Mr. Androide clasifica al Mundial y junto a Cat Negro representan a Chile en Alemania.`,
   },
   {
@@ -44,7 +44,7 @@ const historialCampeonato = [
     campeon: "Onetime",
     subcampeon: "Vintrex",
     tagTeam: "Spectros Family (BCJ & MC Sura)",
-    color: "from-green-500/20",
+    color: "from-cyan-500/20",
     descripcion: `El 5 de Diciembre en el anfiteatro El Cortijo, con jurado internacional. Onetime gana y clasifica al Mundial de Alemania 2018.`,
   },
   {
@@ -53,7 +53,7 @@ const historialCampeonato = [
     campeon: "Ex-bitt",
     subcampeon: "Karloz",
     tagTeam: "Trakloz (Trako & Karloz)",
-    color: "from-yellow-500/20",
+    color: "from-fuchsia-500/20",
     descripcion: `10 de diciembre en Black Soul, Puente Alto. Ex-BiTT se consagra campeón y clasifica al Mundial de Berlín 2018.`,
   },
   {
@@ -95,12 +95,12 @@ const historialCampeonato = [
   {
     año: 2025,
     titulo: "Séptima Edición (Actual)",
-    color: "from-red-600/20",
+    color: "from-fuchsia-600/20",
     esMulticategoria: true,
     categorias: [
       {
         nombre: "SOLO BATTLE",
-        icono: <TrophyIcon className="w-4 h-4 text-yellow-500" />,
+        icono: <TrophyIcon className="w-4 h-4 text-cyan-300" />,
         campeon: "Xiphire",
         subcampeon: "Inferno",
         tercero: "Ex-BiTT",
@@ -108,7 +108,7 @@ const historialCampeonato = [
       },
       {
         nombre: "TAG TEAM",
-        icono: <UserGroupIcon className="w-4 h-4 text-blue-500" />,
+        icono: <UserGroupIcon className="w-4 h-4 text-fuchsia-300" />,
         campeon: "Perpetual Inmortalem",
         subcampeon: "1+1",
         tercero: "D-Auditive",
@@ -116,7 +116,7 @@ const historialCampeonato = [
       },
       {
         nombre: "LOOPSTATION",
-        icono: <CpuChipIcon className="w-4 h-4 text-purple-500" />,
+        icono: <CpuChipIcon className="w-4 h-4 text-violet-300" />,
         campeon: "Omega",
         subcampeon: "Teks",
         tercero: "Epic Wine",
@@ -134,7 +134,7 @@ const variants: Variants = {
 };
 
 export default function Historia() {
-  const [idx, setIdx] = useState(historialCampeonato.length - 1); // Empezamos en 2025 por ser la novedad
+  const [idx, setIdx] = useState(historialCampeonato.length - 1);
   const [direction, setDirection] = useState(0);
   const total = historialCampeonato.length;
 
@@ -146,90 +146,94 @@ export default function Historia() {
   const edicion = historialCampeonato[idx];
 
   return (
-    <section className="w-full max-w-6xl mx-auto py-20 px-4 relative">
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[600px] bg-gradient-to-r ${edicion.color} to-transparent rounded-full blur-[120px] opacity-20 transition-all duration-1000`} />
+    <section className="relative mx-auto w-full max-w-7xl px-4 py-20">
+      <div className={`absolute top-1/2 left-1/2 h-[600px] w-full -translate-x-1/2 -translate-y-1/2 bg-linear-to-r ${edicion.color} to-transparent opacity-25 blur-[120px] transition-all duration-1000`} />
 
-      <div className="text-center mb-12 relative z-10">
-        <h2 className="text-5xl md:text-7xl font-black text-white uppercase italic tracking-tighter leading-none">
-          EL LEGADO <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-red-500">HISTÓRICO</span>
+      <div className="relative z-10 mb-10">
+        <p className="home-kicker">Archivo competitivo</p>
+        <h2 className="home-title mt-2 text-5xl text-white md:text-7xl">
+          El legado <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-300 via-fuchsia-300 to-violet-400">histórico</span>
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
-        {/* LADO IZQUIERDO: TIMELINE */}
-        <div className="lg:col-span-2 flex lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-4 lg:pb-0">
+      <div className="relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="flex gap-2 overflow-x-auto pb-4 lg:col-span-2 lg:flex-col lg:overflow-x-visible lg:pb-0">
           {historialCampeonato.map((item, i) => (
-            <button key={item.año} onClick={() => { setDirection(i > idx ? 1 : -1); setIdx(i); }}
-              className={`flex items-center gap-4 p-3 rounded-xl transition-all ${i === idx ? 'bg-white/10' : 'opacity-30 hover:opacity-100'}`}>
-              <span className={`text-xl font-black italic ${i === idx ? 'text-white' : 'text-gray-500'}`}>{item.año}</span>
+            <button
+              key={item.año}
+              onClick={() => { setDirection(i > idx ? 1 : -1); setIdx(i); }}
+              aria-current={i === idx}
+              className={`flex min-h-11 items-center gap-4 border px-3 py-2.5 transition-all ${
+                i === idx
+                  ? "border-cyan-300/60 bg-cyan-300/10 text-white shadow-[0_0_16px_rgba(34,211,238,0.2)]"
+                  : "border-white/10 text-white/45 hover:border-fuchsia-300/40 hover:text-white"
+              }`}
+            >
+              <span className={`text-xl font-black italic ${i === idx ? "text-cyan-200" : ""}`}>{item.año}</span>
             </button>
           ))}
         </div>
 
-        {/* LADO DERECHO: CONTENIDO */}
         <div className="lg:col-span-10">
-          <div className="bg-[#0c0c12]/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 min-h-[550px]">
+          <div className="home-card home-card-violet min-h-[550px] p-8 md:p-12">
             <AnimatePresence custom={direction} mode="wait">
               <motion.div key={idx} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="space-y-8">
-                
-                <div className="flex justify-between items-start">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <CalendarIcon className="w-5 h-5 text-blue-500" />
-                    <span className="text-blue-400 font-black tracking-widest uppercase text-sm">{edicion.titulo}</span>
+                    <CalendarIcon className="h-5 w-5 text-cyan-300" />
+                    <span className="text-sm font-black uppercase tracking-widest text-cyan-200">{edicion.titulo}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => change(-1)} className="p-2 bg-white/5 rounded-lg hover:bg-white/10"><ChevronLeftIcon className="w-5 h-5"/></button>
-                    <button onClick={() => change(1)} className="p-2 bg-white/5 rounded-lg hover:bg-white/10"><ChevronRightIcon className="w-5 h-5"/></button>
+                    <button aria-label="Edición anterior" onClick={() => change(-1)} className="flex h-11 w-11 items-center justify-center border border-white/15 bg-black/30 hover:bg-white/10"><ChevronLeftIcon className="h-5 w-5"/></button>
+                    <button aria-label="Edición siguiente" onClick={() => change(1)} className="flex h-11 w-11 items-center justify-center border border-white/15 bg-black/30 hover:bg-white/10"><ChevronRightIcon className="h-5 w-5"/></button>
                   </div>
                 </div>
 
                 {edicion.esMulticategoria ? (
-                  // DISEÑO ESPECIAL 2025 (MÚLTIPLES CATEGORÍAS)
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {edicion.categorias?.map((cat) => (
-                      <div key={cat.nombre} className="p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all">
-                        <div className="flex items-center gap-2 mb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                      <div key={cat.nombre} className="border border-white/10 bg-black/30 p-5 transition-all hover:border-cyan-300/40">
+                        <div className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/55">
                           {cat.icono} {cat.nombre}
                         </div>
                         <div className="space-y-3">
                           <div>
-                            <p className="text-yellow-500 text-[9px] font-bold uppercase">🥇 Campeón</p>
-                            <p className="text-xl font-black text-white italic">{cat.campeon}</p>
+                            <p className="text-[9px] font-bold uppercase text-cyan-300">Campeón</p>
+                            <p className="home-title text-3xl text-white">{cat.campeon}</p>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-3">
+                          <div className="grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
                             <div>
-                              <p className="text-gray-500 text-[8px] font-bold uppercase">🥈 Sub</p>
-                              <p className="text-xs font-bold text-gray-300">{cat.subcampeon}</p>
+                              <p className="text-[8px] font-bold uppercase text-white/45">Sub</p>
+                              <p className="text-xs font-bold text-white/85">{cat.subcampeon}</p>
                             </div>
                             <div>
-                              <p className="text-gray-500 text-[8px] font-bold uppercase">🥉 3ro</p>
-                              <p className="text-xs font-bold text-gray-300">{cat.tercero}</p>
+                              <p className="text-[8px] font-bold uppercase text-white/45">3ro</p>
+                              <p className="text-xs font-bold text-white/85">{cat.tercero}</p>
                             </div>
                           </div>
-                          <p className="text-[10px] text-gray-500 italic leading-tight pt-2">{cat.bio}</p>
+                          <p className="pt-2 text-[10px] leading-tight italic text-white/50">{cat.bio}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  // DISEÑO CLÁSICO (AÑOS ANTERIORES)
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
                     <div className="space-y-6">
-                      <h4 className="text-5xl font-black text-white uppercase italic">{edicion.campeon}</h4>
+                      <h4 className="home-title text-5xl text-white">{edicion.campeon}</h4>
                       <div className="flex gap-4">
-                        <div className="p-4 bg-white/5 rounded-xl flex-1">
-                          <span className="text-[9px] text-gray-500 font-bold uppercase">Subcampeón</span>
+                        <div className="flex-1 border border-white/10 bg-black/30 p-4">
+                          <span className="text-[9px] font-bold uppercase text-white/45">Subcampeón</span>
                           <p className="font-bold text-white">{edicion.subcampeon}</p>
                         </div>
                         {edicion.tagTeam && (
-                          <div className="p-4 bg-blue-500/10 rounded-xl flex-1 border border-blue-500/20">
-                            <span className="text-[9px] text-blue-400 font-bold uppercase">Tag Team</span>
-                            <p className="font-bold text-blue-100 leading-tight">{edicion.tagTeam}</p>
+                          <div className="flex-1 border border-cyan-400/20 bg-cyan-500/10 p-4">
+                            <span className="text-[9px] font-bold uppercase text-cyan-300">Tag Team</span>
+                            <p className="leading-tight font-bold text-cyan-100">{edicion.tagTeam}</p>
                           </div>
                         )}
                       </div>
                     </div>
-                    <p className="text-gray-400 italic text-lg leading-relaxed">{edicion.descripcion}</p>
+                    <p className="text-lg leading-relaxed italic text-white/70">{edicion.descripcion}</p>
                   </div>
                 )}
               </motion.div>

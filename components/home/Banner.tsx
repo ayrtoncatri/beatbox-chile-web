@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 const IMAGES = [
   "https://res.cloudinary.com/dfd1byvwn/image/upload/v1783392250/ANBP-1_r1n9vh.png",
@@ -29,82 +31,85 @@ export default function Banner() {
   }, [currentIndex]);
 
   return (
-    <section className="group relative h-[340px] bg-gradient-to-br from-blue-900 to-black rounded-2xl flex items-center justify-center mb-8 shadow-lg overflow-hidden">
-      
-      {/* Contenedor de Imágenes */}
+    <section className="group relative isolate min-h-[680px] overflow-hidden border-b border-cyan-200/20 sm:min-h-[760px] lg:min-h-[820px]">
       {IMAGES.map((src, index) => (
         <div
           key={src}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === currentIndex ? "opacity-60" : "opacity-0"
+            index === currentIndex ? "opacity-100" : "opacity-0"
           }`}
         >
           <Image
             src={src}
-            alt={`Banner Beatbox Chile ${index + 1}`}
+            alt=""
             fill
-            className="object-cover"
+            sizes="100vw"
+            className="scale-105 object-cover object-[center_18%] sm:object-center"
             priority={index === 0}
           />
         </div>
       ))}
 
-      {/* Contenido de Texto */}
-      <div className="z-10 text-center pointer-events-none px-4">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg tracking-tight mb-3 uppercase">
-          asociación nacional de beatbox profesional
-        </h1>
-        <p className="text-lg text-blue-100 font-medium drop-shadow-sm">
-          Comunidad, torneos, cultura y pasión por el beatbox.
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,6,13,0.55)_0%,rgba(5,6,13,0.42)_40%,rgba(5,6,13,0.88)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.22),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(232,121,249,0.28),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(88,28,135,0.35),transparent_42%)]" />
+
+      <div className="pointer-events-none absolute left-4 top-6 h-16 w-16 border-l-2 border-t-2 border-cyan-300/80 sm:left-8 sm:top-10" />
+      <div className="pointer-events-none absolute right-4 top-6 h-16 w-16 border-r-2 border-t-2 border-fuchsia-300/80 sm:right-8 sm:top-10" />
+      <div className="pointer-events-none absolute bottom-6 left-4 h-16 w-16 border-b-2 border-l-2 border-fuchsia-300/50 sm:bottom-10 sm:left-8" />
+      <div className="pointer-events-none absolute bottom-6 right-4 h-16 w-16 border-b-2 border-r-2 border-cyan-300/50 sm:bottom-10 sm:right-8" />
+
+      <div className="relative z-10 mx-auto flex min-h-[680px] max-w-5xl flex-col items-center justify-center px-5 py-28 text-center sm:min-h-[760px] sm:px-8 lg:min-h-[820px]">
+        <p className="mb-5 inline-flex border border-cyan-300/50 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.25)] backdrop-blur-sm">
+          Asociación Nacional de Beatbox Profesional
         </p>
+        <h1 className="home-title text-[4.6rem] text-white drop-shadow-[0_0_34px_rgba(34,211,238,0.45)] sm:text-8xl md:text-9xl lg:text-[8.8rem]">
+          Beatbox
+          <span className="block text-transparent bg-clip-text bg-linear-to-r from-cyan-300 via-white to-fuchsia-300">
+            Chile
+          </span>
+        </h1>
+        <p className="mt-6 max-w-2xl text-sm font-bold uppercase tracking-[0.22em] text-white/85 sm:text-base">
+          La plataforma de competencias, cultura y comunidad para la escena beatbox nacional.
+        </p>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/eventos" className="home-cta gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200">
+            Ver próximos eventos <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/historial-competitivo"
+            className="inline-flex min-h-12 items-center border border-white/40 bg-black/35 px-5 text-sm font-black uppercase tracking-[0.13em] text-white backdrop-blur-sm transition hover:border-fuchsia-200 hover:bg-fuchsia-300/15 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
+          >
+            Hall of Fame
+          </Link>
+        </div>
       </div>
 
-      {/* Botón Izquierdo */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none"
+        className="absolute bottom-7 right-20 z-20 flex h-11 w-11 items-center justify-center border border-cyan-200/40 bg-black/45 text-white backdrop-blur-sm transition hover:border-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:bottom-9 sm:right-24"
         aria-label="Imagen anterior"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2.5}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
+        <ChevronLeft className="h-5 w-5" />
       </button>
 
-      {/* Botón Derecho */}
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none"
+        className="absolute bottom-7 right-5 z-20 flex h-11 w-11 items-center justify-center border border-cyan-200/40 bg-black/45 text-white backdrop-blur-sm transition hover:border-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:bottom-9 sm:right-8"
         aria-label="Siguiente imagen"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2.5}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
+        <ChevronRight className="h-5 w-5" />
       </button>
 
-      {/* Indicadores */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+      <div className="absolute bottom-9 left-5 z-20 flex gap-2 sm:left-8">
         {IMAGES.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`h-2 w-2 rounded-full transition-all duration-300 ${
-              index === currentIndex ? "bg-white w-4" : "bg-white/50"
+            className={`h-1.5 transition-all duration-300 ${
+              index === currentIndex ? "w-10 bg-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.9)]" : "w-4 bg-white/40 hover:bg-white/70"
             }`}
             aria-label={`Ir a la imagen ${index + 1}`}
+            aria-current={index === currentIndex}
           />
         ))}
       </div>
