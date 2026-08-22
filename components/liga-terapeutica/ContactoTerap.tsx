@@ -10,14 +10,14 @@ import { FaInstagram } from "react-icons/fa"; // Mantenemos react-icons para log
 
 export default function ContactoTerap() {
   return (
-    <section className="relative z-10 max-w-5xl mx-auto px-4 py-16">
+    <section className="relative z-10 mx-auto max-w-5xl px-4 py-16 sm:px-6">
       
       {/* Decoración de fondo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl bg-emerald-900/10 blur-[100px] -z-10" />
 
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white mb-4">
-          Inicia la <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Intervención</span>
+        <h2 className="mb-4 font-[family-name:var(--font-display)] text-5xl font-bold uppercase italic leading-none text-white sm:text-6xl">
+          Inicia la <span className="text-emerald-300">intervención</span>
         </h2>
         <p className="text-white/50 text-sm font-medium tracking-widest uppercase">
           Canales de comunicación oficial
@@ -31,7 +31,7 @@ export default function ContactoTerap() {
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="md:col-span-3 group relative overflow-hidden rounded-2xl bg-[#0c0c12]/90 backdrop-blur-xl border border-emerald-500/20 p-8 hover:border-emerald-500/50 transition-all duration-300"
+          className="group relative overflow-hidden border border-emerald-300/30 bg-[#07110f]/95 p-8 transition duration-300 hover:border-emerald-300/60 md:col-span-3 [clip-path:polygon(0_14px,14px_0,100%_0,100%_calc(100%_-_14px),calc(100%_-_14px)_100%,0_100%)]"
         >
           {/* Efecto Hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -53,13 +53,13 @@ export default function ContactoTerap() {
               </div>
               
               <p className="text-white/60 text-sm mb-6 leading-relaxed">
-                Para consultas sobre implementación del programa "Beatbox Inclusivo", supervisión de objetivos neuropsicológicos y validación técnica en instituciones.
+                Para consultas sobre implementación del programa “Beatbox Inclusivo”, supervisión de objetivos neuropsicológicos y validación técnica en instituciones.
               </p>
             </div>
 
             <a 
               href="mailto:jfbermudez@uc.cl"
-              className="flex items-center justify-between w-full p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black text-emerald-400 transition-all duration-300 group/btn"
+              className="group/btn flex min-h-12 w-full items-center justify-between border border-emerald-300/40 bg-emerald-300/10 p-4 text-emerald-200 transition hover:bg-emerald-300 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-200"
             >
               <div className="flex items-center gap-3">
                 <EnvelopeIcon className="w-5 h-5" />
@@ -81,7 +81,7 @@ export default function ContactoTerap() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="md:col-span-2 group relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0c0c12] to-[#050505] border border-white/10 p-8 flex flex-col justify-center items-center text-center hover:border-fuchsia-500/30 transition-all duration-300"
+          className="group relative flex flex-col items-center justify-center overflow-hidden border border-fuchsia-300/25 bg-linear-to-b from-[#100a13] to-[#050505] p-8 text-center transition duration-300 hover:border-fuchsia-300/55 md:col-span-2 [clip-path:polygon(14px_0,100%_0,100%_100%,0_100%,0_14px)]"
         >
           <div className="mb-4 p-4 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-300">
             <FaInstagram className="w-10 h-10 text-white group-hover:text-fuchsia-400 transition-colors" />
@@ -98,7 +98,7 @@ export default function ContactoTerap() {
             href="https://www.instagram.com/beatbox.chile?igsh=MXZqYXRmYmNic2ZidQ=="
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 hover:bg-gradient-to-r hover:from-fuchsia-600 hover:to-orange-600 text-white font-bold text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-lg"
+            className="inline-flex min-h-12 items-center gap-2 border border-fuchsia-300/35 bg-fuchsia-300/10 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-fuchsia-300/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-300"
           >
             <span>@beatboxchile_oficial</span> 
           </a>
