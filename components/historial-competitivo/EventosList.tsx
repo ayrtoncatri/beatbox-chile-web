@@ -1,6 +1,6 @@
 'use client';
 import { motion, Variants } from 'framer-motion';
-import { CalendarIcon, MapPinIcon, MicrophoneIcon } from '@heroicons/react/24/solid';
+import { CalendarIcon, MapPinIcon, TrophyIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { PublicEventListData } from '@/app/actions/public-data';
 
@@ -8,7 +8,6 @@ interface EventosListProps {
   events: PublicEventListData;
 }
 
-// Estilos de animación para la lista
 const container: Variants = {
   hidden: { opacity: 0 },
   show: {
@@ -22,77 +21,89 @@ const item: Variants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
 };
 
+const accents = [
+  'border-cyan-300/55 shadow-[0_0_24px_rgba(34,211,238,0.12)] hover:border-fuchsia-300/75 hover:shadow-[0_0_30px_rgba(232,121,249,0.2)]',
+  'border-fuchsia-300/55 shadow-[0_0_24px_rgba(232,121,249,0.12)] hover:border-cyan-300/75 hover:shadow-[0_0_30px_rgba(34,211,238,0.2)]',
+];
 
 export default function EventosList({ events }: EventosListProps) {
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4">
-      
-      {/* Header de Sección */}
-      <div className="flex items-center gap-3 mb-10">
-        <div className="h-8 w-1 bg-gradient-to-b from-cyan-400 to-fuchsia-500 rounded-full" />
-        <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-          Eventos <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400">Archivados</span>
-        </h2>
+    <section className="relative z-10 mx-auto max-w-6xl">
+      <div className="mb-7 flex items-end justify-between gap-4 border-b border-white/10 pb-4 sm:mb-9">
+        <div>
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Registro oficial
+          </p>
+          <h2 className="font-[family-name:var(--font-display)] text-4xl font-bold uppercase italic leading-none text-white sm:text-5xl">
+            Eventos Archivados
+          </h2>
+        </div>
+        <span className="hidden font-mono text-xs uppercase tracking-widest text-white/40 sm:block">
+          {events.length} registros
+        </span>
       </div>
 
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
-        className="grid md:grid-cols-2 gap-6"
-      >
-        
-        {events.map((ev, i) => (
-          // --- (5) Envolvemos cada item en un Link ---
-          <Link href={`/historial-competitivo/eventos/${ev.id}`} key={ev.id} className="block group">
-            <motion.div
-              variants={item}
-              className={`relative rounded-xl overflow-hidden
-                          bg-[#0b1121]/60 backdrop-blur-md border border-white/5 
-                          hover:border-fuchsia-500/50 transition-all duration-400 
-                          hover:scale-[1.01] hover:shadow-[0_10px_30px_-5px_rgba(217,70,239,0.2)]
-                          cursor-pointer p-0`}
+      {events.length === 0 ? (
+        <div className="border border-dashed border-cyan-300/30 bg-cyan-300/5 px-6 py-12 text-center text-sm text-white/60">
+          Aún no hay eventos publicados en el archivo competitivo.
+        </div>
+      ) : (
+        <motion.div
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="grid gap-4 md:grid-cols-2"
+        >
+          {events.map((ev, i) => (
+            <Link
+              href={`/historial-competitivo/eventos/${ev.id}`}
+              key={ev.id}
+              className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
             >
-              
-              {/* LÍNEA DE PROGRESO DE ARCHIVO (Borde Izquierdo) */}
-              <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-fuchsia-500 to-blue-500 opacity-70 group-hover:w-2 transition-all duration-300" />
+              <motion.article
+                variants={item}
+                className={`relative h-full overflow-hidden rounded-2xl border bg-[#0a0d16]/90 p-5 backdrop-blur-md transition duration-300 sm:p-6 ${accents[i % accents.length]}`}
+              >
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(34,211,238,0.08),transparent_38%,rgba(232,121,249,0.08))] opacity-70" />
+                <div className="pointer-events-none absolute right-0 top-0 h-16 w-16 border-r border-t border-fuchsia-300/35" />
 
-              <div className="p-6 pl-8 flex flex-col gap-2 relative z-10">
-                
-                {/* TÍTULO AGRESIVO */}
-                <h3 className="text-xl font-black italic uppercase text-white tracking-tight group-hover:text-fuchsia-400 transition-colors leading-snug">
-                  {ev.nombre}
-                </h3>
-                
-                {/* METADATOS */}
-                <div className="flex items-center gap-4 text-sm text-white/70 font-medium pt-1">
-                  
-                  {/* Fecha */}
-                  <span className="flex items-center gap-2 text-fuchsia-300 font-mono text-xs uppercase tracking-widest">
-                    <CalendarIcon className="w-4 h-4 text-fuchsia-500" />
-                    {new Date(ev.fecha).toLocaleDateString('es-CL')}
-                  </span>
-                  
-                  {/* Lugar */}
-                  <span className="flex items-center gap-2 text-white/50 text-xs">
-                    <MapPinIcon className="w-4 h-4 text-blue-400" />
-                    {ev.venue.name}
-                  </span>
-                  
+                <div className="relative flex items-center gap-4 sm:gap-5">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-300/45 bg-[radial-gradient(circle,#fbbf24_0%,#78350f_68%,#111827_70%)] shadow-[0_0_20px_rgba(251,191,36,0.18)] sm:h-20 sm:w-20">
+                    <TrophyIcon className="h-8 w-8 text-amber-100 drop-shadow-[0_0_8px_rgba(251,191,36,0.65)] sm:h-10 sm:w-10" aria-hidden="true" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold uppercase italic leading-[0.95] text-white transition-colors group-hover:text-cyan-100 sm:text-3xl">
+                      {ev.nombre}
+                    </h3>
+
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/60">
+                      <span className="flex items-center gap-1.5 font-mono uppercase tracking-wide text-cyan-200">
+                        <CalendarIcon className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+                        {new Intl.DateTimeFormat('es-CL', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          timeZone: 'America/Santiago',
+                        }).format(new Date(ev.fecha))}
+                      </span>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <MapPinIcon className="h-4 w-4 shrink-0 text-fuchsia-300" aria-hidden="true" />
+                        <span className="truncate">{ev.venue.name}</span>
+                      </span>
+                    </div>
+
+                    <span className="mt-4 inline-flex rounded-full border border-cyan-300/45 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.12)]">
+                      Final Nacional
+                    </span>
+                  </div>
                 </div>
-                
-                {/* BADGE DE CATEGORÍA (Ejemplo) */}
-                <span className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider">
-                  <MicrophoneIcon className="w-3 h-3" />
-                  Final Nacional
-                </span>
-
-              </div>
-            </motion.div>
-          </Link>
-        ))}
-      </motion.div>
+              </motion.article>
+            </Link>
+          ))}
+        </motion.div>
+      )}
     </section>
   );
 }

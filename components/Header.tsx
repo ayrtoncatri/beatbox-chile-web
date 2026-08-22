@@ -75,7 +75,7 @@ export default function Header() {
     return null;
   }
 
-  const user = session?.user as any;
+  const user = session?.user;
   const userRoles = user?.roles || [];
   const isAdmin = userRoles.includes("admin");
   const isJudge = userRoles.includes("judge");
@@ -145,36 +145,48 @@ export default function Header() {
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
                   {item.subItems && hoveredCategory === item.label && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full left-1/2 z-20 mt-4 w-56 -translate-x-1/2 overflow-hidden rounded-2xl border border-white/15 bg-black/90 py-2 shadow-[0_20px_40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
-                    >
-                      <ul className="flex flex-col">
-                        {item.subItems.map((subItem) => (
-                          <li key={subItem.href}>
-                            <Link
-                              href={subItem.href}
-                              className="block px-5 py-3 text-[12px] font-black uppercase tracking-widest text-white/80 transition-all hover:bg-white/5 hover:text-cyan-300"
-                            >
-                              {subItem.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
+                    <div className="absolute left-1/2 top-full z-20 w-56 -translate-x-1/2 pt-3">
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.16 }}
+                        className="overflow-hidden rounded-2xl border border-white/15 bg-black/90 py-2 shadow-[0_20px_40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+                      >
+                        <ul className="flex flex-col">
+                          {item.subItems.map((subItem) => (
+                            <li key={subItem.href}>
+                              <Link
+                                href={subItem.href}
+                                className="block px-5 py-3 text-[12px] font-black uppercase tracking-widest text-white/80 transition-all hover:bg-white/5 hover:text-cyan-300 focus-visible:bg-white/5 focus-visible:text-cyan-300 focus-visible:outline-none"
+                              >
+                                {subItem.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    </div>
                   )}
 
                   {item.subItems ? (
-                    <span className={getLinkClasses(item.href, item.subItems) + " cursor-pointer"}>
+                    <button
+                      type="button"
+                      className={getLinkClasses(item.href, item.subItems) + " cursor-pointer"}
+                      onFocus={() => setHoveredCategory(item.label)}
+                      onClick={() => setHoveredCategory(item.label)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") setHoveredCategory(null);
+                      }}
+                      aria-expanded={hoveredCategory === item.label}
+                      aria-haspopup="menu"
+                    >
                       {item.label}
                       <FaChevronDown size={9} className={active ? "text-cyan-300" : "text-white/50"} />
                       {active && (
                         <span className="absolute bottom-0.5 left-1/2 h-0.5 w-5 -translate-x-1/2 bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.9)]" />
                       )}
-                    </span>
+                    </button>
                   ) : (
                     <Link href={item.href!} className={getLinkClasses(item.href)}>
                       {item.label}
