@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import bcrypt from "bcrypt";
-import { RateLimiterMemory } from "rate-limiter-flexible";
 import { verify } from "otplib";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { consumeMfaAttempt, getMfaAttemptKey, recordMfaFailure } from "@/lib/mfa-attempts";
 import { createMfaSessionValue, decryptMfaSecret, mfaCookie } from "@/lib/mfa";
 import { prisma } from "@/lib/prisma";
 import { getRequestMetadata } from "@/lib/privacy";
@@ -14,17 +14,6 @@ const challengeSchema = z.object({
   code: z.string().trim().min(6).max(32),
 });
 
-const limiter = new RateLimiterMemory({
-  points: 5,
-  duration: 5 * 60,
-});
-
-function getClientIp(req: NextRequest): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || req.headers.get("x-real-ip")
-    || "unknown";
-}
-
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -32,24 +21,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const userId = session.user.id;
   const parsed = challengeSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Codigo MFA invalido" }, { status: 400 });
   }
 
-  const rateLimitKey = `${session.user.id}:${getClientIp(req)}`;
   try {
-    await limiter.consume(rateLimitKey);
-  } catch {
-    return NextResponse.json(
-      { error: "Demasiados intentos. Intenta nuevamente en unos minutos." },
-      { status: 429 },
-    );
-  }
+    if (!(await consumeMfaAttempt(getMfaAttemptKey(userId, req)))) {
+      await recordMfaFailure({ userId, action: "MFA_CHALLENGE_FAILED", reason: "rate_limited", request: req });
+      return NextResponse.json(
+        { error: "Demasiados intentos. Intenta nuevamente en unos minutos." },
+        { status: 429 },
+      );
+    }
 
-  try {
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         totpEnabled: true,
@@ -86,6 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!valid) {
+      await recordMfaFailure({ userId, action: "MFA_CHALLENGE_FAILED", reason: "invalid_code", request: req });
       return NextResponse.json({ error: "Codigo MFA incorrecto" }, { status: 400 });
     }
 

@@ -98,8 +98,8 @@
     },
     "sec-mfa": {
       "status": "partial",
-      "evidence": "prisma/migrations/20260822021324_add_privileged_mfa/migration.sql, app/api/auth/mfa, middleware.ts, .compliance/docs/21719-mfa-operacion.md",
-      "remediation": "Configurar MFA_ENCRYPTION_KEY y MFA_SESSION_SECRET en cada entorno, enrolar cuentas admin/judge y ejecutar la prueba operativa documentada."
+      "evidence": "prisma/migrations/20260822021324_add_privileged_mfa/migration.sql, app/api/auth/mfa, lib/mfa-attempts.ts, lib/permissions.ts, middleware.ts, prisma/scripts/mfa-reset.cts, .compliance/docs/21719-mfa-operacion.md",
+      "remediation": "Prueba operativa ejecutada en desarrollo con enrolamiento, desafio, codigo de recuperacion y bloqueo por limite de intentos. Pendiente: configurar MFA_ENCRYPTION_KEY y MFA_SESSION_SECRET en produccion y enrolar las cuentas admin/judge reales."
     },
     "sec-logs": {
       "status": "partial",
