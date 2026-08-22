@@ -155,6 +155,10 @@ button {
   filter: blur(70px);
 }
 
+.home-stage section {
+  scroll-margin-top: 7.25rem;
+}
+
 .home-cta {
   position: relative;
   display: inline-flex;
@@ -180,9 +184,24 @@ button {
   box-shadow: 0 0 28px rgba(34, 211, 238, 0.45);
 }
 
+@keyframes footer-wave {
+  0%, 100% {
+    transform: scaleY(0.7);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-stage {
     scroll-behavior: auto;
+  }
+
+  .footer-wave-bar {
+    animation: none !important;
   }
 }
 

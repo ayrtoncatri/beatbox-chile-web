@@ -109,7 +109,7 @@ export default function Banner() {
               index === currentIndex ? "w-10 bg-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.9)]" : "w-4 bg-white/40 hover:bg-white/70"
             }`}
             aria-label={`Ir a la imagen ${index + 1}`}
-            aria-current={index === currentIndex}
+            aria-current={index === currentIndex ? true : undefined}
           />
         ))}
       </div>

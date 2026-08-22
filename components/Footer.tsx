@@ -1,131 +1,122 @@
-'use client';
-
+import Image from 'next/image';
 import Link from 'next/link';
 import { FaInstagram } from 'react-icons/fa';
-import Image from 'next/image';
 
-/**
- * Componente de barra de ecualizador animada
- * Representa una sola barra del visualizador.
- */
-const SoundBar = ({ height, delay }: { height: string; delay: string }) => (
-  <div
-    className={`w-1.5 ${height} bg-gradient-to-t from-blue-600 to-blue-400 rounded-full`}
-    style={{
-      animation: `pulse-beat 1.2s infinite ease-in-out ${delay}`,
-      // Definimos la animación en el 'style' para que Tailwind no la purgue
-      // (En una app real, esto iría en global.css)
-    }}
-  />
-);
+const waveHeights = [
+  8, 10, 14, 20, 12, 18, 30, 52, 30, 20, 26, 18, 14, 22, 34, 20, 14, 28,
+  44, 30, 20, 34, 52, 26, 16, 12, 18, 10, 8,
+];
+const wavePattern = [...waveHeights, ...waveHeights.slice(4, -2).reverse()];
+
+const navigation = [
+  { label: 'Eventos', href: '/eventos' },
+  { label: 'Rankings', href: '/estadisticas' },
+  { label: 'Historial', href: '/historial-competitivo' },
+];
 
 export default function Footer() {
   return (
-    <>
-      {/* Definición de la animación (requerido para que funcione) */}
-      <style>{`
-        @keyframes pulse-beat {
-          0%, 100% { transform: scaleY(0.1); opacity: 0.3; }
-          50% { transform: scaleY(1.0); opacity: 1; }
-        }
-      `}</style>
+    <footer className="relative overflow-hidden border-t border-cyan-300/15 bg-[#03050a] text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_30%,rgba(34,211,238,0.14),transparent_34%),radial-gradient(circle_at_100%_24%,rgba(232,121,249,0.14),transparent_35%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.06)_0,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_7px)]" />
 
-      {/* --- EL FOOTER --- */}
-      <footer className="w-full text-white mt-24 
-        bg-gradient-to-t from-black via-blue-950 to-blue-950 
-        border-t border-blue-700/50 pt-16 pb-12">
-        
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          
-          {/* --- Sección Superior: Logo y Links --- */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12 items-center justify-center">
-            
-            {/* Columna 1: Marca */}
-            <div className="md:col-span-1 flex flex-col items-center">
-              <Link href="/" className="inline-block">
-                
-                {/* --- 2. Aquí está el componente Image --- */}
-                <Image
-                  // El 'src' es la ruta RELATIVA a la carpeta 'public'
-                  src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp" 
-                  alt="Logo Beatbox Chile"
-                  // Debes definir el tamaño real de tu logo (o el tamaño que quieres que renderice)
-                  width={250} // Ejemplo: 250px de ancho
-                  height={80} // Ejemplo: 80px de alto
-                  priority // <-- (Opcional) Añade 'priority' si el logo está en el header para precargarlo
-                  className="h-auto" // (Opcional) 'h-auto' mantiene el aspect ratio si solo defines 'width'
-                />
+        <div className="relative mx-auto max-w-[1500px] px-3 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+          <div className="rounded-[28px] bg-linear-to-r from-cyan-300/80 via-violet-400/45 to-fuchsia-400/80 p-px shadow-[0_0_32px_rgba(34,211,238,0.12),0_0_40px_rgba(232,121,249,0.1)] sm:rounded-[36px]">
+            <div className="relative overflow-hidden rounded-[27px] bg-[#070a10]/95 px-5 py-10 sm:rounded-[35px] sm:px-10 sm:py-12 lg:px-16 lg:py-14">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(34,211,238,0.04),transparent_35%,rgba(232,121,249,0.05))]" />
 
-              </Link>
-              <p className="text-blue-300/80 mt-3 text-lg">
-                Beatbox Chile.
-              </p>
-              <p className="text-blue-300/80 mt-3 text-lg">
-                Comunidad, cultura y competencia.
-              </p>
-            </div>
-
-            {/* Columna 2: Navegación (Enlaces de ejemplo) */}
-            <div className="md:col-span-1 flex flex-col items-center justify-center">
-              <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">
-                Explora
-              </h3>
-              <ul className="mt-4 space-y-3">
-                <li><Link href="/eventos" className="text-base text-white hover:text-blue-300 transition-colors">Eventos</Link></li>
-                <li><Link href="/estadisticas" className="text-base text-white hover:text-blue-300 transition-colors">Rankings</Link></li>
-                <li><Link href="/historial-competitivo" className="text-base text-white hover:text-blue-300 transition-colors">Historial</Link></li>
-              </ul>
-            </div>
-
-            {/* Columna 3: Social */}
-            <div className="md:col-span-1 flex flex-col items-center justify-center">
-              <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">
-                Síguenos
-              </h3>
-              <ul className="mt-4 space-y-3">
-                <li>
-                  <Link 
-                    href="https://www.instagram.com/beatbox.chile?igsh=MXZqYXRmYmNic2ZidQ=="
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 text-base text-white hover:text-blue-300 transition-colors"
+              <div className="relative grid gap-10 text-center md:grid-cols-[1.15fr_0.7fr_1.15fr] md:items-center md:gap-8 lg:gap-16">
+                <div className="flex flex-col items-center">
+                  <Link
+                    href="/"
+                    aria-label="Ir al inicio de Beatbox Chile"
+                    className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
                   >
-                    <FaInstagram className="w-5 h-5" />
-                    Instagram
+                    <div className="relative">
+                      <div className="absolute -inset-4 rounded-full bg-linear-to-br from-cyan-400/20 to-fuchsia-500/20 blur-2xl transition-opacity group-hover:opacity-100" />
+                      <Image
+                        src="https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744966/ISOTIPO_aql89l.webp"
+                        alt="Logo Beatbox Chile"
+                        width={150}
+                        height={150}
+                        className="relative h-28 w-28 rounded-full border border-white/15 object-cover drop-shadow-[0_0_16px_rgba(34,211,238,0.45)] transition-transform duration-300 group-hover:scale-[1.03] sm:h-32 sm:w-32"
+                      />
+                    </div>
                   </Link>
-                </li>
-              </ul>
+                  <h2 className="mt-5 text-4xl leading-none text-white drop-shadow-[0_0_12px_rgba(34,211,238,0.3)]">
+                    Beatbox Chile.
+                  </h2>
+                  <p className="mt-2 text-sm font-bold tracking-wide text-fuchsia-100/90 sm:text-base">
+                    Comunidad, cultura y competencia.
+                  </p>
+                </div>
+
+                <nav aria-label="Navegación del pie de página">
+                  <ul className="flex flex-col items-center gap-2">
+                    {navigation.map((item) => (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className="inline-block px-3 py-1 font-heading text-4xl font-bold uppercase italic leading-none tracking-wide text-white drop-shadow-[2px_2px_0_rgba(232,121,249,0.45)] transition hover:text-cyan-200 hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 lg:text-5xl"
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+
+                <div className="flex justify-center">
+                  <div className="group relative w-full max-w-[260px] rounded-2xl bg-linear-to-br from-cyan-300/70 via-white/10 to-fuchsia-400/70 p-px shadow-[0_0_24px_rgba(34,211,238,0.12),0_0_28px_rgba(232,121,249,0.12)]">
+                    <div className="relative overflow-hidden rounded-[15px] bg-[#0b0d15]/95 px-6 py-7">
+                      <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-fuchsia-500/15 blur-2xl" />
+                      <p className="font-heading text-xl font-bold uppercase tracking-wider text-white">
+                        Síguenos
+                      </p>
+                      <Link
+                        href="https://www.instagram.com/beatbox.chile?igsh=MXZqYXRmYmNic2ZidQ=="
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Seguir a Beatbox Chile en Instagram"
+                        className="mt-5 inline-flex min-h-14 items-center gap-3 rounded-xl border border-fuchsia-300/35 bg-black/30 px-5 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_20px_rgba(232,121,249,0.18)] transition hover:border-cyan-300/70 hover:text-cyan-100 hover:shadow-[0_0_26px_rgba(34,211,238,0.3)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-300"
+                      >
+                        <FaInstagram
+                          aria-hidden="true"
+                          className="h-8 w-8 text-fuchsia-300 drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]"
+                        />
+                        Instagram
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                aria-hidden="true"
+                className="relative mt-12 flex h-20 w-full items-center justify-center gap-[3px] sm:mt-14 sm:gap-1"
+              >
+                <span className="h-px w-6 shrink-0 bg-linear-to-r from-transparent to-cyan-300/80 sm:w-12" />
+                {wavePattern.map((height, index) => (
+                  <span
+                    key={`${height}-${index}`}
+                    className="footer-wave-bar min-w-px max-w-1.5 flex-1 rounded-full bg-cyan-300 shadow-[0_0_7px_rgba(34,211,238,0.9)]"
+                    style={{
+                      height,
+                      animation: `footer-wave 1.5s ease-in-out ${index * -0.055}s infinite`,
+                    }}
+                  />
+                ))}
+                <span className="h-px w-6 shrink-0 bg-linear-to-l from-transparent to-cyan-300/80 sm:w-12" />
+              </div>
             </div>
           </div>
 
-          {/* --- Sección Media: El Ecualizador (El "Woooow") --- */}
-          <div className="w-full flex justify-center items-baseline gap-1.5 h-20 my-12">
-            <SoundBar height="h-4" delay="0s" />
-            <SoundBar height="h-10" delay="-0.1s" />
-            <SoundBar height="h-16" delay="-0.2s" />
-            <SoundBar height="h-8" delay="-0.3s" />
-            <SoundBar height="h-12" delay="-0.4s" />
-            <SoundBar height="h-6" delay="-0.5s" />
-            <SoundBar height="h-14" delay="-0.6s" />
-            <SoundBar height="h-8" delay="-0.7s" />
-            <SoundBar height="h-16" delay="-0.8s" />
-            <SoundBar height="h-10" delay="-0.9s" />
-            <SoundBar height="h-4" delay="-1.0s" />
-            <SoundBar height="h-8" delay="-0.5s" />
-            <SoundBar height="h-14" delay="-0.6s" />
-            <SoundBar height="h-6" delay="-0.7s" />
-            <SoundBar height="h-12" delay="-0.4s" />
-          </div>
-
-          {/* --- Sección Inferior: Copyright --- */}
-          <div className="border-t border-blue-700/30 pt-8 text-center">
-            <p className="text-xs text-blue-400/60">
+          <div className="py-4 text-center sm:py-5">
+            <p className="text-[10px] leading-5 font-medium tracking-wide text-white/55 sm:text-xs">
               © {new Date().getFullYear()} BEATBOX CHILE. Ecosistema digital construido por dronerdev y alexanderdev.
             </p>
           </div>
-
         </div>
-      </footer>
-    </>
+    </footer>
   );
 }
