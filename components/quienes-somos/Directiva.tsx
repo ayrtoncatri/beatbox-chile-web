@@ -65,29 +65,29 @@ const cardVars: Variants = {
 
 export default function Directiva() {
   return (
-    <section className="relative z-10 max-w-7xl mx-auto px-4 py-20">
+    <section className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
       {/* Decoración de fondo sutil */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-fuchsia-900/10 blur-[100px] -z-10" />
 
       {/* Título de Sección */}
-      <div className="text-center mb-16 space-y-4">
+      <div className="mb-12 border-b border-cyan-300/25 pb-5">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-fuchsia-500/30 bg-fuchsia-900/20 backdrop-blur-md"
+          className="mb-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-fuchsia-300"
         >
-          <SparklesIcon className="w-4 h-4 text-fuchsia-400" />
-          <span className="text-xs font-black italic tracking-widest text-fuchsia-300 uppercase">
-            High Command
+          <SparklesIcon className="h-4 w-4" aria-hidden="true" />
+          <span>
+            Dirección institucional
           </span>
         </motion.div>
         
-        <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white drop-shadow-xl">
-          Directiva <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-blue-500">Beatbox Chile</span>
+        <h2 className="font-[family-name:var(--font-display)] text-5xl font-bold uppercase italic leading-[0.85] tracking-[-0.035em] text-white sm:text-6xl lg:text-7xl">
+          Nuestra directiva
         </h2>
-        <p className="max-w-2xl mx-auto text-white/60 text-lg font-light">
-          El equipo interdisciplinario que impulsa el beatbox como herramienta de transformación social y competitiva[cite: 14].
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
+          El equipo interdisciplinario que impulsa el beatbox como herramienta de transformación social y competitiva.
         </p>
       </div>
 
@@ -97,15 +97,15 @@ export default function Directiva() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, margin: "-100px" }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-8"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
-        {directiva.map((lider, i) => (
+        {directiva.map((lider) => (
           <motion.div
-            key={i}
+            key={lider.nombre}
             variants={cardVars}
             className="group relative h-full"
           >
-            <div className="relative h-full bg-[#0c0c12]/80 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden p-6 hover:border-white/10 transition-colors duration-300 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
+            <div className="relative flex h-full flex-col items-center gap-5 overflow-hidden border border-cyan-300/30 bg-[#080c13]/95 p-5 text-center transition duration-300 hover:-translate-y-1 hover:border-fuchsia-300/65 hover:shadow-[0_0_28px_rgba(232,121,249,0.14)] [clip-path:polygon(0_14px,14px_0,100%_0,100%_calc(100%_-_14px),calc(100%_-_14px)_100%,0_100%)]">
               
               {/* Glow Effect on Hover */}
               <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r ${
@@ -116,12 +116,12 @@ export default function Directiva() {
 
               {/* Avatar / Imagen */}
               <div className="relative flex-shrink-0">
-                <div className={`w-24 h-24 rounded-full p-[2px] bg-gradient-to-br ${
+                <div className={`h-32 w-32 rounded-md p-[2px] bg-gradient-to-br ${
                   lider.accent === 'blue' ? 'from-blue-500 to-transparent' : 
                   lider.accent === 'lime' ? 'from-lime-500 to-transparent' : 
                   'from-fuchsia-500 to-transparent'
                 }`}>
-                  <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
+                  <div className="relative h-full w-full overflow-hidden rounded-[5px] bg-black">
                     {/* Lógica: Si hay imagen intenta cargarla, si falla o no hay, muestra icono */}
                     {lider.image && lider.image !== "" ? (
                       <Image 
@@ -152,12 +152,12 @@ export default function Directiva() {
               </div>
 
               {/* Contenido */}
-              <div className="flex-1 space-y-3 relative z-10">
+              <div className="relative z-10 flex flex-1 flex-col space-y-3">
                 <div>
-                  <h3 className="text-2xl font-black italic uppercase tracking-tight text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-white/70 transition-all">
+                  <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold uppercase italic leading-none tracking-tight text-white">
                     {lider.nombre}
                   </h3>
-                  <p className={`text-sm font-bold uppercase tracking-wider ${
+                  <p className={`mt-2 text-[9px] font-black uppercase tracking-[0.15em] ${
                     lider.accent === 'blue' ? 'text-blue-400' : 
                     lider.accent === 'lime' ? 'text-lime-400' : 
                     'text-fuchsia-400'
@@ -166,16 +166,16 @@ export default function Directiva() {
                   </p>
                 </div>
 
-                <p className="text-sm text-white/50 leading-relaxed">
+                <p className="text-xs leading-relaxed text-white/55">
                   {lider.descripcion}
                 </p>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
-                  {lider.tags.map((tag, j) => (
+                <div className="mt-auto flex flex-wrap justify-center gap-1.5 border-t border-white/10 pt-4">
+                  {lider.tags.map((tag) => (
                     <span 
-                      key={j}
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 border border-white/5 text-white/40 group-hover:border-white/10 group-hover:text-white/70 transition-colors"
+                      key={tag}
+                      className="border border-white/10 bg-white/5 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white/55"
                     >
                       {tag}
                     </span>
