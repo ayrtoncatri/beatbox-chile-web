@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
 type MfaClientProps = {
@@ -17,6 +18,7 @@ type SetupData = {
 
 export default function MfaClient({ mode, callbackUrl }: MfaClientProps) {
   const router = useRouter();
+  const { update: refreshSession } = useSession();
   const [setupData, setSetupData] = useState<SetupData | null>(null);
   const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
@@ -48,12 +50,12 @@ export default function MfaClient({ mode, callbackUrl }: MfaClientProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Codigo MFA invalido");
 
-      if (mode === "setup") {
-        toast.success("MFA activado. Ahora verifica tu segundo factor para continuar.");
-        router.replace(`/auth/mfa/challenge?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-        return;
-      }
+      // Ambos endpoints emiten la cookie del segundo factor, pero el JWT todavia
+      // dice mfaEnabled: false si el enrolamiento ocurrio con la sesion ya iniciada.
+      // Refrescarlo antes de navegar evita volver a caer en el guard de MFA.
+      await refreshSession();
 
+      toast.success(mode === "setup" ? "MFA activado correctamente." : "Segundo factor verificado.");
       router.replace(callbackUrl);
       router.refresh();
     } catch (error) {

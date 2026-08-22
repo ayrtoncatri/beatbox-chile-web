@@ -219,6 +219,7 @@ npx prisma studio
 | `npm run lint` | Análisis estático con ESLint. |
 | `npx prisma migrate dev --name <nombre>` | Crea y aplica una migración. |
 | `npx prisma db seed` | Puebla catálogos, categorías y rúbricas. |
+| `npm run mfa:reset -- <email> "<motivo>"` | Deshabilita el MFA de una cuenta privilegiada que perdió su autenticador y sus códigos de recuperación. Deja registro en `AuditLog`. |
 | `npx prisma studio` | Explorador visual de la base de datos. |
 | `npx tsc --noEmit` | **Verificación de tipos.** Ver la nota siguiente. |
 

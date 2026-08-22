@@ -12,11 +12,9 @@ export async function middleware(req: NextRequest) {
   const isPrivilegedScope = PRIVILEGED_PATHS.some((re) => re.test(pathname));
   if (!isPrivilegedScope) return NextResponse.next();
 
-  // Usamos el secret para desencriptar el JWT
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const isApi = pathname.startsWith("/api/");
 
-  // Si no hay token (no logueado), redirigir
   if (!token) {
     if (isApi) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const loginUrl = new URL("/auth/login", req.url);
@@ -24,29 +22,28 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // --- INICIO DE LA CORRECCIÓN ---
-
-  // 1. Obtenemos el array 'roles' del token (que definimos en lib/auth.ts)
-  const roles = (token as any).roles;
-
-  // 2. Comprobamos si 'roles' es un array Y si incluye "admin"
-  const hasAdminRole = Array.isArray(roles) && roles.includes("admin");
-  const hasJudgeRole = Array.isArray(roles) && roles.includes("judge");
+  const roles = Array.isArray(token.roles) ? token.roles : [];
+  const hasAdminRole = roles.includes("admin");
+  const hasJudgeRole = roles.includes("judge");
   const hasRequiredRole = isAdminScope ? hasAdminRole : (hasAdminRole || hasJudgeRole);
 
   if (!hasRequiredRole) {
-    // Si no es admin, lo redirigimos
     if (isApi) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     return NextResponse.redirect(new URL("/", req.url));
   }
 
   const userId = token.sub;
-  const mfaEnabled = (token as any).mfaEnabled === true;
+  const mfaEnabled = token.mfaEnabled === true;
+
+  // La cookie va firmada por el servidor y ligada al userId, y solo se emite tras
+  // confirmar o superar el desafio: su validez basta como prueba del segundo factor.
+  // El claim mfaEnabled del JWT puede venir desactualizado (se enrolo despues de
+  // emitir el token), asi que solo decide a donde enviar a quien aun no verifico.
   const mfaVerified = userId
     ? await hasValidMfaSession(req.cookies.get(mfaCookieName)?.value, userId)
     : false;
 
-  if (!mfaEnabled || !mfaVerified) {
+  if (!mfaVerified) {
     if (isApi) {
       return NextResponse.json(
         { error: "MFA_REQUIRED", setupRequired: !mfaEnabled },

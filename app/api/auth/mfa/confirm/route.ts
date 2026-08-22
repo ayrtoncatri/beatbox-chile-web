@@ -4,6 +4,7 @@ import { verify } from "otplib";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { consumeMfaAttempt, getMfaAttemptKey, recordMfaFailure } from "@/lib/mfa-attempts";
 import { createMfaSessionValue, decryptMfaSecret, mfaCookie } from "@/lib/mfa";
 import { prisma } from "@/lib/prisma";
 import { getRequestMetadata } from "@/lib/privacy";
@@ -24,14 +25,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "MFA no requerido para este usuario" }, { status: 403 });
   }
 
+  const userId = session.user.id;
   const parsed = confirmationSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Codigo MFA invalido" }, { status: 400 });
   }
 
   try {
+    if (!(await consumeMfaAttempt(getMfaAttemptKey(userId, req)))) {
+      await recordMfaFailure({ userId, action: "MFA_ENABLE_FAILED", reason: "rate_limited", request: req });
+      return NextResponse.json(
+        { error: "Demasiados intentos. Intenta nuevamente en unos minutos." },
+        { status: 429 },
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { id: true, totpSecretEncrypted: true, totpEnabled: true },
     });
 
@@ -50,6 +60,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result.valid) {
+      await recordMfaFailure({ userId, action: "MFA_ENABLE_FAILED", reason: "invalid_code", request: req });
       return NextResponse.json({ error: "Codigo MFA incorrecto" }, { status: 400 });
     }
 
