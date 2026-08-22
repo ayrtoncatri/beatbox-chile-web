@@ -81,7 +81,7 @@ export default function CompraTicketsForm({
 
     // B. Formatear el carrito para la API (solo items con cantidad > 0)
     const itemsToPurchase: CartItem[] = Object.entries(cart)
-      .filter(([id, quantity]) => quantity > 0)
+      .filter(([, quantity]) => quantity > 0)
       .map(([ticketTypeId, quantity]) => ({
         ticketTypeId,
         quantity,
@@ -133,7 +133,7 @@ export default function CompraTicketsForm({
       router.push(redirectUrl);
       // No seteamos submitting(false) porque estamos saliendo de la página
       
-    } catch (err) {
+    } catch {
       const errorMsg = 'Error de red. Intenta de nuevo más tarde.';
       setError(errorMsg);
       toast.error(errorMsg, { id: loadingToast });
@@ -142,32 +142,24 @@ export default function CompraTicketsForm({
   };
 
   return (
-    <section className="mt-12 relative z-10 max-w-2xl mx-auto px-4">
-      <h2 className="text-3xl font-bold mb-8 text-lime-300 drop-shadow-lg text-center">
-        Comprar Entradas
-      </h2>
-
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-xl mx-auto bg-gradient-to-br from-gray-900/80 via-neutral-900/80 to-lime-400/10
-                   backdrop-blur-lg border border-lime-400/20 shadow-2xl
-                   hover:shadow-lime-500/40 p-8 rounded-2xl flex flex-col gap-6
-                   transition-all duration-400"
-      >
+    <form
+      onSubmit={handleSubmit}
+      className="flex w-full flex-col gap-5"
+    >
         {/* 7. Lista dinámica de tipos de tickets */}
         <div className="flex flex-col gap-5">
           {ticketTypes.map((ticket) => (
             <div
               key={ticket.id}
-              className="flex justify-between items-center bg-neutral-800/50 p-4 rounded-lg border border-lime-400/20"
+              className="flex items-center justify-between border border-cyan-300/25 bg-[#0b0d12] p-4"
             >
               <div className="flex items-center gap-3">
-                <FaTicketAlt className="text-lime-400 text-xl" />
+                <FaTicketAlt className="text-xl text-cyan-300" aria-hidden="true" />
                 <div>
-                  <h4 className="text-lg font-semibold text-white">
+                  <h3 className="text-base font-semibold text-white">
                     {ticket.name}
-                  </h4>
-                  <p className="text-lime-300 font-bold">
+                  </h3>
+                  <p className="font-bold text-rose-300">
                     ${ticket.price.toLocaleString('es-CL')}
                   </p>
                 </div>
@@ -175,12 +167,11 @@ export default function CompraTicketsForm({
               <input
                 type="number"
                 min={0}
-                // max={ticket.capacity || 20} // (Podemos añadir lógica de capacidad aquí luego)
                 value={cart[ticket.id] || 0}
                 onChange={(e) =>
                   handleQuantityChange(ticket.id, e.target.valueAsNumber)
                 }
-                className="w-20 bg-neutral-900/80 border border-lime-400/40 focus:border-lime-300 text-white p-2 rounded-xl text-center outline-none transition-all"
+                className="h-11 w-20 border border-cyan-300/40 bg-black/70 text-center text-white outline-none transition focus-visible:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
                 aria-label={`Cantidad para ${ticket.name}`}
               />
             </div>
@@ -188,62 +179,54 @@ export default function CompraTicketsForm({
         </div>
 
         {/* 8. Total calculado */}
-        <div className="border-t border-lime-400/30 pt-4 flex items-center justify-between text-lime-200/90">
-          <span className="text-xl font-semibold">Total</span>
-          <span className="text-lime-300 font-bold text-2xl">
+        <div className="flex items-center justify-between border-t border-white/10 pt-4 text-white/90">
+          <span className="text-lg font-semibold">Total</span>
+          <span className="text-2xl font-bold text-rose-300">
             ${total.toLocaleString('es-CL')}
           </span>
         </div>
 
-        {/* --- 9. SELECCIÓN DE MÉTODO DE PAGO --- */}
-        <div className="border-t border-lime-400/30 pt-4">
-          <span className="text-lg font-semibold text-lime-200/90 mb-3 block">
+        <div className="border-t border-white/10 pt-4">
+          <span className="mb-3 block text-sm font-semibold uppercase tracking-[0.12em] text-white/80">
             Selecciona tu método de pago
           </span>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Botón Webpay */}
+          <div className="grid grid-cols-2 gap-3">
             <button
-              type="button" // Previene que envíe el formulario
+              type="button"
               onClick={() => setPaymentMethod('WEBPAY')}
-              className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 text-center font-semibold transition-all ${
+              className={`flex min-h-12 items-center justify-center gap-2 border-2 text-center text-sm font-semibold transition ${
                 paymentMethod === 'WEBPAY'
-                  ? 'bg-lime-500/20 border-lime-400 text-white shadow-lime-500/40'
-                  : 'bg-neutral-800/50 border-neutral-700 text-gray-400 hover:bg-neutral-700'
+                  ? 'border-cyan-300 bg-cyan-300/15 text-white shadow-[0_0_14px_rgba(34,211,238,0.25)]'
+                  : 'border-white/15 bg-black/40 text-white/60 hover:border-white/30'
               }`}
             >
-              <FaCreditCard /> Webpay
+              <FaCreditCard aria-hidden="true" /> Webpay
             </button>
-            {/* Botón Mercado Pago */}
             <button
-              type="button" // Previene que envíe el formulario
+              type="button"
               onClick={() => setPaymentMethod('MERCADOPAGO')}
-              className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 text-center font-semibold transition-all ${
+              className={`flex min-h-12 items-center justify-center gap-2 border-2 text-center text-sm font-semibold transition ${
                 paymentMethod === 'MERCADOPAGO'
-                  ? 'bg-lime-500/20 border-lime-400 text-white shadow-lime-500/40'
-                  : 'bg-neutral-800/50 border-neutral-700 text-gray-400 hover:bg-neutral-700'
+                  ? 'border-cyan-300 bg-cyan-300/15 text-white shadow-[0_0_14px_rgba(34,211,238,0.25)]'
+                  : 'border-white/15 bg-black/40 text-white/60 hover:border-white/30'
               }`}
             >
-              <SiMercadopago /> Mercado Pago
+              <SiMercadopago aria-hidden="true" /> Mercado Pago
             </button>
           </div>
         </div>
 
-        {/* 10. Botón de envío */}
         <button
           type="submit"
           disabled={submitting || total === 0}
-          className="bg-gradient-to-r from-lime-500 via-lime-400 to-green-400
-                     text-gray-900 font-bold py-3 px-6 rounded-xl mt-2
-                     hover:scale-105 hover:shadow-lg transition-all duration-300
-                     disabled:opacity-60 disabled:cursor-not-allowed"
+          className="evento-cta mt-1 w-full disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? 'Procesando...' : 'Ir a Pagar'}
+          {submitting ? 'Procesando...' : 'Ir a pagar'}
         </button>
 
         {error && (
-          <p className="mt-2 text-red-400 font-semibold text-center">{error}</p>
+          <p className="text-center text-sm font-semibold text-rose-400">{error}</p>
         )}
-      </form>
-    </section>
+    </form>
   );
 }

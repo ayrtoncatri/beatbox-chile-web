@@ -47,15 +47,15 @@ const item = {
 
 export default function Colaboradores() {
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 pb-16">
+    <section className="relative z-10 mx-auto max-w-6xl px-4 pb-16 sm:px-6">
       
       {/* Header de Sección */}
       <div className="flex flex-col items-center text-center mb-12">
         <div className="p-3 bg-white/5 rounded-full mb-4 border border-white/10">
           <HandRaisedIcon className="w-6 h-6 text-white/60" />
         </div>
-        <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
-          Aliados <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Estratégicos</span>
+        <h2 className="font-[family-name:var(--font-display)] text-5xl font-bold uppercase italic leading-none text-white sm:text-6xl">
+          Aliados <span className="text-amber-200">estratégicos</span>
         </h2>
         <p className="text-white/40 text-sm mt-2 max-w-2xl">
           Organizaciones que impulsan el crecimiento y la profesionalización del Beatbox en Chile.
@@ -74,7 +74,7 @@ export default function Colaboradores() {
           <motion.div
             key={i}
             variants={item}
-            className={`group relative h-40 flex flex-col items-center justify-center bg-[#0b1121]/60 backdrop-blur-sm border border-white/5 rounded-xl transition-all duration-300 ${col.color}`}
+            className={`group relative flex h-40 flex-col items-center justify-center border border-white/10 bg-[#0b0c14]/90 transition duration-300 ${col.color} [clip-path:polygon(0_10px,10px_0,100%_0,100%_calc(100%_-_10px),calc(100%_-_10px)_100%,0_100%)]`}
           >
             {/* Logo Container */}
             <div className="relative w-24 h-24 mb-2 transition-transform duration-300 group-hover:scale-110">

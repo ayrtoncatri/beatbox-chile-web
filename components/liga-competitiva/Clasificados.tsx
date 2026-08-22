@@ -33,7 +33,7 @@ const item = {
 
 export default function Clasificados() {
   return (
-    <section className="relative z-10 max-w-5xl mx-auto px-4">
+    <section className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
       
       {/* Header del Ranking */}
       <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
@@ -44,12 +44,12 @@ export default function Clasificados() {
               Temporada 2025
             </span>
           </div>
-          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">
-            Ranking <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Nacional</span>
+          <h2 className="font-[family-name:var(--font-display)] text-5xl font-bold uppercase italic leading-none text-white sm:text-6xl">
+            Ranking <span className="text-amber-200">nacional</span>
           </h2>
         </div>
         
-        <div className="px-4 py-2 rounded-lg bg-blue-900/20 border border-blue-500/30 text-blue-200 text-xs font-bold uppercase">
+        <div className="border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-xs font-bold uppercase text-amber-100">
           Top 5 Clasificados
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function Clasificados() {
             <motion.div
               key={c.rank}
               variants={item}
-              className={`relative flex items-center gap-4 p-4 rounded-xl border ${borderColor} ${bgGradient} backdrop-blur-md hover:bg-white/5 transition-all duration-300 group`}
+              className={`group relative flex items-center gap-4 border p-4 transition duration-300 hover:bg-white/5 ${borderColor} ${bgGradient} [clip-path:polygon(0_8px,8px_0,100%_0,100%_100%,0_100%)]`}
             >
               {/* Rango Número */}
               <div className={`w-8 text-center font-black italic text-2xl ${rankColor}`}>

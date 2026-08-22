@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Manrope:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:ital,wght@0,500;0,700;1,600;1,700&family=Teko:wght@500;700&family=Manrope:wght@400;500;700&display=swap');
 
 @import 'tailwindcss';
 /* --- (NUEVO) 1. Importamos las fuentes de Google Fonts --- */
@@ -9,7 +9,14 @@
   
   /* --- (NUEVO) 2. Definimos nuestras fuentes base --- */
   --font-heading: 'Teko', sans-serif;
+  --font-display: 'Oswald', sans-serif;
   --font-body: 'Manrope', sans-serif;
+
+  --bb-cyan: #22d3ee;
+  --bb-magenta: #f472b6;
+  --bb-violet: #c084fc;
+  --bb-ink: #05060d;
+  --bb-panel: #0a0e1c;
 }
 
 /* --- 3. Registramos las fuentes y utilidades en Tailwind --- */
@@ -21,6 +28,7 @@
   --font-sans: var(--font-body); /* 'sans' será nuestra fuente de cuerpo */
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-heading); /* Nueva fuente de título */
+  --font-display: var(--font-display);
 
   /* (NUEVO) Añadimos utilidades de "GLOW" (NEÓN) */
   /* Podremos usarlas con 'text-shadow-lime', 'text-shadow-red', etc. */
@@ -55,6 +63,146 @@ h1, h2, h3, h4, h5, h6 {
 
 button {
   cursor: pointer;
+}
+
+/* Home: lenguaje visual campeonato / street / neon */
+.home-stage {
+  position: relative;
+  isolation: isolate;
+  color: #f8fafc;
+  background-color: var(--bb-ink);
+}
+
+.home-stage::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.home-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--bb-cyan);
+}
+
+.home-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.home-vert {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.home-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(16, 21, 44, 0.92), rgba(5, 6, 13, 0.96));
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.35);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.home-card:hover {
+  transform: translateY(-2px);
+}
+
+.home-card-cyan {
+  border-color: rgba(34, 211, 238, 0.7);
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.28);
+  filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.35));
+}
+
+.home-card-magenta {
+  border-color: rgba(244, 114, 182, 0.7);
+  box-shadow: 0 0 28px rgba(244, 114, 182, 0.28);
+  filter: drop-shadow(0 0 14px rgba(244, 114, 182, 0.35));
+}
+
+.home-card-violet {
+  border-color: rgba(192, 132, 252, 0.7);
+  box-shadow: 0 0 28px rgba(192, 132, 252, 0.28);
+  filter: drop-shadow(0 0 14px rgba(192, 132, 252, 0.35));
+}
+
+.home-spray {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+}
+
+.home-stage section {
+  scroll-margin-top: 7.25rem;
+}
+
+.home-cta {
+  position: relative;
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  background:
+    linear-gradient(#070915, #070915) padding-box,
+    linear-gradient(90deg, #22d3ee, #e879f9, #c084fc) border-box;
+  border: 2px solid transparent;
+  box-shadow: 0 0 22px rgba(232, 121, 249, 0.28);
+  transition: box-shadow 200ms ease, color 200ms ease;
+}
+
+.home-cta:hover {
+  color: #e0faff;
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.45);
+}
+
+@keyframes footer-wave {
+  0%, 100% {
+    transform: scaleY(0.7);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-stage {
+    scroll-behavior: auto;
+  }
+
+  .footer-wave-bar {
+    animation: none !important;
+  }
 }
 
 input::placeholder,
@@ -102,4 +250,97 @@ textarea::placeholder {
 .admin-panel select option:checked {
   color: #111827 !important;
   background-color: #e2e8f0 !important;
+}
+
+/* Evento específico: afiche neón rojo/cyan */
+.evento-stage {
+  position: relative;
+  isolation: isolate;
+  color: #f8fafc;
+  background-color: #050506;
+}
+
+.evento-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(244, 63, 94, 0.95),
+    0 0 28px rgba(244, 63, 94, 0.55),
+    0 0 48px rgba(225, 29, 72, 0.35);
+}
+
+.evento-cta {
+  position: relative;
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.75rem;
+  border: 2px solid #fb7185;
+  border-radius: 10px;
+  background: rgba(8, 6, 10, 0.85);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 14px rgba(244, 63, 94, 0.75),
+    0 0 36px rgba(244, 63, 94, 0.28);
+  transition: box-shadow 200ms ease, color 200ms ease, background-color 200ms ease;
+}
+
+.evento-cta:hover {
+  color: #ffe4e6;
+  background: rgba(244, 63, 94, 0.16);
+  box-shadow:
+    0 0 18px rgba(244, 63, 94, 0.95),
+    0 0 44px rgba(244, 63, 94, 0.4);
+}
+
+.evento-cta:focus-visible {
+  outline: 2px solid #fda4af;
+  outline-offset: 4px;
+}
+
+.evento-count-num {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: #fb7185;
+  text-shadow: 0 0 12px rgba(244, 63, 94, 0.9);
+}
+
+.evento-skew {
+  transform: skewX(-12deg);
+}
+
+.evento-unskew {
+  transform: skewX(12deg);
+}
+
+.evento-ring {
+  box-shadow:
+    0 0 0 3px #22d3ee,
+    0 0 18px rgba(34, 211, 238, 0.85),
+    0 0 32px rgba(34, 211, 238, 0.35);
+}
+
+@media (max-width: 639px) {
+  .evento-skew,
+  .evento-unskew {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evento-cta,
+  .evento-ring {
+    transition: none;
+  }
 }

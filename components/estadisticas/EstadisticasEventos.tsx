@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-  ChartBarIcon, 
-  UsersIcon, 
-  TrophyIcon, 
-  CalendarDaysIcon 
+import {
+  CalendarDaysIcon,
+  MicrophoneIcon,
+  TrophyIcon,
+  UsersIcon,
 } from '@heroicons/react/24/solid';
 import { GlobalEventStatsData } from '@/app/actions/public-data';
 
@@ -14,82 +14,90 @@ interface EstadisticasEventosProps {
 }
 
 export default function EstadisticasEventos({ stats }: EstadisticasEventosProps) {
-  
-  const statsItems = [
-    { 
-      label: 'Eventos Totales', 
-      value: stats.totalEventos, 
-      icon: <CalendarDaysIcon className="w-6 h-6 text-cyan-400" />,
-      bg: "from-cyan-500/10 to-blue-500/10",
-      border: "group-hover:border-cyan-500/50"
+  const maxValue = Math.max(stats.totalEventos, stats.totalParticipantes, 1);
+  const activity = [
+    {
+      label: 'Eventos registrados',
+      value: stats.totalEventos,
+      width: `${Math.max((stats.totalEventos / maxValue) * 100, 12)}%`,
+      icon: CalendarDaysIcon,
+      color: 'from-fuchsia-500 to-rose-400',
     },
-    { 
-      label: 'Comunidad Activa', 
-      value: stats.totalParticipantes, 
-      icon: <UsersIcon className="w-6 h-6 text-indigo-400" />,
-      bg: "from-indigo-500/10 to-purple-500/10",
-      border: "group-hover:border-indigo-500/50"
-    },
-    { 
-      label: 'Campeón Vigente', 
-      value: stats.ultimoGanadorCN || "N/A", 
-      icon: <TrophyIcon className="w-6 h-6 text-yellow-400" />,
-      bg: "from-yellow-500/10 to-orange-500/10",
-      border: "group-hover:border-yellow-500/50"
+    {
+      label: 'Participantes',
+      value: stats.totalParticipantes,
+      width: `${Math.max((stats.totalParticipantes / maxValue) * 100, 12)}%`,
+      icon: UsersIcon,
+      color: 'from-violet-500 to-cyan-300',
     },
   ];
 
   return (
-    <section className="relative z-10">
-      
-      {/* Header de Sección */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="h-8 w-1 bg-gradient-to-b from-cyan-400 to-indigo-500 rounded-full" />
-        <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-          Métricas <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Globales</span>
-        </h2>
-      </div>
+    <section aria-labelledby="metricas-globales">
+      <div className="grid gap-4 lg:grid-cols-[1.04fr_1fr]">
+        <motion.article
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative overflow-hidden border border-fuchsia-400/40 bg-[#12091b]/80 p-5 shadow-[inset_0_0_32px_rgba(168,85,247,0.08),0_0_24px_rgba(217,70,239,0.08)] sm:p-7 [clip-path:polygon(0_14px,14px_0,100%_0,100%_calc(100%_-_14px),calc(100%_-_14px)_100%,0_100%)]"
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(192,132,252,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(192,132,252,0.055)_1px,transparent_1px)] bg-size-[32px_32px]" />
+          <div className="relative">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-fuchsia-300">Participación de la comunidad</p>
+            <h2 id="metricas-globales" className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold uppercase italic leading-none text-white sm:text-4xl">
+              Métricas globales
+            </h2>
 
-      {/* Grid de KPIs */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {statsItems.map((item, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-            className={`group relative overflow-hidden rounded-xl bg-[#0f172a]/60 backdrop-blur-md border border-white/5 ${item.border} transition-all duration-300`}
-          >
-            {/* Fondo Gradiente Sutil */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${item.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            
-            {/* Efecto Scanline (Línea que baja) */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-y-full group-hover:translate-y-[200%] transition-transform duration-1000 ease-in-out" />
-
-            <div className="relative p-6 flex items-start justify-between">
-              <div>
-                <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-1">
-                  {item.label}
-                </p>
-                <h3 className={`font-mono font-black text-white tracking-tight ${
-                  typeof item.value === 'string' && item.value.length > 10 ? 'text-2xl' : 'text-4xl'
-                }`}>
-                  {item.value}
-                </h3>
-              </div>
-              
-              <div className="p-3 rounded-lg bg-white/5 border border-white/5 group-hover:scale-110 transition-transform duration-300">
-                {item.icon}
-              </div>
+            <div className="mt-8 space-y-7">
+              {activity.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label}>
+                    <div className="mb-2 flex items-end justify-between gap-4">
+                      <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-white/60">
+                        <Icon className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+                        {item.label}
+                      </span>
+                      <strong className="font-[family-name:var(--font-display)] text-3xl italic leading-none text-white">
+                        {item.value}
+                      </strong>
+                    </div>
+                    <div className="h-3 overflow-hidden border border-white/10 bg-black/45 p-0.5">
+                      <div
+                        className={`h-full bg-linear-to-r ${item.color} shadow-[0_0_12px_rgba(34,211,238,0.5)]`}
+                        style={{ width: item.width }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+        </motion.article>
 
-            {/* Decoración Tech en esquinas */}
-            <div className="absolute bottom-0 right-0 w-2 h-2 bg-white/10 rounded-tl-lg" />
-            <div className="absolute top-0 left-0 w-2 h-2 bg-white/10 rounded-br-lg" />
+        <motion.article
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.08 }}
+          className="group relative flex min-h-72 overflow-hidden border border-cyan-300/45 bg-[#07131a]/90 shadow-[inset_0_0_42px_rgba(6,182,212,0.08),0_0_28px_rgba(34,211,238,0.08)] [clip-path:polygon(14px_0,100%_0,100%_calc(100%_-_14px),calc(100%_-_14px)_100%,0_100%,0_14px)]"
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_42%,rgba(34,211,238,0.24),transparent_24%),radial-gradient(circle_at_78%_54%,rgba(244,63,94,0.22),transparent_37%)]" />
+          <div className="pointer-events-none absolute right-[10%] top-1/2 h-44 w-44 -translate-y-1/2 rounded-full border border-cyan-300/40 shadow-[0_0_25px_rgba(34,211,238,0.35),inset_0_0_25px_rgba(244,63,94,0.2)] sm:h-52 sm:w-52" />
+          <MicrophoneIcon className="pointer-events-none absolute bottom-[-12px] right-[13%] h-56 w-56 rotate-[-8deg] text-white/10 drop-shadow-[0_0_14px_rgba(34,211,238,0.5)] sm:h-64 sm:w-64" aria-hidden="true" />
 
-          </motion.div>
-        ))}
+          <div className="relative z-10 flex max-w-[68%] flex-col justify-center p-6 sm:p-8">
+            <span className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300">Campeón vigente</span>
+            <TrophyIcon className="mb-4 h-8 w-8 text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" aria-hidden="true" />
+            <h2 className="font-[family-name:var(--font-display)] text-4xl font-bold uppercase italic leading-[0.85] text-white sm:text-5xl lg:text-6xl">
+              {stats.ultimoGanadorCN || 'Sin registro'}
+            </h2>
+            <p className="mt-4 text-xs font-bold uppercase tracking-wider text-white/55">
+              Campeón nacional más reciente
+            </p>
+          </div>
+          <div className="absolute bottom-0 left-0 h-1 w-2/3 bg-linear-to-r from-rose-500 via-fuchsia-400 to-transparent" />
+        </motion.article>
       </div>
     </section>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { LightBulbIcon, PaperAirplaneIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 
@@ -61,45 +61,47 @@ export default function BuzonIdeas() {
   };
 
   return (
-    <section className="relative z-10 max-w-3xl mx-auto py-16 px-4">
+    <section className="relative z-10 mx-auto max-w-4xl px-4 pb-28 pt-16 sm:px-6">
       
       {/* Decoración de fondo */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-fuchsia-900/5 to-transparent blur-3xl -z-10" />
 
       {/* Cabecera */}
-      <div className="flex flex-col items-center text-center mb-10 space-y-3">
-        <div className="p-3 rounded-full bg-yellow-500/10 border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-           <LightBulbIcon className="text-yellow-400 w-8 h-8" />
+      <header className="mb-10 flex flex-col items-center space-y-3 text-center">
+        <div className="border border-amber-300/30 bg-amber-300/10 p-3 shadow-[0_0_16px_rgba(251,191,36,0.16)]">
+          <LightBulbIcon className="h-7 w-7 text-amber-300" aria-hidden="true" />
         </div>
-        <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
-          Buzón de <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Ideas</span>
+        <h2 className="font-[family-name:var(--font-display)] text-5xl font-bold uppercase italic leading-none text-white sm:text-6xl">
+          Buzón de ideas
         </h2>
-        <p className="text-white/50 text-sm md:text-base max-w-lg">
+        <p className="max-w-lg text-sm leading-relaxed text-white/55 sm:text-base">
           ¿Tienes una visión para mejorar la comunidad? Tu voz construye el futuro de Beatbox Chile.
         </p>
-      </div>
+      </header>
 
       {/* Tarjeta del Formulario */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="relative group rounded-2xl bg-[#0c0c12]/90 backdrop-blur-xl border border-white/10 p-1 transition-all duration-300 hover:border-white/20"
+        className="group relative border border-white/15 bg-[#090b12]/95 p-1 transition-all duration-300 hover:border-cyan-300/35 [clip-path:polygon(0_14px,14px_0,100%_0,100%_calc(100%_-_14px),calc(100%_-_14px)_100%,0_100%)]"
       >
         {/* Borde brillante animado al hacer foco */}
-        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-blue-600 to-fuchsia-600 opacity-0 transition-opacity duration-500 -z-10 blur-sm ${isFocused ? 'opacity-40' : ''}`} />
+        <div className={`absolute inset-0 -z-10 bg-linear-to-r from-fuchsia-500 via-cyan-400 to-fuchsia-500 opacity-0 blur-sm transition-opacity duration-300 ${isFocused ? 'opacity-35' : ''}`} />
 
-        <div className="bg-[#050505]/80 rounded-xl p-6 md:p-8">
+        <div className="bg-[#05070b]/90 p-6 md:p-8">
             <form className="flex flex-col gap-6" onSubmit={onSubmit}>
             
             <div className="relative">
+                <label htmlFor="idea-comunidad" className="sr-only">Escribe tu propuesta para Beatbox Chile</label>
                 <textarea
+                    id="idea-comunidad"
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     placeholder="Escribe tu propuesta aquí..."
-                    className="w-full p-4 rounded-xl bg-white/5 text-white border border-white/10 placeholder:text-white/20 focus:outline-none focus:bg-white/10 transition-all resize-none text-lg min-h-[150px]"
+                    className="min-h-[150px] w-full resize-none border border-white/15 bg-white/5 p-4 text-base text-white placeholder:text-white/30 transition focus:border-cyan-300/55 focus:bg-white/8 focus:outline-none sm:text-lg"
                     maxLength={1000}
                 />
                 {/* Contador de caracteres sutil */}
@@ -112,17 +114,17 @@ export default function BuzonIdeas() {
                 <button
                     type="submit"
                     disabled={sending || idea.trim().length < 5}
-                    className="relative overflow-hidden group/btn flex items-center gap-2 py-3 px-8 bg-gradient-to-r from-fuchsia-600 to-blue-600 text-white font-black uppercase italic tracking-wider rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(217,70,239,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="group/btn relative flex min-h-12 items-center gap-2 overflow-hidden border border-fuchsia-300/50 bg-linear-to-r from-fuchsia-600 to-cyan-600 px-7 py-3 text-xs font-black uppercase italic tracking-[0.14em] text-white transition hover:shadow-[0_0_22px_rgba(34,211,238,0.25)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                     {sending ? (
                         <span className="flex items-center gap-2">
-                            <SparklesIcon className="w-5 h-5 animate-spin" />
+                            <SparklesIcon className="h-5 w-5 animate-spin" aria-hidden="true" />
                             Enviando...
                         </span>
                     ) : (
                         <>
                             <span>Enviar Propuesta</span>
-                            <PaperAirplaneIcon className="w-5 h-5 group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-transform" />
+                            <PaperAirplaneIcon className="h-5 w-5 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" aria-hidden="true" />
                         </>
                     )}
                 </button>

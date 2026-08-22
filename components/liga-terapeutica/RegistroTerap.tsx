@@ -6,21 +6,20 @@ import {
   ClockIcon, 
   UserGroupIcon, 
   SpeakerWaveIcon,
-  BuildingLibraryIcon
 } from "@heroicons/react/24/solid";
 
 export default function RegistroTerap() {
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4">
+    <section className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
       
       {/* Encabezado */}
       <div className="flex items-center gap-4 mb-10">
-        <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-          <ClipboardDocumentCheckIcon className="w-8 h-8 text-emerald-400" />
+        <div className="border border-emerald-300/35 bg-emerald-300/10 p-3 shadow-[0_0_20px_rgba(16,185,129,0.16)]">
+          <ClipboardDocumentCheckIcon className="h-8 w-8 text-emerald-300" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
-            Implementación <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Del Programa</span>
+          <h2 className="font-[family-name:var(--font-display)] text-4xl font-bold uppercase italic leading-none text-white sm:text-5xl">
+            Implementación <span className="text-emerald-300">del programa</span>
           </h2>
           <p className="text-white/40 text-sm font-medium tracking-widest uppercase mt-1">
             Logística & Requisitos Técnicos
@@ -37,7 +36,7 @@ export default function RegistroTerap() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="group bg-[#0c0c12]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:border-emerald-500/50 transition-all duration-300"
+          className="group border border-emerald-300/25 bg-[#07110f]/95 p-6 transition duration-300 hover:border-emerald-300/55 [clip-path:polygon(0_12px,12px_0,100%_0,100%_100%,0_100%)]"
         >
           <div className="flex items-center gap-3 mb-4">
             <UserGroupIcon className="w-6 h-6 text-emerald-400" />
@@ -71,7 +70,7 @@ export default function RegistroTerap() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="group bg-[#0c0c12]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:border-teal-500/50 transition-all duration-300"
+          className="group border border-teal-300/25 bg-[#071111]/95 p-6 transition duration-300 hover:border-teal-300/55 [clip-path:polygon(12px_0,100%_0,100%_100%,0_100%,0_12px)]"
         >
           <div className="flex items-center gap-3 mb-4">
             <ClockIcon className="w-6 h-6 text-teal-400" />
@@ -105,7 +104,7 @@ export default function RegistroTerap() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className="group bg-[#0c0c12]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:border-lime-500/50 transition-all duration-300"
+          className="group border border-cyan-300/25 bg-[#071014]/95 p-6 transition duration-300 hover:border-cyan-300/55 [clip-path:polygon(0_0,calc(100%_-_12px)_0,100%_12px,100%_100%,0_100%)]"
         >
           <div className="flex items-center gap-3 mb-4">
             <SpeakerWaveIcon className="w-6 h-6 text-lime-400" />
