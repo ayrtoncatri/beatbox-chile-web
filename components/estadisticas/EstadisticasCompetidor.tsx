@@ -1,22 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-  UserCircleIcon, 
-  TrophyIcon, 
-  StarIcon, 
+import {
+  UserCircleIcon,
+  TrophyIcon,
+  StarIcon,
   MicrophoneIcon,
-  ChartBarIcon,
-  ChevronDownIcon // Icono para "Ver Más"
+  ChevronDownIcon,
 } from '@heroicons/react/24/solid';
 import { GlobalCompetitorStatsData } from '@/app/actions/public-data';
-import { useState } from 'react'; // Importamos useState
+import { useState } from 'react';
 
 interface EstadisticasCompetidorProps {
   stats: GlobalCompetitorStatsData;
 }
 
-const ITEMS_PER_PAGE = 5; // Mostrar 5 competidores inicialmente
+const ITEMS_PER_PAGE = 4;
 
 export default function EstadisticasCompetidor({ stats }: EstadisticasCompetidorProps) {
   const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
@@ -26,140 +25,123 @@ export default function EstadisticasCompetidor({ stats }: EstadisticasCompetidor
   };
 
   return (
-    <section className="relative z-10">
-      
-      {/* Header de Sección */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-1 bg-gradient-to-b from-indigo-400 to-purple-500 rounded-full" />
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-            Top <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Performers</span>
+    <section aria-labelledby="top-performers">
+      <div className="mb-5 flex items-end justify-between gap-4 border-b border-white/10 pb-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-rose-400">Ranking por desempeño</p>
+          <h2 id="top-performers" className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold uppercase italic leading-none text-white sm:text-5xl">
+            Top performers
           </h2>
         </div>
-        
-        {/* Etiqueta decorativa */}
-        <div className="hidden md:flex items-center gap-2 text-xs font-mono text-indigo-300/50 uppercase tracking-widest bg-indigo-900/10 px-3 py-1 rounded border border-indigo-500/20">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          Live Data
+        <div className="hidden items-center gap-2 border border-cyan-300/30 bg-cyan-300/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200 sm:flex">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+          Datos oficiales
         </div>
       </div>
 
-      {/* Grid de Tarjetas de Atleta */}
-      <div className="grid grid-cols-1 gap-4">
-        
-        {stats.slice(0, visibleItems).map((c, i) => { // Usamos .slice() para controlar cuántos se muestran
-          // Corrección del error: c.notaPromedio ya es un número.
-          const ratingPercent = (c.notaPromedio / 10) * 100; 
-          
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative overflow-hidden rounded-xl bg-[#0f172a]/40 border border-white/5 hover:border-indigo-500/30 hover:bg-[#0f172a]/60 transition-all duration-300"
-            >
-              {/* Fondo Gradiente Hover */}
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      {stats.length === 0 ? (
+        <div className="border border-dashed border-fuchsia-300/30 bg-fuchsia-300/5 px-6 py-12 text-center text-sm text-white/60">
+          Aún no hay estadísticas de competidores disponibles.
+        </div>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.slice(0, visibleItems).map((c, i) => {
+            const ratingPercent = Math.min(Math.max((c.notaPromedio / 10) * 100, 0), 100);
+            const accent = i % 2 === 0 ? 'cyan' : 'rose';
 
-              <div className="relative p-4 md:p-6 flex flex-col md:flex-row items-center gap-6">
-                
-                {/* Ranking Number (Badge Lateral) */}
-                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-white/5 border border-white/5 font-black italic text-2xl text-white/80 group-hover:text-indigo-400 group-hover:border-indigo-500/30 transition-colors">
-                  #{i + 1}
-                </div>
+            return (
+              <motion.li
+                key={`${c.nombre}-${i}`}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: (i % ITEMS_PER_PAGE) * 0.06 }}
+                className={`group relative min-w-0 overflow-hidden border bg-[#0a0d14]/95 p-4 transition duration-300 [clip-path:polygon(0_12px,12px_0,100%_0,100%_calc(100%_-_12px),calc(100%_-_12px)_100%,0_100%)] ${
+                  accent === 'cyan'
+                    ? 'border-cyan-300/35 hover:border-cyan-300/70 hover:shadow-[0_0_24px_rgba(34,211,238,0.14)]'
+                    : 'border-rose-400/35 hover:border-rose-400/70 hover:shadow-[0_0_24px_rgba(244,63,94,0.14)]'
+                }`}
+              >
+                <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${
+                  accent === 'cyan'
+                    ? 'bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.12),transparent_40%)]'
+                    : 'bg-[radial-gradient(circle_at_15%_20%,rgba(244,63,94,0.12),transparent_40%)]'
+                }`} />
 
-                {/* Avatar e Info Principal */}
-                <div className="flex items-center gap-4 flex-grow w-full md:w-auto">
-                  <div className="relative">
-                     <UserCircleIcon className="w-14 h-14 text-indigo-300/50 group-hover:text-indigo-400 transition-colors" />
-                     {/* Indicador de Estado (Top 3) */}
-                     {i < 3 && (
-                       <div className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-yellow-500/20">
-                         TOP
-                       </div>
-                     )}
+                <div className="relative flex items-start gap-3">
+                  <div className={`relative flex h-16 w-14 shrink-0 items-center justify-center border bg-black/40 ${
+                    accent === 'cyan' ? 'border-cyan-300/45' : 'border-rose-400/45'
+                  }`}>
+                    <UserCircleIcon className="h-12 w-12 text-white/55" aria-hidden="true" />
+                    <span className="absolute -left-px -top-px bg-white px-1.5 py-0.5 text-[9px] font-black text-black">#{i + 1}</span>
                   </div>
-                  
-                  <div>
-                    <h3 className="text-xl font-black text-white tracking-tight group-hover:text-indigo-300 transition-colors">
+
+                  <div className="min-w-0 pt-1">
+                    <h3 className="truncate font-[family-name:var(--font-display)] text-2xl font-bold uppercase italic leading-none text-white">
                       {c.nombre}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-white/40 font-mono uppercase">
-                      <span>ID: 00{i + 1}-BX</span>
-                      <span className="text-indigo-500">•</span>
-                      <span>Active</span>
-                    </div>
+                    <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">
+                      Competidor nacional
+                    </p>
+                    {i < 3 && (
+                      <span className="mt-2 inline-flex items-center gap-1 bg-amber-300 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-black">
+                        <TrophyIcon className="h-2.5 w-2.5" aria-hidden="true" />
+                        Top
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Métricas (Grid Interno) */}
-                <div className="grid grid-cols-3 gap-4 w-full md:w-auto md:min-w-[400px]">
-                  
-                  {/* Stat 1: Victorias */}
-                  <div className="bg-black/20 rounded-lg p-3 border border-white/5">
-                    <div className="flex items-center gap-2 text-xs text-white/40 font-bold uppercase mb-1">
-                      <TrophyIcon className="w-3 h-3 text-yellow-500" />
-                      <span>Podios</span>
-                    </div>
-                    <span className="text-lg font-mono font-bold text-white">
-                      {c.victorias}
-                    </span>
+                <dl className="relative mt-4 grid grid-cols-3 gap-1.5 border-t border-white/10 pt-3">
+                  <div>
+                    <dt className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-white/40">
+                      <TrophyIcon className="h-3 w-3 text-amber-300" aria-hidden="true" />
+                      Podios
+                    </dt>
+                    <dd className="mt-1 font-mono text-base font-black text-white">{c.victorias}</dd>
                   </div>
-
-                  {/* Stat 2: Nota Promedio */}
-                  <div className="bg-black/20 rounded-lg p-3 border border-white/5 relative overflow-hidden">
-                    <div className="flex items-center gap-2 text-xs text-white/40 font-bold uppercase mb-1 relative z-10">
-                      <StarIcon className="w-3 h-3 text-cyan-400" />
-                      <span>Avg. Score</span>
-                    </div>
-                    <span className="text-lg font-mono font-bold text-white relative z-10">
-                      {c.notaPromedio.toFixed(1)} {/* Formateamos a un decimal si es necesario */}
-                    </span>
-                    {/* Barra de Progreso de fondo sutil */}
-                    <div 
-                      className="absolute bottom-0 left-0 h-1 bg-cyan-500/50" 
-                      style={{ width: `${ratingPercent}%` }} 
-                    />
+                  <div>
+                    <dt className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-white/40">
+                      <StarIcon className="h-3 w-3 text-cyan-300" aria-hidden="true" />
+                      Nota
+                    </dt>
+                    <dd className="mt-1 font-mono text-base font-black text-white">{c.notaPromedio.toFixed(1)}</dd>
                   </div>
-
-                  {/* Stat 3: Participaciones */}
-                  <div className="bg-black/20 rounded-lg p-3 border border-white/5">
-                    <div className="flex items-center gap-2 text-xs text-white/40 font-bold uppercase mb-1">
-                      <MicrophoneIcon className="w-3 h-3 text-purple-400" />
-                      <span>Batallas</span>
-                    </div>
-                    <span className="text-lg font-mono font-bold text-white">
-                      {c.participaciones}
-                    </span>
+                  <div>
+                    <dt className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-white/40">
+                      <MicrophoneIcon className="h-3 w-3 text-fuchsia-300" aria-hidden="true" />
+                      Batallas
+                    </dt>
+                    <dd className="mt-1 font-mono text-base font-black text-white">{c.participaciones}</dd>
                   </div>
+                </dl>
 
+                <div className="relative mt-3 h-1.5 overflow-hidden bg-white/10" aria-label={`Nota promedio: ${c.notaPromedio.toFixed(1)} de 10`}>
+                  <div
+                    className="h-full bg-linear-to-r from-rose-500 via-fuchsia-400 to-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.55)]"
+                    style={{ width: `${ratingPercent}%` }}
+                  />
                 </div>
+              </motion.li>
+            );
+          })}
+        </ul>
+      )}
 
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Botón "Ver Más" */}
       {visibleItems < stats.length && (
-        <div className="flex justify-center mt-8">
+        <div className="mt-7 flex justify-center">
           <motion.button
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
             onClick={handleLoadMore}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold text-sm uppercase tracking-wider hover:bg-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300"
+            className="inline-flex min-h-11 items-center gap-2 border border-cyan-300/50 bg-cyan-300/10 px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-300/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
           >
-            <ChevronDownIcon className="w-5 h-5" />
-            <span>Ver Más Competidores</span>
+            <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
+            Ver más competidores
           </motion.button>
         </div>
       )}
-
     </section>
   );
 }

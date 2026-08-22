@@ -13,8 +13,6 @@ export const metadata: Metadata = {
 };
 
 export default async function EstadisticasPage() {
-
-  // Obtenemos los datos en el servidor
   const [eventStats, competitorStats, judgeStats] = await Promise.all([
     getEventStats(),
     getCompetitorStats(),
@@ -22,77 +20,64 @@ export default async function EstadisticasPage() {
   ]);
 
   return (
-    // CAMBIO 1: Fondo "Tech Data" (Grid sutil + Gradiente Oscuro)
-    <main className="min-h-screen bg-[#020617] relative overflow-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
-      
-      {/* FONDO: Malla Cuadriculada (Grid Pattern) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] opacity-[0.1] pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-transparent to-[#020617] pointer-events-none" />
+    <main className="relative min-h-screen overflow-hidden bg-[#03060b] text-white selection:bg-fuchsia-400/30 selection:text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(34,211,238,0.065)_1px,transparent_1px),linear-gradient(rgba(34,211,238,0.05)_1px,transparent_1px)] bg-size-[44px_44px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:radial-gradient(circle_at_12%_18%,rgba(244,63,94,0.38),transparent_27%),radial-gradient(circle_at_88%_14%,rgba(6,182,212,0.3),transparent_30%),linear-gradient(180deg,transparent_60%,rgba(244,63,94,0.13))]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.1)_0,rgba(255,255,255,0.1)_1px,transparent_1px,transparent_7px)]" />
 
-      {/* LUCES AMBIENTALES (Indigo/Cyan para sensación "Tech") */}
-      <div className="fixed top-[-20%] left-1/4 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none -z-10" />
-      <div className="fixed bottom-[-20%] right-1/4 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+      <div className="relative z-10 mx-auto max-w-[1440px] px-3 pb-24 pt-28 sm:px-6 sm:pt-32 lg:px-8">
+        <div className="relative overflow-hidden border border-white/15 bg-[#050810]/90 shadow-[0_0_60px_rgba(8,145,178,0.12)] [clip-path:polygon(0_18px,18px_0,calc(100%_-_18px)_0,100%_18px,100%_calc(100%_-_18px),calc(100%_-_18px)_100%,18px_100%,0_calc(100%_-_18px))]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-rose-500 via-white/20 to-cyan-300" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-24 w-24 border-b border-r border-cyan-300/60" />
+          <div className="pointer-events-none absolute left-0 top-0 h-24 w-24 border-l border-t border-rose-500/60" />
 
-      {/* HERO SECTION: Centro de Datos */}
-      <section className="relative pt-36 pb-16 px-4 text-center max-w-6xl mx-auto z-10">
-        
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-900/20 backdrop-blur-md mb-6 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-          <ChartBarSquareIcon className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-black italic tracking-widest text-indigo-300 uppercase">
-            System Analytics
-          </span>
+          <header className="relative px-5 pb-7 pt-9 sm:px-8 lg:px-10 lg:pb-9">
+            <div className="mb-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300 sm:text-xs">
+              <ChartBarSquareIcon className="h-4 w-4" aria-hidden="true" />
+              Datos oficiales del circuito
+            </div>
+            <h1 className="max-w-4xl font-[family-name:var(--font-display)] text-[2.125rem] font-bold uppercase italic leading-[0.82] tracking-[-0.045em] text-white sm:text-7xl lg:text-[6.5rem]">
+              Centro de
+              <span className="block">
+                estadísticas
+                <span className="ml-2 text-transparent [-webkit-text-stroke:1px_rgba(34,211,238,0.75)] sm:ml-3">V2</span>
+              </span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-sm font-medium text-white/60 sm:text-base">
+              Rendimiento, participación y métricas del beatbox competitivo nacional.
+            </p>
+          </header>
+
+          <div className="relative space-y-12 px-4 pb-8 sm:px-7 sm:pb-10 lg:px-9">
+            <Suspense fallback={<LoadingSpinner label="Cargando métricas de eventos..." />}>
+              <EstadisticasEventos stats={eventStats} />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner label="Analizando competidores..." />}>
+              <EstadisticasCompetidor stats={competitorStats} />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner label="Procesando datos de jueces..." />}>
+              <EstadisticasJueces stats={judgeStats} />
+            </Suspense>
+          </div>
         </div>
-
-        <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white mb-4 leading-none drop-shadow-xl">
-          Centro de <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400">Estadísticas</span>
-        </h1>
-        
-        <p className="text-lg md:text-xl text-indigo-200/60 font-light max-w-2xl mx-auto font-mono">
-          // Análisis de rendimiento y métricas del circuito nacional.
-        </p>
-      </section>
-
-      {/* CONTENEDOR PRINCIPAL: Separación vertical amplia */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 pb-24 space-y-24">
-        
-        <Suspense fallback={<LoadingSpinner label="Cargando Métricas de Eventos..." />}>
-          <EstadisticasEventos stats={eventStats} />
-        </Suspense>
-
-        {/* Divisor Visual Tecnológico */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
-
-        <Suspense fallback={<LoadingSpinner label="Analizando Competidores..." />}>
-          <EstadisticasCompetidor stats={competitorStats} />
-        </Suspense>
-
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-
-        <Suspense fallback={<LoadingSpinner label="Procesando Datos de Jueces..." />}>
-          <EstadisticasJueces stats={judgeStats} />
-        </Suspense>
-        
       </div>
     </main>
   );
 }
 
-// Loading Spinner Mejorado (Estilo "Cargando Datos")
 function LoadingSpinner({ label = "Cargando..." }: { label?: string }) {
   return (
-    <div className="flex flex-col justify-center items-center h-64 space-y-4">
+    <div className="flex h-64 flex-col items-center justify-center space-y-4 border border-cyan-300/20 bg-cyan-300/5">
       <div className="relative">
-        {/* Anillo Exterior */}
-        <div className="w-16 h-16 border-4 border-indigo-500/30 rounded-full"></div>
-        {/* Anillo Interior Giratorio */}
-        <div className="absolute top-0 left-0 w-16 h-16 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-        {/* Icono Central */}
+        <div className="h-14 w-14 rounded-full border-2 border-cyan-300/20" />
+        <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-2 border-transparent border-t-cyan-300" />
         <div className="absolute inset-0 flex items-center justify-center">
-            <ArrowPathIcon className="w-6 h-6 text-indigo-400 animate-pulse" />
+          <ArrowPathIcon className="h-5 w-5 animate-pulse text-cyan-300" />
         </div>
       </div>
-      <span className="text-xs font-mono uppercase tracking-widest text-indigo-300 animate-pulse">
+      <span className="animate-pulse font-mono text-xs uppercase tracking-widest text-cyan-100/70">
         {label}
       </span>
     </div>
