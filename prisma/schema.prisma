@@ -98,6 +98,31 @@ enum ScoreStatus {
   SUBMITTED 
 }
 
+enum PrivacyConsentCategory {
+  NECESSARY
+  MARKETING
+  SENSITIVE
+}
+
+enum PrivacyRequestType {
+  ACCESO
+  RECTIFICACION
+  SUPRESION
+  OPOSICION
+  PORTABILIDAD
+  BLOQUEO
+  REVOCACION
+}
+
+enum PrivacyRequestStatus {
+  RECEIVED
+  IDENTITY_PENDING
+  IN_PROGRESS
+  EXTENDED
+  COMPLETED
+  REJECTED
+}
+
 /* =========================
    Ubicación
    ========================= */
@@ -157,6 +182,9 @@ model User {
   password   String?
   image      String?
   isActive   Boolean      @default(true)
+  totpSecretEncrypted String?
+  totpEnabled         Boolean      @default(false)
+  totpConfirmedAt     DateTime?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
@@ -179,6 +207,82 @@ model User {
   battlesAsParticipantB Battle[] @relation("ParticipantB")
   battlesWon            Battle[] @relation("Winner")
   passwordResetTokens PasswordResetToken[]
+  mfaRecoveryCodes    MfaRecoveryCode[]
+  privacyConsents     PrivacyConsent[]
+  privacyRequests     PrivacyRequest[]
+  auditLogs           AuditLog[]
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PrivacyConsent {
+  id          String                   @id @default(cuid())
+  userId      String?
+  user        User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email       String?
+  category    PrivacyConsentCategory
+  policyVersion String
+  policyHash  String
+  method      String
+  ip          String?
+  userAgent   String?
+  givenAt     DateTime                 @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId, category])
+  @@index([email, category])
+  @@index([givenAt])
+}
+
+model PrivacyRequest {
+  id             String               @id @default(cuid())
+  userId         String?
+  user           User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email          String
+  name           String?
+  type           PrivacyRequestType
+  status         PrivacyRequestStatus @default(RECEIVED)
+  detail         String
+  ip             String?
+  userAgent      String?
+  receivedAt     DateTime             @default(now())
+  deadlineAt     DateTime
+  extendedUntil  DateTime?
+  resolution     String?
+  rejectionReason String?
+  completedAt    DateTime?
+
+  @@index([userId, status])
+  @@index([email, status])
+  @@index([deadlineAt])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorUserId    String?
+  actorUser      User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  action         String
+  resourceType   String
+  resourceId     String?
+  outcome        String
+  ip             String?
+  userAgent      String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
 }
 
 model UserProfile {
@@ -638,4 +742,15 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model DataRetentionRun {
+  id          String    @id @default(cuid())
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  status      String
+  result      Json?
+  error       String?
+
+  @@index([startedAt])
 }

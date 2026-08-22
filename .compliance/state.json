@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "generated_at": "2026-08-22T01:44:12Z",
+  "git_commit": "440df54",
+  "company": {
+    "razon_social": "[COMPLETAR: razon social]",
+    "rut": "[COMPLETAR: rut]",
+    "tamano": "[COMPLETAR: micro|pequena|mediana|grande]"
+  },
+  "active_packs": [
+    "ley-21719"
+  ],
+  "controls": {
+    "gov-responsable": {
+      "status": "unknown",
+      "evidence": "No verificable por codigo",
+      "remediation": "Designar responsable y registrar nombramiento interno."
+    },
+    "gov-registro": {
+      "status": "pass",
+      "evidence": ".compliance/docs/21719-rat.md",
+      "remediation": ""
+    },
+    "gov-politicas": {
+      "status": "pass",
+      "evidence": ".compliance/docs/21719-politica-privacidad.md",
+      "remediation": ""
+    },
+    "data-rights-channel": {
+      "status": "pass",
+      "evidence": "app/api/privacy/rights/route.ts, app/api/admin/privacy/requests, .compliance/docs/21719-canal-derechos.md",
+      "remediation": ""
+    },
+    "data-licitud": {
+      "status": "partial",
+      "evidence": ".compliance/docs/21719-rat.md, .compliance/docs/21719-politica-privacidad.md",
+      "remediation": "Completar mapeo por flujo con responsable/encargado y fundamento legal especifico por categoria."
+    },
+    "data-consent-text": {
+      "status": "partial",
+      "evidence": ".compliance/docs/21719-consentimiento.md, app/auth/register/page.tsx, app/api/auth/register/route.ts, app/perfil, lib/privacy.ts, prisma/schema.prisma",
+      "remediation": "Aplicar la migracion final en produccion y publicar la politica con datos corporativos completos."
+    },
+    "data-derechos": {
+      "status": "partial",
+      "evidence": "app/api/privacy/rights/route.ts, app/api/privacy/export/route.ts, app/api/admin/privacy/requests",
+      "remediation": "Aplicar la migracion final en produccion, definir verificacion de identidad/notificaciones y ejecutar rectificacion, supresion, bloqueo u oposicion caso a caso segun fundamento legal y matriz de retencion."
+    },
+    "data-info": {
+      "status": "pass",
+      "evidence": ".compliance/docs/21719-politica-privacidad.md",
+      "remediation": ""
+    },
+    "data-minimizacion": {
+      "status": "partial",
+      "evidence": "lib/data-retention.ts, app/api/internal/data-retention/route.ts, vercel.json, prisma/migrations/20260822022124_add_data_retention_audit/migration.sql, .compliance/docs/21719-retencion-y-purga.md",
+      "remediation": "Configurar CRON_SECRET en despliegue y completar la matriz legal de retencion para compras, perfiles, sugerencias e historial competitivo."
+    },
+    "data-dpa": {
+      "status": "partial",
+      "evidence": ".compliance/docs/21719-dpa.md",
+      "remediation": "Firmar DPA con cada encargado real y mantener evidencia contractual."
+    },
+    "data-transfer": {
+      "status": "partial",
+      "evidence": ".compliance/docs/21719-anexo-transferencias.md, lib/mercadopago.ts:1, lib/transbank.ts:1, lib/email.ts:1, lib/auth.ts:61",
+      "remediation": "Cerrar mecanismo legal de transferencia por proveedor y registrar pais/entidad."
+    },
+    "data-eipd": {
+      "status": "pass",
+      "evidence": ".compliance/docs/21719-eipd.md",
+      "remediation": "Reevaluar ante cambios de alto riesgo."
+    },
+    "data-privacy-by-design": {
+      "status": "partial",
+      "evidence": "app/api/auth/register/route.ts:9, app/api/password/forgot/route.ts:8, app/api/privacy/rights/route.ts",
+      "remediation": "Extender privacy by default a todo flujo de captura y retencion."
+    },
+    "data-pseudonym": {
+      "status": "fail",
+      "evidence": "No se detectan estrategias de seudonimizacion para analytics/reporteria",
+      "remediation": "Aplicar seudonimizacion/mascaramiento en datasets secundarios."
+    },
+    "sec-tls": {
+      "status": "partial",
+      "evidence": "README.md:110",
+      "remediation": "Documentar enforcement TLS extremo a extremo y HSTS."
+    },
+    "sec-rest": {
+      "status": "partial",
+      "evidence": "app/api/password/reset/route.ts:58, prisma/schema.prisma:155",
+      "remediation": "Documentar cifrado en reposo de BD/backups y cifrado de campos sensibles si aplica."
+    },
+    "sec-passwords": {
+      "status": "pass",
+      "evidence": "lib/auth.ts:43, app/api/auth/register/route.ts:43, app/api/password/reset/route.ts:58",
+      "remediation": ""
+    },
+    "sec-mfa": {
+      "status": "partial",
+      "evidence": "prisma/migrations/20260822021324_add_privileged_mfa/migration.sql, app/api/auth/mfa, middleware.ts, .compliance/docs/21719-mfa-operacion.md",
+      "remediation": "Configurar MFA_ENCRYPTION_KEY y MFA_SESSION_SECRET en cada entorno, enrolar cuentas admin/judge y ejecutar la prueba operativa documentada."
+    },
+    "sec-logs": {
+      "status": "partial",
+      "evidence": "prisma/schema.prisma, app/api/privacy, app/api/auth/mfa, lib/data-retention.ts",
+      "remediation": "Aplicar la migracion final en produccion, definir la retencion/acceso de AuditLog y ampliar la cobertura a acciones administrativas criticas."
+    },
+    "sec-tenant": {
+      "status": "unknown",
+      "evidence": "No verificable como arquitectura multitenant",
+      "remediation": "Si hay multiples organizaciones, implementar aislamiento por tenant."
+    },
+    "sec-secrets": {
+      "status": "pass",
+      "evidence": "lib/transbank.ts:27, lib/transbank.ts:28, lib/mercadopago.ts:5",
+      "remediation": ""
+    },
+    "sec-backups": {
+      "status": "unknown",
+      "evidence": "No verificable por codigo de aplicacion",
+      "remediation": "Documentar politica de backups, restauracion y pruebas periodicas."
+    },
+    "inc-brechas": {
+      "status": "pass",
+      "evidence": ".compliance/docs/21719-plan-respuesta-brechas.md, .compliance/docs/21719-registro-vulneraciones.md",
+      "remediation": ""
+    }
+  },
+  "frameworks": {
+    "ley-21719": {
+      "score": 0.609,
+      "controls_required": 23,
+      "pass": 9,
+      "partial": 10,
+      "fail": 1,
+      "unknown": 3
+    }
+  }
+}

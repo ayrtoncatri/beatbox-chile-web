@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -37,6 +36,8 @@ export default function RegisterPage() {
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
     const confirmPassword = e.target.confirmPassword.value;
+    const privacyNoticeAccepted = e.target.privacyNoticeAccepted.checked;
+    const marketingConsent = e.target.marketingConsent.checked;
 
     if (!nombres || !apellidoPaterno || !email || !password || !confirmPassword) {
       setError("Todos los campos son obligatorios.");
@@ -64,6 +65,8 @@ export default function RegisterPage() {
           apellidoMaterno,
           email,
           password,
+          privacyNoticeAccepted,
+          marketingConsent,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -102,7 +105,7 @@ export default function RegisterPage() {
         {/* Google Button — Idéntico a Login */}
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => router.push("/auth/google-consent")}
           className="mb-8 w-full flex items-center justify-center gap-3
                      rounded-xl bg-[#111827]/70 hover:bg-[#1e293b]/70
                      transition py-3 font-black italic uppercase tracking-wider
@@ -222,6 +225,32 @@ export default function RegisterPage() {
               )}
             </button>
           </div>
+        </div>
+
+        <div className="mb-6 space-y-3 text-left text-sm text-blue-100">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              name="privacyNoticeAccepted"
+              type="checkbox"
+              required
+              disabled={loading}
+              className="mt-1 h-4 w-4 shrink-0 accent-red-500"
+            />
+            <span>
+              He leido y acepto el tratamiento de mis datos para crear y administrar mi cuenta,
+              conforme al aviso de privacidad.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              name="marketingConsent"
+              type="checkbox"
+              disabled={loading}
+              className="mt-1 h-4 w-4 shrink-0 accent-red-500"
+            />
+            <span>Quiero recibir novedades y comunicaciones de Beatbox Chile por correo.</span>
+          </label>
         </div>
 
         {/* Botón Crear Cuenta */}

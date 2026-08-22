@@ -74,7 +74,7 @@ export default function LoginClient({
 
         {/* 🔵 GOOGLE BUTTON — MISMO ESTILO QUE REGISTER */}
         <button
-          onClick={() => signIn("google", { callbackUrl })}
+          onClick={() => router.push(`/auth/google-consent?callbackUrl=${encodeURIComponent(callbackUrl)}`)}
           className="mb-8 w-full flex items-center justify-center gap-3
                      rounded-xl bg-[#111827]/70 hover:bg-[#1e293b]/70
                      transition py-3 font-black italic uppercase tracking-wider

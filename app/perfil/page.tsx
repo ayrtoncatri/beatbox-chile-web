@@ -33,7 +33,14 @@ export default async function PerfilPage() {
             }
           },
           orderBy: { createdAt: "desc" } 
-        }
+        },
+        privacyConsents: {
+          where: {
+            category: "MARKETING",
+            revokedAt: null,
+          },
+          select: { id: true },
+        },
       },
     }),
     prisma.region.findMany({ orderBy: { id: "asc" } }), // Necesario para el Select
@@ -64,6 +71,7 @@ export default async function PerfilPage() {
           comunaId: perfil?.comunaId ?? undefined,
           regionId: perfil?.comuna?.regionId ?? undefined, // Importante para pre-seleccionar
           birthDate: birthDateISO,
+          marketingConsentActive: user.privacyConsents.length > 0,
           
           wildcards: user.wildcards,
         }}

@@ -3,6 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import GoogleProvider from "next-auth/providers/google";
+import { cookies } from "next/headers";
+import {
+  googleOAuthConsentCookie,
+  PRIVACY_NOTICE_HASH,
+  PRIVACY_NOTICE_VERSION,
+  verifyGoogleOAuthConsentToken,
+} from "@/lib/privacy";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -53,6 +60,7 @@ export const authOptions: NextAuthOptions = {
           nombres: user.profile?.nombres ?? null,
           apellidoPaterno: user.profile?.apellidoPaterno ?? null,
           apellidoMaterno: user.profile?.apellidoMaterno ?? null,
+          mfaEnabled: user.totpEnabled,
           roles: roles.length > 0 ? roles : ["user"],
         } as any;
       },
@@ -73,6 +81,14 @@ export const authOptions: NextAuthOptions = {
         if (existing) {
           if (existing.isActive === false) return false;
         } else {
+          const cookieStore = await cookies();
+          const privacyConsent = verifyGoogleOAuthConsentToken(
+            cookieStore.get(googleOAuthConsentCookie.name)?.value,
+          );
+          if (!privacyConsent) {
+            return "/auth/google-consent";
+          }
+
           // --- INICIO DE CORRECCIÓN DE NOMBRES DE GOOGLE ---
           let nombres = "";
           let apellidoPaterno = "";
@@ -126,6 +142,30 @@ export const authOptions: NextAuthOptions = {
                     roleId: defaultUserRole.id,
                   },
                 },
+                privacyConsents: {
+                  create: [
+                    {
+                      email: user.email!,
+                      category: "NECESSARY",
+                      policyVersion: PRIVACY_NOTICE_VERSION,
+                      policyHash: PRIVACY_NOTICE_HASH,
+                      method: "google_oauth_registration",
+                      ip: privacyConsent.ip,
+                      userAgent: privacyConsent.userAgent,
+                    },
+                    ...(privacyConsent.marketingConsent
+                      ? [{
+                          email: user.email!,
+                          category: "MARKETING" as const,
+                          policyVersion: PRIVACY_NOTICE_VERSION,
+                          policyHash: PRIVACY_NOTICE_HASH,
+                          method: "google_oauth_registration",
+                          ip: privacyConsent.ip,
+                          userAgent: privacyConsent.userAgent,
+                        }]
+                      : []),
+                  ],
+                },
               },
             });
           } catch (error) {
@@ -177,6 +217,7 @@ export const authOptions: NextAuthOptions = {
         nombres: dbUser.profile?.nombres ?? null,
         apellidoPaterno: dbUser.profile?.apellidoPaterno ?? null,
         apellidoMaterno: dbUser.profile?.apellidoMaterno ?? null,
+        mfaEnabled: dbUser.totpEnabled,
         roles: roles.length > 0 ? roles : ["user"], // Array de roles
       };
     },
@@ -192,6 +233,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).nombres = token.nombres;
         (session.user as any).apellidoPaterno = token.apellidoPaterno;
         (session.user as any).apellidoMaterno = token.apellidoMaterno;
+        (session.user as any).mfaEnabled = token.mfaEnabled;
         (session.user as any).roles = token.roles;
       }
 

@@ -3,7 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { getServerSession } from "next-auth/next";
+import { headers } from "next/headers";
 import { authOptions } from "@/lib/auth";
+import { getHeaderMetadata } from "@/lib/privacy";
 
 const UpdatePerfilSchema = z.object({
   nombres: z.string().max(100).optional(),
@@ -71,4 +73,39 @@ export async function updatePerfil(prevState: any, formData: FormData) {
   } catch (e: any) {
     return { ok: false, error: e.message || "Error al actualizar perfil" };
   }
+}
+
+export async function revokeMarketingConsent() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const requestHeaders = await headers();
+  const result = await prisma.$transaction(async (transaction) => {
+    const revoked = await transaction.privacyConsent.updateMany({
+      where: {
+        userId: session.user.id,
+        category: "MARKETING",
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    });
+
+    await transaction.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "MARKETING_CONSENT_REVOKED",
+        resourceType: "User",
+        resourceId: session.user.id,
+        outcome: "SUCCESS",
+        metadata: { recordsRevoked: revoked.count },
+        ...getHeaderMetadata(requestHeaders),
+      },
+    });
+
+    return revoked;
+  });
+
+  return { ok: true, recordsRevoked: result.count };
 }

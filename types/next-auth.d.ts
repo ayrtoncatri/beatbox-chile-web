@@ -13,6 +13,7 @@ declare module "next-auth" {
       nombres: string | null;
       apellidoPaterno: string | null;
       apellidoMaterno: string | null;
+      mfaEnabled: boolean;
       roles: string[]; // Array de roles
     } & DefaultSession["user"]; // Mantiene email, name, image
   }
@@ -25,6 +26,7 @@ declare module "next-auth" {
     nombres: string | null;
     apellidoPaterno: string | null;
     apellidoMaterno: string | null;
+    mfaEnabled: boolean;
     roles: string[];
   }
 }
@@ -38,6 +40,7 @@ declare module "next-auth/jwt" {
     nombres: string | null;
     apellidoPaterno: string | null;
     apellidoMaterno: string | null;
+    mfaEnabled: boolean;
     roles: string[];
   }
 }
