@@ -405,10 +405,10 @@ Muchas Server Actions (`battles.ts`, `classification.ts`, `wildcards/actions.ts`
 | `/api/compra/crear-orden` | POST | Sesión | Crea `Compra` y devuelve URL de la pasarela |
 | `/api/compra/confirmar` | POST | Sesión | Commit de Webpay |
 | `/api/compra/webhook-mp` | POST | **Pública** | Webhook de Mercado Pago |
-| `/api/admin/eventos[/id]` | GET, POST, PATCH, DELETE | `guard` correcto | |
-| `/api/admin/usuarios[/id]` | GET, PATCH | `guard` correcto | |
+| `/api/admin/eventos[/id]` | GET, POST, PATCH, DELETE | `guard` correcto | ⚠️ Sin llamadas desde la UI; desincronizado del schema actual (§11.20) |
+| `/api/admin/usuarios[/id]` | GET, PATCH | `guard` correcto | ⚠️ Sin llamadas desde la UI; desincronizado del schema actual (§11.20) |
 | `/api/admin/publicaciones[/id]` | GET, POST, PATCH, DELETE | `guard` correcto | |
-| `/api/admin/wildcards[/id]` | GET, PATCH | `guard` correcto | |
+| `/api/admin/wildcards[/id]` | GET, PATCH | `guard` correcto | ⚠️ Sin llamadas desde la UI; desincronizado del schema actual (§11.20) |
 | `/api/admin/compras[/id]`, `/export` | GET, DELETE | ⚠️ guard ignorado (§11) | Export CSV |
 | `/api/admin/sugerencias[/id]`, `/export` | GET, PATCH, DELETE | ⚠️ guard ignorado (§11) | Export CSV |
 
@@ -549,7 +549,9 @@ Automatiza los cupos directos: toma el Top 3 del CN del año anterior, de la Lig
 
 **Transacciones.** `prisma.$transaction` para operaciones multi-tabla (generación de brackets, cierre de batalla). Úsalo siempre que un fallo parcial deje datos inconsistentes.
 
-**Errores.** Las actions devuelven `{ error }` en vez de lanzar (salvo `checkAdmin`). Los errores se registran con `console.error` — no hay servicio de observabilidad configurado.
+**Errores.** Las actions devuelven `{ error }` en vez de lanzar (salvo `checkAdmin`). Los errores se registran con `console.error` — no hay servicio de observabilidad configurado. En un `catch`, tipa la variable como `unknown` (el default de TS en modo estricto) y usa `getErrorMessage(error, "mensaje por defecto")` de `lib/errors.ts` en vez de castear a `any` y leer `error.message` directo; es el mismo patrón repetido en decenas de Server Actions. Para distinguir errores conocidos de Prisma/Zod, usa `instanceof Prisma.PrismaClientKnownRequestError` (y compara `.code`) o `instanceof z.ZodError` — no `(error as any).code` ni `error.name === 'ZodError'`.
+
+**Tipado.** `tsconfig.json` tiene `strict: true`; evita `any` explícito. `session?.user` y `session?.user?.roles` ya vienen tipados por la augmentación de `types/next-auth.d.ts` — no hace falta `(session as any)?.user`. Para el `where`/`data` de una consulta Prisma que se arma condicionalmente, usa el tipo generado (`Prisma.XWhereInput`, `Prisma.XUpdateInput`, etc.) en vez de `any`. Para tipar la forma de un modelo con relaciones sin declarar una interfaz a mano, usa `Prisma.XGetPayload<{ include: {...} }>` directo (no el patrón `Prisma.validator(...)`, que además de redundante deja una variable de runtime sin usar).
 
 **Feedback al usuario.** `react-hot-toast` vía `ToastProvider` global; `canvas-confetti` en momentos de celebración (revelación de ganador).
 
@@ -571,11 +573,12 @@ Ordenados por impacto. Cada punto está verificado en el código.
 ### Calidad y mantenibilidad
 
 7. **Verificación de tipos desactivada en build.** `next.config.ts` tiene `typescript: { ignoreBuildErrors: true }` y `package.json` compila con `next build --no-lint`. `strict: true` en `tsconfig.json` queda anulado en la práctica: **el build no atrapa errores de tipo**. Riesgo alto para un agente de IA que asuma que "compila = correcto". *Recomendación:* correr `npx tsc --noEmit` manualmente antes de dar por cerrado cualquier cambio.
+   - *Actualización 2026-08-24:* pasada de legibilidad (rama `chore/buenas-practicas-legibilidad`) eliminó casi todo el `any` explícito y los `catch (e: any)` fuera de las rutas huérfanas del punto 20. `npm run lint` bajó de 134 errores/47 warnings a 8 errores/4 warnings (ver detalle en el punto 20 y en `docs/trello-buenas-practicas-legibilidad.md`); `npx tsc --noEmit` sigue con los mismos 13 errores preexistentes de siempre (columnas de schema desincronizadas en las rutas huérfanas, `Headers` mockeado en `lib/privacy/parental.ts`, tipos de `framer-motion` en `MissionVisionValues.tsx`). Ninguno de esos 13 se tocó porque arreglarlos implica decidir un comportamiento nuevo, no solo tipar.
 8. **Cero pruebas automatizadas y cero CI.** No hay Jest/Vitest/Playwright ni carpeta `.github/`. Toda validación es manual. Los flujos de brackets, votación y pagos son candidatos evidentes a pruebas unitarias (`getSeedingOrder` y el conteo de votos son funciones puras fáciles de testear).
 9. **`approveWildcard` no crea la inscripción** pese a informar que sí (§9.1).
 10. **Dos flujos de compra coexistiendo** (§9.4). El legado debería eliminarse o marcarse como deprecado.
 11. **`app/admin/eventos/actions.ts` con 713 líneas** y 11 responsabilidades distintas (eventos, tickets, jueces, ranking, clasificación, categorías, inscritos). Es el principal candidato a división por dominio.
-12. **Componentes duplicados:** `CompraDetailDrawer`/`CompraDetailPopup` y `SugerenciaDetailDrawer`/`SugerenciaDetailPopup` conviven; conviene verificar cuál está en uso antes de modificar.
+12. **Componentes duplicados:** `CompraDetailDrawer`/`CompraDetailPopup` y `SugerenciaDetailDrawer`/`SugerenciaDetailPopup` conviven; conviene verificar cuál está en uso antes de modificar. `CompraDetailDrawer.tsx` además tiene un bug de datos: lee `compra.userNombre`, `compra.tipoEntrada`, `compra.cantidad`, `compra.precioUnitario` (campos planos), pero `getCompraById()` devuelve el objeto anidado de Prisma (`user.profile.nombres`, `items[].ticketType.name`, etc.) — esos campos planos no existen en la respuesta real, así que esa sección del drawer probablemente siempre renderiza vacío. Detectado al intentar tipar su `useState<any>` durante la pasada de legibilidad; se dejó como `any` a propósito porque arreglarlo es una decisión de a cuál de los dos lados alinear, no de tipado.
 13. **`/api/Sugerencias` con mayúscula inicial**, rompiendo la convención kebab/minúscula del resto de las rutas.
 14. **`prisma/dev.db`** (SQLite de 73 KB) permanece en el repo aunque el datasource es PostgreSQL. Residuo de una etapa anterior.
 15. **Una sola migración** (`20260329225123_init`) tras un `reset migrations from scratch`. No hay historial incremental: la BD de producción debe estar alineada con ese punto de partida.
@@ -586,6 +589,7 @@ Ordenados por impacto. Cada punto está verificado en el código.
 17. **Consulta a BD en cada llamada del callback `jwt`** (§7.1). Correcto funcionalmente, costoso a escala. Alternativa: cachear roles en el token y refrescar solo ante cambios explícitos.
 18. **`components/mascota/Mascota.tsx` (40 KB)** se monta en el root layout, o sea en todas las páginas. Vale la pena medir su impacto en el bundle del cliente.
 19. **`getTop3` promedia scores de `FINAL` y `TERCER_LUGAR`** para determinar el podio, en vez de leer los `winnerId` de las batallas. Es una aproximación que puede dar podios incorrectos si el puntaje promedio no coincide con el resultado por votos.
+20. **`/api/admin/eventos[/id]`, `/api/admin/usuarios[/id]` y `/api/admin/wildcards[/id]` parecen código huérfano.** La tabla de §8.2 los marca como "guard correcto", pero no hay ningún `fetch()` ni componente que los llame — la UI real de esas tres secciones del panel admin usa las Server Actions de §8.3 (`app/admin/eventos/actions.ts`, `app/admin/usuarios/actions.ts`, `app/admin/wildcards/actions.ts`). Además, ya fallan `npx tsc --noEmit` porque referencian columnas que no existen en el `Evento`/`User` actual (`lugar`, `ciudad`, `direccion`, `nombres`/`apellidoPaterno`/`apellidoMaterno` sueltos en vez de vía `profile`) — quedaron desincronizados de un `schema.prisma` anterior. Antes de tocarlos: confirmar que de verdad nadie los llama (ni un cliente externo, ni un script) y luego decidir entre borrarlos o migrarlos al schema actual.
 
 ---
 
