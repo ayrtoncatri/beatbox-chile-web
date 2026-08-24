@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { PublicationStatus, PublicationType } from "@prisma/client";
 
 type Props = {
@@ -64,13 +65,17 @@ export default async function PublicacionDetailPage({ params }: Props) {
         </header>
 
         {imagenPrincipal && (
-          <div className="mb-8 overflow-hidden rounded-2xl border border-blue-700/20 bg-black/30 shadow-xl">
-            <img
+          <div
+            className={`relative mb-8 w-full overflow-hidden rounded-2xl border border-blue-700/20 bg-black/30 shadow-xl ${
+              isNoticia ? "h-64 sm:h-80 lg:h-[420px]" : "h-60 sm:h-72 lg:h-[380px]"
+            }`}
+          >
+            <Image
               src={imagenPrincipal}
               alt={pub.titulo}
-              className={`w-full object-cover ${
-                isNoticia ? "h-64 sm:h-80 lg:h-[420px]" : "h-60 sm:h-72 lg:h-[380px]"
-              }`}
+              fill
+              className="object-cover"
+              unoptimized
             />
           </div>
         )}
@@ -110,12 +115,14 @@ export default async function PublicacionDetailPage({ params }: Props) {
               {imagenesSecundarias.map((img, index) => (
                 <div
                   key={`${img}-${index}`}
-                  className="overflow-hidden rounded-2xl border border-blue-700/20 bg-black/30"
+                  className="relative h-56 w-full overflow-hidden rounded-2xl border border-blue-700/20 bg-black/30"
                 >
-                  <img
+                  <Image
                     src={img}
                     alt={`${pub.titulo} ${index + 2}`}
-                    className="h-56 w-full object-cover transition duration-300 hover:scale-105"
+                    fill
+                    className="object-cover transition duration-300 hover:scale-105"
+                    unoptimized
                   />
                 </div>
               ))}
