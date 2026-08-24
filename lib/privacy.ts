@@ -28,6 +28,7 @@ export const PRIVACY_POLICY_SECTIONS = [
       "Compras: ordenes, items, montos y estado de pago.",
       "Contacto y comunidad: sugerencias y mensajes.",
       "No solicitamos de forma ordinaria datos sensibles. Si se requieren, pediremos consentimiento expreso.",
+      "Fecha de nacimiento: es opcional. Si indica que eres menor de 14 anos, pediremos autorizacion de tu padre, madre o cuidador (Art. 16 quater).",
     ],
   },
   {
@@ -45,6 +46,7 @@ export const PRIVACY_POLICY_SECTIONS = [
     title: "4. Encargados y transferencias",
     paragraphs: [
       "Podemos compartir datos con encargados: autenticacion (Google OAuth), correo (Resend), pasarelas (Transbank, Mercado Pago) e infraestructura (Vercel/BD).",
+      "YouTube (Google) recibe IP e identificadores tecnicos solo si autorizas cargar un video de wildcard en paginas publicas. Detalle: /privacidad/cookies.",
       "Si hay transferencia internacional, se usaran mecanismos validos bajo Ley 21.719 (p. ej. clausulas contractuales modelo).",
     ],
   },
@@ -78,6 +80,20 @@ export const PRIVACY_POLICY_SECTIONS = [
     title: "9. Reclamos",
     paragraphs: [
       "Puedes reclamar ante la Agencia de Proteccion de Datos Personales de Chile.",
+    ],
+  },
+  {
+    title: "10. Cookies e identificadores",
+    paragraphs: [
+      "Las cookies necesarias (sesion, MFA, evidencia de consentimiento y preferencia de cookies) se tratan para operar la cuenta y la seguridad.",
+      "Los contenidos de YouTube en el sitio publico se cargan solo con tu autorizacion. Inventario y revocacion: /privacidad/cookies.",
+    ],
+  },
+  {
+    title: "11. Ninos, ninas y adolescentes",
+    paragraphs: [
+      "El sitio esta pensado para la comunidad beatbox, incluida gente joven. No recolectamos datos de salud.",
+      "Si registras una fecha de nacimiento que corresponde a menos de 14 anos, el tratamiento adicional del perfil exige consentimiento de padre, madre o cuidador (Art. 16 quater). Los adolescentes de 14 a 17 anos se tratan como adultos, salvo datos sensibles.",
     ],
   },
 ] as const;

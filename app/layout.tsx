@@ -7,6 +7,8 @@ import Footer from '@/components/Footer';
 import AuthProvider from '@/components/AuthProvider';
 import ToastProvider from '@/components/ToastProvider';
 import Mascota from '@/components/mascota/Mascota';
+import { CookieConsentProvider } from '@/components/privacy/CookieConsentProvider';
+import CookieConsentBanner from '@/components/privacy/CookieConsentBanner';
 
 export const metadata: Metadata = {
   title: 'Beatbox Chile',
@@ -22,9 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       */}
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
+          <CookieConsentProvider>
           <ToastProvider>
             <Header />
             <Mascota />
+            <CookieConsentBanner />
             
             {/* 2. MAIN CON FLEX-GROW: 
               Esto hace que el <main> ocupe todo el espacio disponible,
@@ -34,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             
             <Footer />
           </ToastProvider>
+          </CookieConsentProvider>
         </AuthProvider>
       </body>
     </html>

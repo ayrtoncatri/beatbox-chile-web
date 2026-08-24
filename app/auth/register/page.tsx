@@ -260,6 +260,10 @@ export default function RegisterPage() {
             />
             <span>Quiero recibir novedades y comunicaciones de Beatbox Chile por correo.</span>
           </label>
+          <p className="text-xs text-white/55">
+            Si tienes menos de 14 anos, un adulto debe completar la autorizacion en tu perfil
+            (fecha de nacimiento). No pedimos datos de salud.
+          </p>
         </div>
 
         {/* Botón Crear Cuenta */}

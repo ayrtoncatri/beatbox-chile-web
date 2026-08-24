@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaInstagram } from 'react-icons/fa';
+import CookiePreferencesLink from '@/components/privacy/CookiePreferencesLink';
 
 const waveHeights = [
   8, 10, 14, 20, 12, 18, 30, 52, 30, 20, 26, 18, 14, 22, 34, 20, 14, 28,
@@ -124,6 +125,12 @@ export default function Footer() {
               <Link href="/privacidad/derechos" className="underline-offset-2 hover:text-cyan-200 hover:underline">
                 Ejercer derechos
               </Link>
+              {" · "}
+              <Link href="/privacidad/cookies" className="underline-offset-2 hover:text-cyan-200 hover:underline">
+                Cookies
+              </Link>
+              {" · "}
+              <CookiePreferencesLink />
             </p>
           </div>
         </div>

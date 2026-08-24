@@ -37,7 +37,7 @@ Actualizacion de implementacion: 2026-08-21
 - Portabilidad: entrega estructurada JSON/CSV.
 - Rectificacion: correccion de datos inexactos.
 - Supresion: eliminacion/anonimizacion salvo obligacion legal.
-- Oposicion: cese para finalidad impugnada.
+- Oposicion: cese para la finalidad impugnada (marketing, cookies/YouTube, o ambos no esenciales). La cuenta contractual no se cierra; el bloqueo total sigue siendo el derecho de bloqueo.
 - Bloqueo: suspension temporal del tratamiento.
 
 4. Cierre

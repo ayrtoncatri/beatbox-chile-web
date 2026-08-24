@@ -111,6 +111,31 @@ async function exportSubjectData(userId: string) {
           nombreArtistico: true,
         },
       },
+      stats: {
+        select: {
+          id: true,
+          eventoId: true,
+          puntos: true,
+          detalle: true,
+        },
+      },
+      participantScores: {
+        select: {
+          id: true,
+          eventoId: true,
+          categoriaId: true,
+          phase: true,
+          totalScore: true,
+          status: true,
+          createdAt: true,
+        },
+      },
+      battlesAsParticipantA: {
+        select: { id: true, eventoId: true, phase: true, orderInRound: true },
+      },
+      battlesAsParticipantB: {
+        select: { id: true, eventoId: true, phase: true, orderInRound: true },
+      },
     },
   });
 
@@ -144,6 +169,8 @@ async function anonymizeSubject(tx: Tx, userId: string) {
       apellidoMaterno: null,
       birthDate: null,
       comunaId: null,
+      parentalGuardianName: null,
+      parentalConsentAt: null,
     },
   });
 
@@ -152,7 +179,23 @@ async function anonymizeSubject(tx: Tx, userId: string) {
     data: {
       youtubeUrl: "https://invalid.local/anonimizado",
       nombreArtistico: "ANONIMIZADO",
+      notes: null,
     },
+  });
+
+  await tx.inscripcion.updateMany({
+    where: { userId },
+    data: { nombreArtistico: "ANONIMIZADO" },
+  });
+
+  await tx.puntaje.updateMany({
+    where: { userId },
+    data: { detalle: null },
+  });
+
+  await tx.score.updateMany({
+    where: { participantId: userId },
+    data: { notes: null },
   });
 
   await tx.sugerencia.updateMany({
@@ -249,6 +292,40 @@ async function applyRectification(
   }
 
   return { ok: true as const, summary: "Datos rectificados segun el detalle aportado." };
+}
+
+async function revokeCookieConsent(tx: Tx, userId: string) {
+  await tx.privacyConsent.updateMany({
+    where: {
+      userId,
+      category: "COOKIES",
+      revokedAt: null,
+    },
+    data: { revokedAt: new Date() },
+  });
+}
+
+function parseOppositionScope(detail: string): "MARKETING" | "COOKIES" | "NON_ESSENTIAL" {
+  const trimmed = detail.trim();
+  const firstLine = trimmed.split("\n")[0] ?? "";
+  if (firstLine.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(firstLine) as { scope?: string };
+      if (parsed.scope === "COOKIES" || parsed.scope === "NON_ESSENTIAL" || parsed.scope === "MARKETING") {
+        return parsed.scope;
+      }
+    } catch {
+      // seguir con heuristicas
+    }
+  }
+  const lower = trimmed.toLowerCase();
+  if (lower.includes("cookie") || lower.includes("youtube") || lower.includes("tercer")) {
+    return "COOKIES";
+  }
+  if (lower.includes("esencial") || lower.includes("no esencial") || lower.includes("tratamiento no")) {
+    return "NON_ESSENTIAL";
+  }
+  return "MARKETING";
 }
 
 async function revokeMarketing(tx: Tx, userId: string) {
@@ -384,26 +461,42 @@ export async function fulfillPrivacyRequest(params: {
     if (!userId) {
       return {
         ok: false,
-        summary: "Vincular usuario verificado para aplicar revocacion/oposicion de marketing.",
+        summary: "Vincular usuario verificado para aplicar revocacion/oposicion.",
       };
     }
+    const scope = parseOppositionScope(detail);
     await prisma.$transaction(async (tx) => {
-      await revokeMarketing(tx, userId);
+      if (scope === "COOKIES") {
+        await revokeCookieConsent(tx, userId);
+      } else if (scope === "NON_ESSENTIAL") {
+        await revokeMarketing(tx, userId);
+        await revokeCookieConsent(tx, userId);
+      } else {
+        await revokeMarketing(tx, userId);
+      }
       await tx.auditLog.create({
         data: {
           actorUserId: actorUserId ?? null,
-          action: "PRIVACY_MARKETING_REVOKE",
+          action:
+            scope === "COOKIES"
+              ? "PRIVACY_COOKIE_REVOKE"
+              : scope === "NON_ESSENTIAL"
+                ? "PRIVACY_NON_ESSENTIAL_OPPOSE"
+                : "PRIVACY_MARKETING_REVOKE",
           resourceType: "User",
           resourceId: userId,
           outcome: "SUCCESS",
-          metadata: { requestId, type },
+          metadata: { requestId, type, scope },
         },
       });
     });
-    return {
-      ok: true,
-      summary: "Oposicion/revocacion de comunicaciones comerciales aplicada.",
-    };
+    const summary =
+      scope === "COOKIES"
+        ? "Oposicion a cookies y contenidos de terceros aplicada."
+        : scope === "NON_ESSENTIAL"
+          ? "Oposicion a tratamientos no esenciales aplicada (marketing y cookies). La cuenta contractual sigue activa."
+          : "Oposicion/revocacion de comunicaciones comerciales aplicada.";
+    return { ok: true, summary };
   }
 
   return { ok: false, summary: `Tipo de derecho no soportado: ${type}` };

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { revokeMarketingConsent, updatePerfil } from "@/app/perfil/actions"; // Tu action existente
 import { useRouter } from "next/navigation";
 import { PencilSquareIcon, XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
+import { isChildBirthDate } from "@/lib/privacy/age";
 
 // Tipos recibidos desde la DB
 type Region = { id: number; name: string };
@@ -25,6 +26,8 @@ export type UserLike = {
   regionId?: number; 
   birthDate?: string; 
   marketingConsentActive?: boolean;
+  parentalGuardianName?: string | null;
+  parentalConsentAt?: string | null;
   edad?: number | string | null;
   wildcards?: any[];
 };
@@ -48,6 +51,9 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
   const [selectedComunaId, setSelectedComunaId] = useState<string>(
     user.comunaId ? user.comunaId.toString() : ""
   );
+  const [birthDate, setBirthDate] = useState(user.birthDate || "");
+  const [guardianName, setGuardianName] = useState(user.parentalGuardianName || "");
+  const needsParentalConsent = isChildBirthDate(birthDate);
 
   const comunasFiltradas = useMemo(() => {
     if (!selectedRegionId) return [];
@@ -150,13 +156,50 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
                 <input
                     type="date"
                     name="birthDate"
-                    defaultValue={user.birthDate || ""}
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
                     disabled={!isEditing}
                     className="w-full rounded-xl bg-black/20 border border-gray-700 px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50 disabled:cursor-not-allowed icon-invert"
-                    style={{ colorScheme: 'dark' }} 
+                    style={{ colorScheme: 'dark' }}
+                    aria-describedby="birthdate-hint"
                 />
+                <p id="birthdate-hint" className="mt-1 text-xs text-white/50">
+                  Opcional. Si tienes menos de 14 anos, un adulto debe autorizar.
+                </p>
              </div>
           </div>
+
+          {needsParentalConsent && (
+            <div className="space-y-3 rounded-xl border border-amber-400/40 bg-amber-500/10 p-4">
+              <p className="text-sm text-amber-100">
+                La fecha indica menos de 14 anos. Un padre, madre o cuidador debe autorizar el tratamiento del perfil (Ley 21.719 Art. 16 quater).
+              </p>
+              <label className="block text-xs uppercase tracking-wider text-amber-100/80 font-bold">
+                Nombre de quien autoriza
+                <input
+                  name="parentalGuardianName"
+                  value={guardianName}
+                  onChange={(e) => setGuardianName(e.target.value)}
+                  disabled={!isEditing}
+                  className="mt-1.5 w-full rounded-xl bg-black/20 border border-amber-400/40 px-4 py-3 text-white outline-none disabled:opacity-50"
+                  autoComplete="name"
+                />
+              </label>
+              <label className="flex items-start gap-3 text-sm text-amber-50">
+                <input
+                  name="parentalConsent"
+                  type="checkbox"
+                  disabled={!isEditing}
+                  required={isEditing}
+                  defaultChecked={Boolean(user.parentalConsentAt)}
+                  className="mt-1 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  Autorizo, en calidad de padre, madre o cuidador, el tratamiento de los datos del menor para administrar su cuenta y participar en la comunidad. No se solicitan datos de salud.
+                </span>
+              </label>
+            </div>
+          )}
 
           {/* Ubicación */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

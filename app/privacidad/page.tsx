@@ -49,6 +49,12 @@ export default function PrivacyPolicyPage() {
           >
             Ejercer derechos
           </Link>
+          <Link
+            href="/privacidad/cookies"
+            className="rounded-xl border border-white/20 px-4 py-2 text-white/80"
+          >
+            Politica de cookies
+          </Link>
           <Link href="/" className="rounded-xl border border-white/20 px-4 py-2 text-white/80">
             Volver al inicio
           </Link>
