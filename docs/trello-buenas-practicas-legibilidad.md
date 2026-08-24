@@ -123,6 +123,23 @@ Objetivo: tickets para el tablero, uno por tarjeta. Pasada de legibilidad/tipado
 - **Archivos:** `ARCHITECTURE.md`, `CONTEXT.md`, `README.md`, `docs/trello-buenas-practicas-legibilidad.md`
 - **QA:** N/A (solo documentación).
 
+### Tarjeta 12 — `<img>` → `next/image` en publicaciones y home
+- **Etiqueta:** Buenas prácticas / rendimiento
+- **Fecha:** 2026-08-24 (commit posterior, misma rama)
+- **Por qué:** Los 4 warnings `@next/next/no-img-element` que habían quedado pendientes (Tarjeta C original) — pedido explícito para cerrarlos.
+- **Qué se hizo:**
+  - `Anuncios.tsx`: las fotos vienen de `res.cloudinary.com` (ya en `remotePatterns` de `next.config.ts`) → `<Image fill sizes="..." />` con optimización normal.
+  - `PublicacionesRow.tsx` y `app/publicaciones/[id]/page.tsx` (portada + galería): las URLs las escribe el admin a mano en un campo de texto libre, no vienen de un dominio fijo → `<Image fill unoptimized />`, el mismo patrón que ya existía en `components/admin/publicaciones/PublicacionForm.tsx` para ese mismo caso. Sin `unoptimized`, una URL de un dominio no listado en `remotePatterns` rompe la página en vez de solo perder la optimización.
+  - En los contenedores que no tenían `relative` + alto fijo (requisito de `fill`), se movieron las clases de alto del `<img>` al contenedor padre; mismo tamaño visual que antes.
+- **Archivos:** `components/home/Anuncios.tsx`, `components/publicaciones/PublicacionesRow.tsx`, `app/publicaciones/[id]/page.tsx`
+- **QA:**
+  - [ ] Home: sección "Hall of Fame" muestra las 3 fotos de campeones igual que antes, con el hover de zoom
+  - [ ] Listado de publicaciones (blog/noticia): miniatura 96×96 se ve igual, incluido el estado "Sin imagen"
+  - [ ] Detalle de una publicación con imagen de portada: mismo alto/recorte que antes
+  - [ ] Detalle de una publicación con galería: cada imagen de la grilla mantiene su alto (224px) y el hover de zoom
+  - [ ] Probar con una URL de imagen de un dominio no listado en `remotePatterns` (ej. pegar cualquier link externo en el campo de portada del admin): debe seguir mostrándose (gracias a `unoptimized`), no romper la página
+- **Nota de verificación:** no se pudo confirmar visualmente en un servidor local — este entorno no tiene la base de datos disponible (mismo límite que al correr `npm run build`, ver §11.7). Verificado solo con `npx tsc --noEmit` (sin diferencias) y `npm run lint` (los 4 warnings desaparecen).
+
 ---
 
 ## Lista: Pendiente (no se hizo en esta rama a propósito)
@@ -139,10 +156,6 @@ Copiar cada una como tarjeta aparte. Son decisiones de producto/arquitectura, no
 - Decidir: ¿el drawer debería recibir los datos ya aplanados (como hace la tabla), o debería leer la forma anidada real? Cualquiera de las dos es un cambio de comportamiento, no de tipado
 - Ver `ARCHITECTURE.md` §11.12
 
-### Tarjeta C — `<img>` → `next/image` en publicaciones y anuncios
-- `components/home/Anuncios.tsx`, `components/publicaciones/PublicacionesRow.tsx`, `app/publicaciones/[id]/page.tsx` (2 casos) usan `<img>` plano
-- Migrar a `next/image` mejora LCP pero exige revisar `width`/`height`/`sizes` y el dominio remoto en `next.config.ts` — es un cambio de comportamiento visual, se dejó fuera de esta pasada
-
 ### Tarjeta D — Indentación con NBSP (U+00A0) en vez de espacios
 - Detectada en partes de `SugerenciasTable.tsx`, `app/api/wildcard/route.ts`, `SugerenciaDetailDrawer.tsx`, `BracketMatch.tsx` (probablemente hay más en el repo, no se hizo un barrido completo)
 - No afecta la ejecución (JS no le da significado al espacio en blanco fuera de strings), pero puede confundir a otros editores/herramientas
@@ -153,10 +166,9 @@ Copiar cada una como tarjeta aparte. Son decisiones de producto/arquitectura, no
 ## Lista: Fuera de alcance a propósito
 - No se tocó ninguna funcionalidad existente: mismo comportamiento antes y después (verificado con `npx tsc --noEmit` sin diferencias de errores nuevos y `npm run lint` con conteo documentado)
 - No se "arreglaron" los 13 errores preexistentes de `npx tsc --noEmit` que no tienen que ver con `any` (columnas de schema, `Headers` mockeado, tipos de `framer-motion`) — son bugs o decisiones de diseño, no legibilidad
-- No se tocaron los 4 warnings de `<img>` (cambio de comportamiento de carga/layout)
 - No se migró `Prisma.validator()` en archivos que no estaban ya en la lista de cambios por otro motivo
 - No se hizo un barrido completo de indentación NBSP en todo el repo
 
 ---
 
-DISCLAIMER: Generado automáticamente a partir del commit `chore: pasada de legibilidad y tipado en TypeScript/React` de la rama `chore/buenas-practicas-legibilidad`. Revisar antes de mover las tarjetas a "Hecho" en el tablero real.
+DISCLAIMER: Generado automáticamente a partir de los commits `chore: pasada de legibilidad y tipado en TypeScript/React`, `docs: documenta la pasada de legibilidad y agrega tarjetas Trello` y `refactor: migra <img> a next/image en publicaciones y home` de la rama `chore/buenas-practicas-legibilidad`. Revisar antes de mover las tarjetas a "Hecho" en el tablero real.
