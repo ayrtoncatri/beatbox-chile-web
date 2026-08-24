@@ -454,6 +454,10 @@ export type PublicBracketData = Awaited<
   ReturnType<typeof getPublicEventBracket>
 >;
 
+// Una sola batalla formateada (participantA/B simplificados a {id, name}),
+// tal como la consume BracketMatch.
+export type PublicBracketBattle = NonNullable<PublicBracketData>[RoundPhase][number];
+
 /**
  * Obtiene todas las batallas de un evento, formateadas y
  * agrupadas por fase, listas para ser consumidas por el frontend del bracket.

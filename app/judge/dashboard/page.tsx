@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { JudgePanel } from '@/components/judge/dashboard/JudgePanel'
-import { RoundPhase, ScoreStatus, WildcardStatus } from '@prisma/client'
+import { WildcardStatus } from '@prisma/client'
 import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
 
 /**

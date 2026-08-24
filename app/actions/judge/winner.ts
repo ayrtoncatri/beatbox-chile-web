@@ -35,7 +35,7 @@ export async function declareBattleWinner(
   }
   
   const session = await getServerSession(authOptions);
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('judge')) {
     return { error: 'No autorizado. Debes ser juez.' };
   }

@@ -4,11 +4,19 @@ import { useState } from "react";
 import { FunnelIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { exportComprasToCSV } from "@/app/admin/compras/actions";
 
-type EventOpt = { id: string; nombre: string };
+export type CompraEventOpt = { id: string | undefined; nombre: string | undefined };
+export type CompraFilterDefaults = {
+  q?: string;
+  eventId?: string;
+  tipo?: string;
+  from?: string;
+  to?: string;
+  pageSize: number;
+};
 
 export default function ComprasFilters(props: {
-  events: EventOpt[];
-  defaults: { q?: string; eventId?: string; tipo?: string; from?: string; to?: string; pageSize: number };
+  events: CompraEventOpt[];
+  defaults: CompraFilterDefaults;
   exportUrl?: string;
   sort: "fecha_desc" | "fecha_asc" | "total_desc" | "total_asc";
 }) {

@@ -37,7 +37,7 @@ export default async function Page({
   });
 
   // Mapeo para la tabla
-  const comprasRows = compras.map((c: any) => ({
+  const comprasRows = compras.map((c) => ({
     id: c.id,
     createdAt: c.createdAt,
     status: c.status,
@@ -54,7 +54,7 @@ export default async function Page({
     eventoFecha: c.evento?.fecha,
     eventoTipo: c.evento?.tipo?.name,
     eventoVenue: c.evento?.venue?.name,
-    items: c.items.map((i: any) => ({
+    items: c.items.map((i) => ({
       tipoEntrada: i.ticketType.name,
       cantidad: i.quantity,
       precioUnitario: i.unitPrice,
@@ -65,12 +65,12 @@ export default async function Page({
 
   // Para los filtros de eventos
   const events = comprasRows
-    .map((c: any) => ({
+    .map((c) => ({
       id: c.eventoId,
       nombre: c.eventoNombre,
     }))
     .filter(
-      (v: any, i: number, arr: any[]) =>
+      (v, i, arr) =>
         arr.findIndex((x) => x.id === v.id) === i
     );
 

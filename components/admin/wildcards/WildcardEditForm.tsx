@@ -3,7 +3,7 @@ import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import PencilSquareIcon from "@heroicons/react/24/solid/esm/PencilSquareIcon";
-import { editWildcard } from "@/app/admin/wildcards/actions";
+import { editWildcard, type EditWildcardState } from "@/app/admin/wildcards/actions";
 import toast from "react-hot-toast";
 
 type Wildcard = {
@@ -34,7 +34,7 @@ export default function WildcardEditForm({ item }: { item: Wildcard }) {
   const [youtubeUrl, setYoutubeUrl] = useState(item.youtubeUrl ?? "");
   const router = useRouter();
 
-  const initialState = { ok: false, error: undefined };
+  const initialState: EditWildcardState = { ok: false };
   const [state, formAction] = useActionState(editWildcard, initialState);
   
   useEffect(() => {

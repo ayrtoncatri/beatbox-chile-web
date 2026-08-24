@@ -1,6 +1,6 @@
 import SugerenciasPageWrapper from "@/components/admin/sugerencias/SugerenciasPageWrapper";
 import { prisma } from "@/lib/prisma"; 
-import { Sugerencia, User, Prisma, SuggestionStatus } from "@prisma/client";
+import { Sugerencia, Prisma, SuggestionStatus } from "@prisma/client";
 
 // Forzamos a que la página sea dinámica, igual que en 'wildcards'
 export const dynamic = "force-dynamic";

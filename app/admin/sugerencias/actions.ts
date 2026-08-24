@@ -13,6 +13,14 @@ const SugerenciaUpdateSchema = z.object({
   notaPrivada: z.string().optional(),
 });
 
+// Estado devuelto por updateSugerencia; usado tanto por el server action
+// como por el useFormState/useActionState de los componentes cliente.
+export type UpdateSugerenciaState = {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[] | undefined>;
+};
+
 //
 // --- LA FUNCIÓN 'getSugerencias' SE HA ELIMINADO DE AQUÍ ---
 // La lógica ahora vive en 'page.tsx' para evitar el caché,
@@ -47,7 +55,10 @@ export async function getSugerenciaById(id: string) {
 /**
  * Actualiza el estado y/o nota privada de una sugerencia
  */
-export async function updateSugerencia(prevState: any, formData: FormData) {
+export async function updateSugerencia(
+  prevState: UpdateSugerenciaState,
+  formData: FormData,
+): Promise<UpdateSugerenciaState> {
   await ensureAdminPage();
 
   const validatedFields = SugerenciaUpdateSchema.safeParse(
@@ -111,8 +122,8 @@ export async function exportSugerenciasToCSV(filters: {
   await ensureAdminPage();
   
   const { search, userId, estado, from, to } = filters;
-  
-  const where: any = {};
+
+  const where: Prisma.SugerenciaWhereInput = {};
   
   if (search) {
     where.OR = [
@@ -138,13 +149,10 @@ export async function exportSugerenciasToCSV(filters: {
   }
   
   if (from || to) {
-    where.createdAt = {};
-    if (from) {
-      where.createdAt.gte = new Date(from);
-    }
-    if (to) {
-      where.createdAt.lte = new Date(to);
-    }
+    where.createdAt = {
+      ...(from ? { gte: new Date(from) } : {}),
+      ...(to ? { lte: new Date(to) } : {}),
+    };
   }
   
   const sugerencias = await prisma.sugerencia.findMany({

@@ -12,21 +12,29 @@ type CompraItemRow = {
   total: number;
 };
 
-type Row = {
+export type CompraRow = {
   id: string;
   createdAt: string | Date;
   status: PaymentStatus;
   userNombre: string;
-  userEmail: string;
-  comuna: string;
-  region: string;
-  eventoId: string;
-  eventoNombre: string;
-  eventoFecha: string | Date;
-  eventoTipo: string;
-  eventoVenue: string;
+  userEmail: string | undefined;
+  comuna: string | undefined;
+  region: string | undefined;
+  eventoId: string | undefined;
+  eventoNombre: string | undefined;
+  eventoFecha: string | Date | undefined;
+  eventoTipo: string | undefined;
+  eventoVenue: string | undefined;
   items: CompraItemRow[];
   total: number;
+};
+
+export type CompraPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  sort: string;
 };
 
 
@@ -64,8 +72,8 @@ function StatusBadge({ status }: { status: PaymentStatus }) {
 
 
 export default function ComprasTable(props: {
-  rows: Row[];
-  pagination: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  rows: CompraRow[];
+  pagination: CompraPagination;
   onVerClick?: (compraId: string) => void;
 }) {
   const { rows, onVerClick } = props;
@@ -86,7 +94,8 @@ export default function ComprasTable(props: {
     }
   };
 
-  const copyEmail = async (email: string) => {
+  const copyEmail = async (email: string | undefined) => {
+    if (!email) return;
     try {
       await navigator.clipboard.writeText(email);
     } catch {}
@@ -121,7 +130,7 @@ export default function ComprasTable(props: {
                   <StatusBadge status={r.status} />
                 </td>
                 <td className="px-4 py-3 text-white">{r.eventoNombre}</td>
-                <td className="px-4 py-3 text-white">{new Date(r.eventoFecha).toLocaleString("es-CL")}</td>
+                <td className="px-4 py-3 text-white">{r.eventoFecha ? new Date(r.eventoFecha).toLocaleString("es-CL") : "—"}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-col">
                     <span className="font-medium text-white">{r.userNombre}</span>
@@ -200,7 +209,7 @@ export default function ComprasTable(props: {
             <div className="font-semibold text-base text-white">{r.eventoNombre}</div>
             <div className="text-xs text-blue-300/70">Fecha compra: {new Date(r.createdAt).toLocaleString("es-CL")}</div>
             <div><StatusBadge status={r.status} /></div>
-            <div className="text-xs text-blue-300/70">Fecha evento: {new Date(r.eventoFecha).toLocaleString("es-CL")}</div>
+            <div className="text-xs text-blue-300/70">Fecha evento: {r.eventoFecha ? new Date(r.eventoFecha).toLocaleString("es-CL") : "—"}</div>
             <div className="text-xs text-blue-300/70">
               Comprador: <span className="font-medium text-white">{r.userNombre}</span>
               <button className="ml-2 link text-xs text-blue-300 hover:text-blue-200" onClick={() => copyEmail(r.userEmail)} title="Copiar email">

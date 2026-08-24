@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 
@@ -23,7 +23,7 @@ export default function PublicacionesRow({ title, tipo }: Props) {
   const [loading, setLoading] = useState(false);
   const [hasNext, setHasNext] = useState(true);
 
-  const fetchData = async (newPage: number) => {
+  const fetchData = useCallback(async (newPage: number) => {
     setLoading(true);
 
     try {
@@ -41,11 +41,11 @@ export default function PublicacionesRow({ title, tipo }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tipo]);
 
   useEffect(() => {
     fetchData(page);
-  }, [page, tipo]);
+  }, [page, tipo, fetchData]);
 
   const goNext = () => {
     if (hasNext) setPage((prev) => prev + 1);

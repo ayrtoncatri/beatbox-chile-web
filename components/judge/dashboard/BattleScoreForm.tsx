@@ -104,8 +104,8 @@ export function BattleScoreForm({
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // --- 1. ESTADO DE LA MATRIZ DE PUNTAJES ---
-  const [scores, setScores] = useState<Record<number, Record<string, Record<string, number>>>>(() => {
-    const state: any = { 1: {}, 2: {} };
+  const [scores, setScores] = useState<Record<number, Record<string, Record<string, number | undefined>>>>(() => {
+    const state: Record<number, Record<string, Record<string, number | undefined>>> = { 1: {}, 2: {} };
     // Filtramos solo los participantes que existen
     const participants = [battle.participantA, battle.participantB].filter(Boolean);
 
@@ -140,7 +140,7 @@ export function BattleScoreForm({
     [1, 2].forEach(r => {
         const pScores = scores[r]?.[pId];
         if (pScores) {
-            sum += Object.values(pScores).reduce((acc, val) => acc + (val || 0), 0);
+            sum += Object.values(pScores).reduce<number>((acc, val) => acc + (val || 0), 0);
         }
     });
     return sum;
@@ -185,7 +185,7 @@ export function BattleScoreForm({
     if (isNaN(val)) {
         setScores(prev => ({
             ...prev,
-            [round]: { ...prev[round], [pId]: { ...prev[round][pId], [cId]: undefined as any } }
+            [round]: { ...prev[round], [pId]: { ...prev[round][pId], [cId]: undefined } }
         }));
         return;
     }
@@ -221,9 +221,13 @@ export function BattleScoreForm({
 
         [1, 2].forEach(round => {
             pIds.forEach(pId => {
-                const details = Object.entries(scores[round][pId] || {}).map(([cId, val]) => ({
-                    criterioId: cId, value: val
-                }));
+                // isBattleComplete ya garantizó que todos los valores están definidos;
+                // filtramos igual para que el tipo coincida con lo que espera el payload.
+                const details = Object.entries(scores[round][pId] || {})
+                    .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
+                    .map(([cId, val]) => ({
+                        criterioId: cId, value: val
+                    }));
                 
                 if (details.length > 0) {
                     payloads.push({

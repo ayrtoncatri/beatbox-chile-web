@@ -66,7 +66,7 @@ export default function SugerenciaDetailPopup({
     formData.append("estado", nuevoEstado);
     formData.append("notaPrivada", notaPrivada);
     startTransition(async () => {
-      const res = await updateSugerencia({}, formData);
+      const res = await updateSugerencia({ success: false, message: "" }, formData);
       setMsg(res.message);
       if (res.success) {
         setEstado(nuevoEstado);

@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
           apellidoMaterno: user.profile?.apellidoMaterno ?? null,
           mfaEnabled: user.totpEnabled,
           roles: roles.length > 0 ? roles : ["user"],
-        } as any;
+        };
       },
     }),
 
@@ -179,7 +179,7 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token }) {
       // El objeto 'user' solo existe en el login inicial.
       // Después de eso, necesitamos consultar la BD para hidratar el token
       // con los datos de nuestro schema (roles y profile).
@@ -231,12 +231,12 @@ export const authOptions: NextAuthOptions = {
         session.user.image = token.image as string | null;
         
         // Agregar campos personalizados
-        (session.user as any).isActive = token.isActive;
-        (session.user as any).nombres = token.nombres;
-        (session.user as any).apellidoPaterno = token.apellidoPaterno;
-        (session.user as any).apellidoMaterno = token.apellidoMaterno;
-        (session.user as any).mfaEnabled = token.mfaEnabled;
-        (session.user as any).roles = token.roles;
+        session.user.isActive = token.isActive;
+        session.user.nombres = token.nombres;
+        session.user.apellidoPaterno = token.apellidoPaterno;
+        session.user.apellidoMaterno = token.apellidoMaterno;
+        session.user.mfaEnabled = token.mfaEnabled;
+        session.user.roles = token.roles;
       }
 
       return session;

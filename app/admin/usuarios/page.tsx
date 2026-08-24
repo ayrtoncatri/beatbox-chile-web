@@ -22,7 +22,7 @@ type Props = {
 
 export default async function UsuariosPage({ searchParams }: Props) {
   const session = await getServerSession(authOptions);
-  const currentUserId = (session?.user as any)?.id;
+  const currentUserId = session?.user?.id;
   
   const sp = await searchParams;
   const q = sp?.q?.trim() || "";

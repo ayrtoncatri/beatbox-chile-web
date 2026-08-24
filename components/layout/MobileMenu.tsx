@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { Session } from "next-auth";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FaTimes,
@@ -35,7 +36,7 @@ interface MobileMenuProps {
 
   isClient: boolean;
   status: "loading" | "authenticated" | "unauthenticated";
-  user: any; // puedes tiparlo con Session["user"] si quieres
+  user: Session["user"] | undefined;
   isAdmin: boolean;
   isJudge: boolean;
   userName: string | null;

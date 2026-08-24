@@ -24,7 +24,7 @@ export async function GET() {
       },
     });
     return NextResponse.json({ ok: true, wildcards }, { status: 200 });
-  } catch (e) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: 'Error interno' },
       { status: 500 },

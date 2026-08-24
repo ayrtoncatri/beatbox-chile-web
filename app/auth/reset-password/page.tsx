@@ -65,7 +65,7 @@ function ResetPasswordForm() {
       let json;
       try {
         json = JSON.parse(text);
-      } catch (e) {
+      } catch {
         toast.error("Error inesperado del servidor.");
         setIsSubmitting(false);
         return;
@@ -82,7 +82,7 @@ function ResetPasswordForm() {
         router.push("/auth/login"); 
       }, 2000);
 
-    } catch (error) {
+    } catch {
       toast.error("Error de conexión.");
     } finally {
       setIsSubmitting(false);

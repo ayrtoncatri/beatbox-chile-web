@@ -14,9 +14,18 @@ const statusLabels: Record<SuggestionStatus, string> = {
   [SuggestionStatus.descartada]: "Descartada",
 };
 
+export type SugerenciaFilterDefaults = {
+  q?: string;
+  estado?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+  pageSize: number;
+};
+
 export default function SugerenciasFilters(props: {
   users: UserOpt[];
-  defaults: { q?: string; estado?: string; userId?: string; from?: string; to?: string; pageSize: number };
+  defaults: SugerenciaFilterDefaults;
   exportUrl?: string; // Mantenemos esta prop por compatibilidad, pero no la usaremos
 }) {
   const { users, defaults } = props;

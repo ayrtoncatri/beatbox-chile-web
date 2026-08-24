@@ -52,11 +52,11 @@ export async function runCnClassification(
   formData: FormData
 ): Promise<ActionState> {
   
-  let log: string[] = ['Iniciando proceso...'];
+  const log: string[] = ['Iniciando proceso...'];
 
   // --- 1. Seguridad: Verificar Sesión de Admin ---
   const session = await getServerSession(authOptions);
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
     return { error: 'No autorizado. Se requiere ser administrador.', log };
   }
@@ -81,7 +81,7 @@ export async function runCnClassification(
   log.push(`Clasificando para el CN (ID: ${cnEventoId}) del ciclo ${year}...`);
 
   try {
-    let qualifiedUserIds = new Set<string>();
+    const qualifiedUserIds = new Set<string>();
 
     // --- 3. Obtener eventos relevantes del ciclo ---
     const prevCn = await prisma.evento.findFirst({

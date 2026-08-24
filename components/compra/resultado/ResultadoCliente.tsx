@@ -4,6 +4,19 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { getErrorMessage } from '@/lib/errors';
+
+// Respuesta de /api/compra/confirmar (ver app/api/compra/confirmar/route.ts).
+type ConfirmarCompraResponse = {
+  status: 'success' | 'failed' | 'error';
+  error?: string;
+  message?: string;
+  compraId?: string;
+  amount?: number;
+  transactionDate?: string;
+  paymentType?: string;
+  lastCardDigits?: string;
+};
 
 /**
  * Componente de "Carga" (movido desde page.tsx)
@@ -44,7 +57,7 @@ export default function ResultadoCompraCliente() {
   >('loading');
   
   // Usaremos un estado más completo para los datos de éxito
-  const [compraData, setCompraData] = useState<any | null>(null);
+  const [compraData, setCompraData] = useState<ConfirmarCompraResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,7 +87,7 @@ export default function ResultadoCompraCliente() {
             body: JSON.stringify({ token_ws }),
           });
 
-          const data = await response.json();
+          const data: ConfirmarCompraResponse = await response.json();
 
           if (!response.ok) {
             // Error de nuestra API (500, 404, etc.)
@@ -90,10 +103,10 @@ export default function ResultadoCompraCliente() {
             setStatus('failed');
             setErrorMessage(data.error || 'El pago fue rechazado o falló.');
           }
-        } catch (err: any) {
+        } catch (err) {
           // Error de red o en el fetch
           setStatus('failed');
-          setErrorMessage(err.message || 'Error de conexión al confirmar el pago.');
+          setErrorMessage(getErrorMessage(err, 'Error de conexión al confirmar el pago.'));
         }
       };
 
@@ -130,7 +143,7 @@ export default function ResultadoCompraCliente() {
           <div className="text-left bg-gray-800 p-4 rounded-md mb-8 w-full max-w-md mx-auto">
             <p className="text-gray-300">
               <span className="font-semibold text-lime-300">Monto Pagado:</span>{' '}
-              {formatCurrency(compraData.amount)}
+              {formatCurrency(compraData.amount ?? 0)}
             </p>
             <p className="text-gray-300 mt-2">
               <span className="font-semibold text-lime-300">ID de Compra:</span>{' '}

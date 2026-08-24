@@ -33,7 +33,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
       { user: { profile: { apellidoMaterno: { contains: q, mode: "insensitive" } } } },
     ];
   }
-  if (statusParam !== "ALL") where.status = statusParam as any;
+  if (statusParam !== "ALL") where.status = statusParam;
 
   const [total, items] = await Promise.all([
     prisma.wildcard.count({ where }),
@@ -182,7 +182,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                           </div>
                         {/* Columna 2: Botones/Badges (50% de ancho, centrado) */}
                           <div className="w-1/2 flex justify-start">
-                            <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
+                            <ReviewButtons id={w.id} status={w.status} isClassified={w.isClassified} />
                         </div>
                       </div>
                     </td>
@@ -250,7 +250,7 @@ export default async function WildcardsAdminPage({ searchParams }: Props) {
                   >
                     <EyeIcon className="w-4 h-4" /> Ver
                   </Link>
-                  <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
+                  <ReviewButtons id={w.id} status={w.status} isClassified={w.isClassified} />
                 </div>
               </div>
             );

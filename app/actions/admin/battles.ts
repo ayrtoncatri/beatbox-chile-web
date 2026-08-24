@@ -2,10 +2,11 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { InscripcionSource, Prisma, RoundPhase, ScoreStatus } from '@prisma/client';
+import { RoundPhase, ScoreStatus } from '@prisma/client';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { getErrorMessage } from '@/lib/errors';
 
 // Tipo de estado (sin cambios)
 interface ActionState {
@@ -54,11 +55,11 @@ export async function generateBrackets(
   formData: FormData
 ): Promise<ActionState> {
   
-  let log: string[] = ['Iniciando generación de árbol de torneo...'];
+  const log: string[] = ['Iniciando generación de árbol de torneo...'];
 
   // 1. Seguridad
   const session = await getServerSession(authOptions);
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
     return { error: 'No autorizado.', log };
   }
@@ -200,8 +201,8 @@ export async function generateBrackets(
     revalidatePath(`/admin/eventos/${eventoId}`);
     return { success: `Se generaron todas las llaves desde ${startPhase} hasta la FINAL (incluyendo 3er Lugar).`, log };
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error generando brackets:', error);
-    return { error: 'Error interno: ' + (error.message || error), log };
+    return { error: 'Error interno: ' + getErrorMessage(error), log };
   }
 }

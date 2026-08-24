@@ -6,6 +6,7 @@ import {
     getWildcardRanking,
     classifyWildcardsAction,
     RankingResult,
+    type EventoSimpleActionState,
 } from '@/app/admin/eventos/actions'
 import { useEffect, useState , useActionState } from 'react'
 import toast from 'react-hot-toast'
@@ -44,8 +45,8 @@ export function WildcardRankingTable({
     const [selectedIds, setSelectedIds] = useState<string[]>([])
 
     // Estado para el formulario de Server Action
-    const initialState = { ok: false, error: undefined, message: undefined } // <-- CORREGIDO
-    const [state, dispatch] = useActionState(classifyWildcardsAction, initialState as any)
+    const initialState: EventoSimpleActionState = { ok: false, error: undefined, message: undefined }
+    const [state, dispatch] = useActionState(classifyWildcardsAction, initialState)
 
     // 1. FETCH ASÍNCRONO del Ranking (Hook para el cliente)
     useEffect(() => {

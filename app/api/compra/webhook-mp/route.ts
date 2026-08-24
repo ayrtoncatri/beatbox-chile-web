@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
+import { getErrorMessage } from '@/lib/errors';
 
 // 1. Inicializar el SDK (solo para validar el pago)
 const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN!;
@@ -13,8 +14,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const searchParams = new URL(req.url).searchParams;
-    
+
     // 2. Validar el tipo de notificación
     // Solo nos interesa cuando un pago se crea o actualiza
     if (body.type === 'payment') {
@@ -75,8 +75,8 @@ export async function POST(req: Request) {
     // 7. Responder 200 OK a Mercado Pago
     return NextResponse.json({ ok: true });
     
-  } catch (e: any) {
-    console.error('[Webhook MP] Error:', e.message);
+  } catch (e) {
+    console.error('[Webhook MP] Error:', getErrorMessage(e));
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 },

@@ -3,14 +3,22 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { InscripcionSource, WildcardStatus } from "@prisma/client";
+import { Prisma, WildcardStatus } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ActionState {
   error?: string;
   success?: string;
 }
+
+// Estado devuelto por editWildcard; usado también como tipo de `prevState`
+// en el useActionState del formulario cliente.
+export type EditWildcardState = {
+  ok: boolean;
+  error?: string;
+};
 
 const YT_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w\-]{11}(\S+)?$/i;
@@ -25,7 +33,7 @@ const EditWildcardSchema = z.object({
   ),
 });
 
-export async function editWildcard(prevState: any, formData: FormData) {
+export async function editWildcard(prevState: EditWildcardState, formData: FormData) {
   try {
     const data = {
       id: formData.get("id") as string,
@@ -48,8 +56,8 @@ export async function editWildcard(prevState: any, formData: FormData) {
     revalidatePath(`/admin/wildcards/${parsed.id}`);
 
     return { ok: true, wildcard: updated };
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Error al actualizar" };
+  } catch (e) {
+    return { ok: false, error: getErrorMessage(e, "Error al actualizar") };
   }
 }
 
@@ -59,7 +67,7 @@ export async function approveWildcard(
   
   const session = await getServerSession(authOptions);
 
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
     return { error: 'No autorizado. Se requiere ser administrador.' };
   }
@@ -110,7 +118,7 @@ export async function approveWildcard(
 
   } catch (error) {
     console.error('Error al aprobar wildcard:', error);
-    if ((error as any).code === 'P2002') { // Error de constraint (ej. wildcardId ya está en una inscripción)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') { // Error de constraint (ej. wildcardId ya está en una inscripción)
       return { error: 'Error de consistencia: La inscripción para este wildcard ya existe.' };
     }
     return { error: 'Error del servidor al procesar la aprobación.' };
@@ -125,7 +133,7 @@ export async function rejectWildcard(
 ): Promise<ActionState> {
 
   const session = await getServerSession(authOptions);
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
     return { error: 'No autorizado.' };
   }

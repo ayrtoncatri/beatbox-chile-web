@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { getErrorMessage } from "@/lib/errors";
 
 export type EventoDTO = {
   id: string;
@@ -26,11 +27,11 @@ export default function EventosDisponibles({ onSelect, selectedId }: Props) {
     const load = async () => {
       try {
         const res = await fetch("/api/eventos", { cache: "no-store" });
-        const json = await res.json();
+        const json: { error?: string; data?: EventoDTO[] } = await res.json();
         if (!res.ok) throw new Error(json?.error || "Error al cargar eventos");
         setEventos(json?.data ?? []);
-      } catch (e: any) {
-        setErr(e.message || "Error");
+      } catch (e) {
+        setErr(getErrorMessage(e));
       } finally {
         setLoading(false);
       }

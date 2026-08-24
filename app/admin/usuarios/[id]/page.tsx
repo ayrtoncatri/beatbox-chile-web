@@ -11,7 +11,7 @@ import Image from "next/image";
 
 export default async function UsuarioDetallePage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
-  const currentUserId = (session?.user as any)?.id;
+  const currentUserId = session?.user?.id;
   const { id } = await params; 
 
   const [user, allRoles] = await Promise.all([

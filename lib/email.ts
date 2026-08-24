@@ -76,7 +76,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: 'Beatbox Chile <no-reply@beatboxchile.cl>', // Si aún no verificas dominio, usa este remitente de prueba
       to: email,
       subject: 'Restablece tu contraseña - Beatbox Chile',

@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
   }
 }

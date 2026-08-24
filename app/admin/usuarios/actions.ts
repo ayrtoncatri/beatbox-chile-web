@@ -7,6 +7,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkAdmin } from "@/lib/permissions";
 import { writeAuditLog } from "@/lib/privacy/audit";
+import { getErrorMessage } from "@/lib/errors";
+
+// Estado devuelto por las server actions de este módulo; usado también como
+// tipo de `prevState` en el useActionState de los formularios cliente.
+export type UserActionState = {
+  ok: boolean;
+  error?: string;
+};
 
 const EditUserSchema = z.object({
   id: z.string().min(1),
@@ -22,15 +30,15 @@ const ToggleUserActiveSchema = z.object({
   isActive: z.coerce.boolean(),
 });
 
-export async function editUser(prevState: any, formData: FormData) {
+export async function editUser(prevState: UserActionState, formData: FormData) {
   const session = await getServerSession(authOptions);
 
   try {
     await checkAdmin();
-  } catch (e: any) {
+  } catch {
     return { ok: false, error: "No tienes permisos de administrador." };
   }
-  const currentUserId = (session?.user as any)?.id;
+  const currentUserId = session?.user?.id;
 
   try {
     const data = {
@@ -152,23 +160,23 @@ export async function editUser(prevState: any, formData: FormData) {
     });
 
     return { ok: true, user: updated };
-  } catch (e: any) {
+  } catch (e) {
     // Si la transacción falla, 'e' tendrá el error
-    return { ok: false, error: e.message || "Error al actualizar" };
+    return { ok: false, error: getErrorMessage(e, "Error al actualizar") };
   }
 }
 
-export async function toggleUserActive(prevState: any, formData: FormData) {
+export async function toggleUserActive(prevState: UserActionState, formData: FormData) {
   const session = await getServerSession(authOptions);
 
   try {
     // 2. VERIFICAR QUE EL USUARIO ACTUAL ES ADMIN
     await checkAdmin();
-  } catch (e: any) {
+  } catch {
     return { ok: false, error: "No tienes permisos de administrador." };
   }
   // Obtenemos el ID del admin que realiza la acción
-  const currentUserId = (session?.user as any)?.id;
+  const currentUserId = session?.user?.id;
 
   try {
     const data = {
@@ -219,7 +227,7 @@ export async function toggleUserActive(prevState: any, formData: FormData) {
     });
 
     return { ok: true, user: updated };
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Error al cambiar estado del usuario" };
+  } catch (e) {
+    return { ok: false, error: getErrorMessage(e, "Error al cambiar estado del usuario") };
   }
 }

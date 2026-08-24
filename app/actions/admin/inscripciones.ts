@@ -93,7 +93,7 @@ export async function registerParticipantForLeague(
 
   } catch (error) {
     console.error('Error al inscribir participante:', error);
-    if ((error as any).code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
        return { error: 'Este usuario ya está inscrito en esta categoría del evento.' };
     }
     return { error: 'No se pudo completar la inscripción. Error del servidor.' };

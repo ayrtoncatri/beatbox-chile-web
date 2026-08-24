@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition, useCallback, useMemo  } from 'react'
+import { useEffect, useState, useTransition, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Criterio, ScoreStatus, RoundPhase } from '@prisma/client'
@@ -56,7 +56,7 @@ function getYouTubeVideoId(url: string): string | null {
     if (urlObj.hostname === 'youtu.be') {
       return urlObj.pathname.slice(1);
     }
-  } catch (error) {
+  } catch {
     return null;
   }
   return null;
@@ -118,7 +118,6 @@ export function JudgeScoreForm({
   const isFormComplete = watchedScores.every(s => typeof s.value === 'number' && !isNaN(s.value));
 
   // AUTOSAVE (Debounce 2.5s)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedDraftSave = useMemo(
   () =>
     debounce(async (payload: SubmitScorePayload) => {

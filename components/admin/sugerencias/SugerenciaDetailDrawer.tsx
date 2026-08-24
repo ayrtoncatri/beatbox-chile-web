@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
-import { getSugerenciaById, updateSugerencia, deleteSugerencia } from "@/app/admin/sugerencias/actions";
+import { getSugerenciaById, updateSugerencia, deleteSugerencia, type UpdateSugerenciaState } from "@/app/admin/sugerencias/actions";
 import { SuggestionStatus } from "@prisma/client";
 import toast from "react-hot-toast";
 
@@ -43,30 +43,30 @@ export default function SugerenciaDetailDrawer({ sugerenciaId, isOpen, onClose }
   const [deleteLoading, setDeleteLoading] = useState(false);
   
   // Estado inicial para el formulario
-  const initialState = { success: false, message: "", errors: {} };
+  const initialState: UpdateSugerenciaState = { success: false, message: "", errors: {} };
   
   // useFormState para manejar la acción del servidor
   const [formState, formAction] = useFormState(updateSugerencia, initialState);
   
+  // Función para cargar los datos de la sugerencia
+  const loadSugerencia = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getSugerenciaById(sugerenciaId);
+      setSugerencia(data as SugerenciaDetalle);
+    } catch (error) {
+      console.error("Error al cargar la sugerencia:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [sugerenciaId]);
+
   // Cargar datos de la sugerencia cuando se abre el drawer
   useEffect(() => {
     if (isOpen && sugerenciaId) {
       loadSugerencia();
     }
-  }, [isOpen, sugerenciaId]);
-
-  // Función para cargar los datos de la sugerencia
-  async function loadSugerencia() {
-    setLoading(true);
-    try {
-      const data = await getSugerenciaById(sugerenciaId);
-      setSugerencia(data as SugerenciaDetalle);
-    } catch (error) {
-      console.error("Error al cargar la sugerencia:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [isOpen, sugerenciaId, loadSugerencia]);
   
   // Función para eliminar la sugerencia
   async function handleDelete() {

@@ -3,25 +3,22 @@
 import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
-import { editUser } from "@/app/admin/usuarios/actions";
+import { editUser, type UserActionState } from "@/app/admin/usuarios/actions";
 import { Prisma, Role } from "@prisma/client";
 import toast from "react-hot-toast";
 
-
-const userWithProfileAndRoles = Prisma.validator<Prisma.UserDefaultArgs>()({
+type UserFormProps = Prisma.UserGetPayload<{
   include: {
-    profile: true,
+    profile: true;
     roles: {
       include: {
         role: {
-          select: { id: true, name: true },
-        },
-      },
-    },
-  },
-});
-
-type UserFormProps = Prisma.UserGetPayload<typeof userWithProfileAndRoles>;
+          select: { id: true; name: true };
+        };
+      };
+    };
+  };
+}>;
 
 
 function SubmitButton() {
@@ -39,30 +36,29 @@ function SubmitButton() {
   );
 }
 
-export default function UserEditForm({ 
-    user, 
-    isSelf,
+export default function UserEditForm({
+    user,
     isTargetAdmin,
-    allRoles, 
-  }: { 
-    user: UserFormProps 
-    isSelf: boolean;
-    isTargetAdmin: boolean; 
+    allRoles,
+  }: {
+    user: UserFormProps
+    // Se recibe desde la página para uso futuro (mensajes contextuales),
+    // pero este formulario todavía no la necesita.
+    isSelf?: boolean;
+    isTargetAdmin: boolean;
     allRoles: Role[];
   }) {
   const [nombres, setNombres] = useState(user.profile?.nombres ?? "");
   const [apellidoPaterno, setApellidoPaterno] = useState(user.profile?.apellidoPaterno ?? "");
   const [apellidoMaterno, setApellidoMaterno] = useState(user.profile?.apellidoMaterno ?? "");
-  
-  const [role, setRole] = useState(user.roles[0]?.role.name ?? "user");
-  
+
   const [image, setImage] = useState(user.image ?? "");
 
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>(
     user.roles.map(r => r.role.id)
   );
 
-  const initialState = { ok: false, error: null };
+  const initialState: UserActionState = { ok: false };
   const [state, formAction] = useActionState(editUser, initialState);
 
   useEffect(() => {
@@ -140,7 +136,7 @@ export default function UserEditForm({
           </div>
           {isRoleChangeDisabled && (
             <p className="text-xs text-blue-300/70 mt-1">
-              No puedes quitar el rol de 'admin' a un administrador, pero puedes agregar otros roles.
+              No puedes quitar el rol de &lsquo;admin&rsquo; a un administrador, pero puedes agregar otros roles.
             </p>
           )}
         </div>
