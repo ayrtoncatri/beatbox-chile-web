@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated_at": "2026-08-22T18:00:00Z",
-  "git_commit": "feat/cierre-ley-21719-compliance",
+  "generated_at": "2026-08-23T15:30:00Z",
+  "git_commit": "feat/ley-21719-cookies-nna-arco",
   "company": {
     "razon_social": "[COMPLETAR: razon social]",
     "rut": "[COMPLETAR: rut]",
@@ -38,17 +38,17 @@
     },
     "data-consent-text": {
       "status": "pass",
-      "evidence": "lib/privacy.ts, app/auth/register/page.tsx, components/login/GoogleConsentClient.tsx, app/privacidad/page.tsx, PrivacyConsent",
+      "evidence": "lib/privacy.ts, app/auth/register/page.tsx, components/login/GoogleConsentClient.tsx, app/privacidad/page.tsx, app/privacidad/cookies/page.tsx, CookieConsentBanner, PrivacyConsent COOKIES",
       "remediation": "Publicar datos corporativos definitivos cuando esten disponibles (bump de version)."
     },
     "data-derechos": {
       "status": "pass",
-      "evidence": "lib/privacy/fulfill-request.ts, lib/privacy/data-map.ts, app/api/privacy/export/route.ts, app/admin/privacidad",
+      "evidence": "lib/privacy/fulfill-request.ts, lib/privacy/data-map.ts, app/api/privacy/export/route.ts, app/admin/privacidad, oposicion por alcance MARKETING/COOKIES/NON_ESSENTIAL",
       "remediation": "Operar identity verification y FULFILL en produccion tras migrate deploy."
     },
     "data-info": {
       "status": "pass",
-      "evidence": "app/privacidad/page.tsx, Footer, registro/Google con enlace a politica",
+      "evidence": "app/privacidad/page.tsx, app/privacidad/cookies/page.tsx, Footer, registro/Google con enlace a politica",
       "remediation": ""
     },
     "data-minimizacion": {
@@ -73,7 +73,7 @@
     },
     "data-privacy-by-design": {
       "status": "pass",
-      "evidence": "consent opt-in no premarcado, minimizacion en retencion, bloqueo/anonimizacion, seudonimizacion exports, MFA privilegiado",
+      "evidence": "consent opt-in no premarcado, minimizacion en retencion, bloqueo/anonimizacion, seudonimizacion exports, MFA privilegiado, cookies YouTube por defecto off, autorizacion parental <14",
       "remediation": ""
     },
     "data-pseudonym": {
@@ -135,7 +135,7 @@
       "partial": 4,
       "fail": 0,
       "unknown": 0,
-      "notes": "Partials restantes son operativos/contractuales: acta responsable firmada, DPA/transferencias firmadas, backups con evidencia de restore, y activacion operativa en prod (env/MFA/cron). No quedan fallas de codigo del pack."
+      "notes": "Corrida 2026-08-23: cookies/YouTube opt-in, NNA <14, mapa PII e oposicion por alcance. Partials restantes son operativos/contractuales: acta responsable, DPA/transferencias, backups con restore, y activacion en prod (env/MFA/cron)."
     }
   }
 }

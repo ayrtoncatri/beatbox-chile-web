@@ -71,6 +71,8 @@ export default async function PerfilPage() {
           comunaId: perfil?.comunaId ?? undefined,
           regionId: perfil?.comuna?.regionId ?? undefined, // Importante para pre-seleccionar
           birthDate: birthDateISO,
+          parentalGuardianName: perfil?.parentalGuardianName ?? "",
+          parentalConsentAt: perfil?.parentalConsentAt?.toISOString() ?? null,
           marketingConsentActive: user.privacyConsents.length > 0,
           
           wildcards: user.wildcards,

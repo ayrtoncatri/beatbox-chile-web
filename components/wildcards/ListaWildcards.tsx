@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import LiteYouTubeEmbed from 'react-lite-youtube-embed';
-import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
+import ConsentYouTubeEmbed from "@/components/privacy/ConsentYouTubeEmbed";
 
 type Wildcard = {
   id: string;
@@ -56,12 +55,12 @@ export default function ListaWildcards() {
                 </div>
               )}
               {ytId ? (
-                <LiteYouTubeEmbed
-                    id={ytId}
-                    title={`Wildcard de ${w.nombreArtistico}`}
-                    adNetwork={false}
-                    noCookie={true}
-                />
+                <div className="aspect-video w-full">
+                  <ConsentYouTubeEmbed
+                    videoId={ytId}
+                    title={`Wildcard de ${w.nombreArtistico}`}
+                  />
+                </div>
               ) : (
                 <div className="text-red-400">Video no válido</div>
               )}

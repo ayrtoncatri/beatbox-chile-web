@@ -51,5 +51,15 @@ El callback de Google no crea cuentas nuevas si esa evidencia no es valida. Si e
 
 Pendiente antes de produccion: publicar la politica con los datos corporativos completos.
 
+## 10. Cookies y terceros (2026-08-23)
+No existe una ley chilena autonoma de cookies. Si el identificador permite identificar a una persona, aplica la 21.719.
+
+Implementacion:
+- Banner no modal, opt-in para YouTube, por defecto solo cookies necesarias.
+- Politica publica `/privacidad/cookies`.
+- Preferencia en cookie `beatbox_cookie_consent` (12 meses) y, si hay sesion, en `PrivacyConsent` categoria `COOKIES`.
+- Oposicion/revocacion con alcance COOKIES en `/privacidad/derechos`.
+- Jueces/admin no se bloquean: el video es necesario para evaluar.
+
 ---
 DISCLAIMER: Este documento no constituye asesoria legal. Es un borrador tecnico basado en Ley 21.719 y debe validarse juridicamente antes de su implementacion final.

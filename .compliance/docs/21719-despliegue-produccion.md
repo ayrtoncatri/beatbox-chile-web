@@ -46,7 +46,10 @@ Migraciones de compliance esperadas:
 - `20260822021324_add_privileged_mfa`
 - `20260822022124_add_data_retention_audit`
 - `20260822032009_add_privacy_governance`
-- migracion de bloqueo de tratamiento (`processingBlockedAt`) si esta pendiente
+- `20260822180000_add_processing_block`
+- `20260823153000_add_cookies_and_parental_consent` (cookies + tutor NNA)
+
+En local (2026-08-23) `prisma migrate deploy` aplico la de cookies contra `localhost:5432/beatbox`. Produccion sigue pendiente.
 
 - [ ] `prisma migrate status` sin migraciones pendientes
 - [ ] Smoke: login, registro, admin, compra de prueba

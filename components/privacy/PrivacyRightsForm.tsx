@@ -24,6 +24,7 @@ export default function PrivacyRightsForm({
   defaultName,
 }: Props) {
   const [right, setRight] = useState<(typeof RIGHTS)[number]["value"]>("ACCESO");
+  const [oppositionScope, setOppositionScope] = useState<"MARKETING" | "COOKIES" | "NON_ESSENTIAL">("MARKETING");
   const [detail, setDetail] = useState("");
   const [name, setName] = useState(defaultName ?? "");
   const [email, setEmail] = useState(defaultEmail ?? "");
@@ -40,12 +41,16 @@ export default function PrivacyRightsForm({
     setMessage(null);
 
     try {
+      const composedDetail =
+        right === "OPOSICION" || right === "REVOCACION"
+          ? `${JSON.stringify({ scope: oppositionScope })}\n${detail}`
+          : detail;
       const res = await fetch("/api/privacy/rights", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           right,
-          detail,
+          detail: composedDetail,
           ...(needsIdentity ? { name, email } : { name: name || undefined }),
         }),
       });
@@ -82,6 +87,21 @@ export default function PrivacyRightsForm({
           ))}
         </select>
       </label>
+
+      {(right === "OPOSICION" || right === "REVOCACION") && (
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs uppercase tracking-wider text-white/60">Alcance</span>
+          <select
+            value={oppositionScope}
+            onChange={(e) => setOppositionScope(e.target.value as typeof oppositionScope)}
+            className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white"
+          >
+            <option value="MARKETING">Comunicaciones comerciales</option>
+            <option value="COOKIES">Cookies y YouTube</option>
+            <option value="NON_ESSENTIAL">Tratamientos no esenciales (marketing + cookies)</option>
+          </select>
+        </label>
+      )}
 
       {needsIdentity && (
         <>

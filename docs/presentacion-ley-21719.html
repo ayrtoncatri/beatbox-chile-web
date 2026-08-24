@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Datos personales · ANBP y Beatbox Chile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Oswald:ital,wght@0,500;0,700;1,600;1,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-primary: #22d3ee;
+      --color-secondary: #f472b6;
+      --color-background: #1a2140;
+      --color-muted: rgba(248, 250, 252, 0.72);
+      --primitive-gradient-primary: linear-gradient(135deg, #22d3ee, #f472b6);
+      --font-h: "Oswald", sans-serif;
+      --font-b: "Manrope", sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f1428; color: #f8fafc; font-family: var(--font-b); overflow: hidden; }
+
+    .slide-deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    @media (min-width: 769px) {
+      .slide-deck {
+        max-width: calc(100vh * 16 / 9);
+        max-height: calc(100vw * 9 / 16);
+        margin: auto;
+        position: absolute;
+        inset: 0;
+        box-shadow: 0 0 80px rgba(34, 211, 238, 0.12);
+      }
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      padding: 56px 72px 88px;
+      opacity: 0;
+      visibility: hidden;
+      background:
+        radial-gradient(ellipse 70% 50% at 0% 0%, rgba(34, 211, 238, 0.18), transparent 50%),
+        radial-gradient(ellipse 60% 45% at 100% 0%, rgba(244, 114, 182, 0.14), transparent 48%),
+        var(--color-background);
+    }
+    .slide.active { opacity: 1; visibility: visible; }
+
+    .slide-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+    }
+
+    .kicker {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #67e8f9;
+      font-weight: 700;
+    }
+
+    h1, h2 {
+      font-family: var(--font-h);
+      text-transform: uppercase;
+      font-style: italic;
+      line-height: 0.98;
+    }
+    .slide-title {
+      font-size: clamp(40px, 5.8vw, 76px);
+      background: var(--primitive-gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h2 { font-size: clamp(30px, 4vw, 52px); color: #fff; max-width: 18ch; }
+
+    p, li { font-size: clamp(18px, 2vw, 24px); line-height: 1.4; color: var(--color-muted); }
+    strong { color: #fff; }
+
+    .big-line {
+      font-size: clamp(22px, 2.6vw, 32px);
+      color: #fff;
+      max-width: 22ch;
+      line-height: 1.25;
+    }
+
+    .cards { display: grid; gap: 16px; }
+    .cols-2 { grid-template-columns: 1fr 1fr; }
+    .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .card {
+      background: rgba(49, 60, 104, 0.75);
+      border: 1px solid rgba(34, 211, 238, 0.22);
+      padding: 20px 22px;
+    }
+    .card h3 {
+      font-family: var(--font-h);
+      font-size: clamp(18px, 2vw, 26px);
+      text-transform: uppercase;
+      font-style: italic;
+      color: #a5f3fc;
+      margin-bottom: 10px;
+    }
+
+    ul.clean { list-style: none; display: grid; gap: 12px; }
+    ul.clean li::before { content: "▸ "; color: #22d3ee; font-weight: 700; }
+
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: var(--primitive-gradient-primary); z-index: 20; width: 0;
+    }
+    .nav-controls {
+      position: fixed; bottom: 18px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 16px; z-index: 20;
+    }
+    .nav-btn {
+      width: 40px; height: 40px;
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      background: rgba(26, 33, 64, 0.85);
+      color: #fff; cursor: pointer;
+    }
+    .slide-counter { color: rgba(255,255,255,0.55); font-size: 13px; }
+
+    .notes {
+      display: none;
+      position: fixed;
+      right: 16px; bottom: 70px;
+      width: min(400px, 38vw);
+      background: #0b1020;
+      border: 1px solid rgba(244, 114, 182, 0.35);
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #e2e8f0;
+      z-index: 30;
+      line-height: 1.45;
+    }
+    .notes.visible { display: block; }
+    .notes strong { color: #f9a8d4; }
+
+    @media (max-width: 768px) {
+      .slide { padding: 28px 20px 72px; }
+      .cols-2, .cols-3 { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .slide { position: relative; opacity: 1; visibility: visible; page-break-after: always; height: 100vh; }
+      .nav-controls, .progress-bar, .notes { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="slide-deck">
+
+    <div class="slide active" data-notes="Empieza por ANBP: ustedes van a hacerse cargo de Beatbox Chile. Esta charla no es de informática. Es: qué nos pide Chile con los datos de la gente, y qué hay que decidir como organización.">
+      <div class="slide-content">
+        <p class="kicker">ANBP · Beatbox Chile</p>
+        <h1 class="slide-title">Cuidar los datos de la comunidad</h1>
+        <p class="big-line">Una ley nueva. Una web que ya tiene gente adentro. Una responsabilidad de ANBP.</p>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Tres preguntas nada más. Si al final las responden, la reunión sirvió.">
+      <div class="slide-content">
+        <p class="kicker">Hoy hablamos de tres cosas</p>
+        <h2>Así de simple</h2>
+        <div class="cards cols-3">
+          <div class="card"><h3>1</h3><p>Qué pide esta ley, en cristiano.</p></div>
+          <div class="card"><h3>2</h3><p>Por qué nos toca si tenemos la web de Beatbox Chile.</p></div>
+          <div class="card"><h3>3</h3><p>Qué ya está hecho y qué tiene que decidir ANBP.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Compara con algo que todos entienden: si guardas la ficha de un socio, no puedes hacer lo que se te ocurra. Ahora eso es ley, con una institución que fiscaliza.">
+      <div class="slide-content">
+        <p class="kicker">La ley, en una frase</p>
+        <h2>Si tienes datos de personas, tienes que cuidarlos</h2>
+        <p class="big-line">Nombre, correo, compras, videos. No son “de la web”. Son de la persona.</p>
+        <p>Chile actualizó las reglas. Desde <strong>diciembre de 2026</strong> hay una Agencia que vigila y puede multar. Da igual si somos cultura, deporte o una asociación: si hay datos, aplica.</p>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Cuatro reglas de la casa. Sin números de artículo. Habla lento.">
+      <div class="slide-content">
+        <p class="kicker">Las 4 reglas de la casa</p>
+        <h2>Como si fuera un local</h2>
+        <div class="cards cols-2">
+          <div class="card"><h3>Pedir permiso</h3><p>No uses el correo para publicidad si la persona no dijo que sí. Un tilde obligatorio y escondido no vale.</p></div>
+          <div class="card"><h3>Decir la verdad</h3><p>En la web tiene que estar claro quiénes somos, para qué pedimos datos y a quién se los pasamos.</p></div>
+          <div class="card"><h3>Dejar irse</h3><p>Si alguien pide ver, corregir o borrar sus datos, hay que responder en un mes.</p></div>
+          <div class="card"><h3>Cuidar la llave</h3><p>Si se filtra una lista, hay que avisar rápido. No se puede esconder.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Hazlo concreto: un beatboxer se crea cuenta, manda wildcard, compra entrada. Eso ya es tratamiento. ANBP, al tomar Beatbox Chile, hereda esa responsabilidad.">
+      <div class="slide-content">
+        <p class="kicker">La web de Beatbox Chile</p>
+        <h2>No es un afiche. Es una oficina</h2>
+        <p>Ahí la gente:</p>
+        <ul class="clean">
+          <li>Se crea una cuenta con su correo</li>
+          <li>Deja su nombre y a veces su fecha de nacimiento</li>
+          <li>Manda un video para competir</li>
+          <li>Compra una entrada</li>
+        </ul>
+        <p>Eso vive en computadores. <strong>ANBP, al hacerse cargo de Beatbox Chile, se hace cargo también de esos datos.</strong></p>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Por qué hacerlo: no solo multa. Confianza de la escena, padres, sponsors, colegios de la liga terapéutica.">
+      <div class="slide-content">
+        <p class="kicker">Por qué hacerlo</p>
+        <h2>Tres razones, sin tecnicismos</h2>
+        <div class="cards cols-3">
+          <div class="card"><h3>La gente</h3><p>Es la comunidad. Si filtramos correos o videos, se quiebra la confianza.</p></div>
+          <div class="card"><h3>La marca</h3><p>ANBP recién inscribe su patente. Una filtración o una multa mancha el nombre desde el día uno.</p></div>
+          <div class="card"><h3>La ley</h3><p>Las multas pueden ser muy altas. El primer año pueden ser más suaves si somos organización chica. Eso no es “podemos esperar”.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="No enumerar MFA ni cron. Di: la página ya sabe cuidar y responder. Falta que ANBP ponga su nombre y sus contratos.">
+      <div class="slide-content">
+        <p class="kicker">Buena noticia</p>
+        <h2>La web ya hizo la parte difícil</h2>
+        <div class="cards cols-2">
+          <div class="card">
+            <h3>Ya se puede</h3>
+            <ul class="clean">
+              <li>Leer la política de privacidad</li>
+              <li>Pedir tus datos o borrarlos</li>
+              <li>Decir que no a las novedades</li>
+              <li>Aceptar o no los videos de YouTube</li>
+              <li>Si es menor de 14, pedir permiso de un adulto</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Eso no basta</h3>
+            <p>Una página bien hecha no reemplaza a la organización.</p>
+            <p style="margin-top:12px">Falta que <strong>ANBP aparezca con nombre y RUT</strong>, firme papeles con quienes guardan los datos (hosting, correos, pagos, Google) y nombre a alguien que responda cuando una persona escriba.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Esto es el pedido. No pidas que entiendan DPA: di contratos con Google, el hosting y las pasarelas de pago.">
+      <div class="slide-content">
+        <p class="kicker">Qué tiene que hacer ANBP</p>
+        <h2>Cuatro cosas, no veinte</h2>
+        <ul class="clean">
+          <li><strong>Poner los datos de la organización</strong> en la web: razón social, RUT, domicilio, un correo de privacidad.</li>
+          <li><strong>Nombrar a una persona</strong> (y un reemplazo) que atienda los pedidos de datos. Un mes de plazo.</li>
+          <li><strong>Firmar los contratos</strong> con quienes procesan información por nosotros: la página, el correo, los pagos, Google.</li>
+          <li><strong>No improvisar fichas de salud</strong> en la Liga Terapéutica. Eso es otro nivel de cuidado.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide" data-notes="Cierra humano. ANBP toma la marca y también el deber. El equipo técnico ya dejó la casa ordenada. Falta la llave con el nombre de ANBP.">
+      <div class="slide-content">
+        <p class="kicker">Para llevarse</p>
+        <h1 class="slide-title">La web ya está lista para cuidar.</h1>
+        <p class="big-line">ANBP tiene que ponerle su nombre, su cara y sus firmas.</p>
+        <p>No estamos tarde. Estamos a tiempo si esto se trata como parte de tomar Beatbox Chile, no como un tema de “los de sistemas”.</p>
+        <p style="font-size:14px; color:rgba(248,250,252,0.45)">Este material no es asesoría legal. Es una explicación para decidir. Teclas: flechas o espacio · N notas · F pantalla completa.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn" type="button" onclick="prevSlide()" aria-label="Anterior">←</button>
+    <span class="slide-counter"><span id="current">1</span> / <span id="total">0</span></span>
+    <button class="nav-btn" type="button" onclick="nextSlide()" aria-label="Siguiente">→</button>
+  </div>
+  <aside class="notes" id="notes" hidden></aside>
+
+  <script>
+    let current = 1;
+    const slides = document.querySelectorAll(".slide");
+    const total = slides.length;
+    document.getElementById("total").textContent = total;
+
+    function renderNotes() {
+      const panel = document.getElementById("notes");
+      panel.innerHTML = "<strong>Para decir en voz alta</strong><br>" + (slides[current - 1].dataset.notes || "");
+    }
+
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > total) n = total;
+      current = n;
+      slides.forEach((s, i) => s.classList.toggle("active", i === n - 1));
+      document.getElementById("current").textContent = n;
+      document.getElementById("progressBar").style.width = (n / total * 100) + "%";
+      renderNotes();
+    }
+
+    function nextSlide() { showSlide(current + 1); }
+    function prevSlide() { showSlide(current - 1); }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); nextSlide(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); prevSlide(); }
+      if (e.key === "n" || e.key === "N") {
+        const panel = document.getElementById("notes");
+        panel.hidden = !panel.hidden;
+        panel.classList.toggle("visible", !panel.hidden);
+      }
+      if (e.key === "f" || e.key === "F") {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".nav-controls") && !e.target.closest(".notes")) nextSlide();
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>

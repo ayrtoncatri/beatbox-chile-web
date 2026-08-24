@@ -6,6 +6,8 @@ import { getServerSession } from "next-auth/next";
 import { headers } from "next/headers";
 import { authOptions } from "@/lib/auth";
 import { getHeaderMetadata } from "@/lib/privacy";
+import { parseBirthDateInput } from "@/lib/privacy/age";
+import { parentalConsentError, persistParentalConsent } from "@/lib/privacy/parental";
 
 const UpdatePerfilSchema = z.object({
   nombres: z.string().max(100).optional(),
@@ -33,41 +35,58 @@ export async function updatePerfil(prevState: any, formData: FormData) {
     };
 
     const parsed = UpdatePerfilSchema.parse(data);
+    const birthDate = parseBirthDateInput(parsed.birthDate);
+    const guardianName = formData.get("parentalGuardianName")?.toString() ?? "";
+    const parentalAccepted = formData.get("parentalConsent") === "on";
+    const parentalError = parentalConsentError(birthDate, guardianName, parentalAccepted);
+    if (parentalError) return { ok: false, error: parentalError };
 
     // Busca el usuario
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true },
+      select: { id: true, email: true },
     });
     if (!user) return { ok: false, error: "Usuario no encontrado" };
 
-    // Actualiza UserProfile
-    await prisma.userProfile.upsert({
-      where: { userId: user.id },
-      update: {
-        nombres: parsed.nombres,
-        apellidoPaterno: parsed.apellidoPaterno,
-        apellidoMaterno: parsed.apellidoMaterno,
-        birthDate: parsed.birthDate ? new Date(parsed.birthDate) : undefined,
-        comunaId: parsed.comunaId,
-      },
-      create: {
-        userId: user.id,
-        nombres: parsed.nombres,
-        apellidoPaterno: parsed.apellidoPaterno,
-        apellidoMaterno: parsed.apellidoMaterno,
-        birthDate: parsed.birthDate ? new Date(parsed.birthDate) : undefined,
-        comunaId: parsed.comunaId,
-      },
-    });
+    const requestHeaders = await headers();
 
-    // Actualiza imagen si corresponde
-    if (parsed.image) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { image: parsed.image },
+    await prisma.$transaction(async (tx) => {
+      await tx.userProfile.upsert({
+        where: { userId: user.id },
+        update: {
+          nombres: parsed.nombres,
+          apellidoPaterno: parsed.apellidoPaterno,
+          apellidoMaterno: parsed.apellidoMaterno,
+          birthDate: birthDate ?? undefined,
+          comunaId: parsed.comunaId,
+        },
+        create: {
+          userId: user.id,
+          nombres: parsed.nombres,
+          apellidoPaterno: parsed.apellidoPaterno,
+          apellidoMaterno: parsed.apellidoMaterno,
+          birthDate: birthDate ?? undefined,
+          comunaId: parsed.comunaId,
+        },
       });
-    }
+
+      await persistParentalConsent({
+        tx,
+        userId: user.id,
+        email: user.email,
+        birthDate,
+        guardianName,
+        accepted: parentalAccepted,
+        headers: requestHeaders,
+      });
+
+      if (parsed.image) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { image: parsed.image },
+        });
+      }
+    });
 
     return { ok: true };
   } catch (e: any) {

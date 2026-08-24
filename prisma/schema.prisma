@@ -102,6 +102,7 @@ enum PrivacyConsentCategory {
   NECESSARY
   MARKETING
   SENSITIVE
+  COOKIES
 }
 
 enum PrivacyRequestType {
@@ -295,7 +296,10 @@ model UserProfile {
   nombres          String?
   apellidoPaterno  String?
   apellidoMaterno  String?
-  birthDate        DateTime?    
+  birthDate        DateTime?
+  /// Evidencia Art. 16 quáter cuando el titular es menor de 14 años.
+  parentalGuardianName String?
+  parentalConsentAt    DateTime?
   comunaId         Int?
   comuna           Comuna? @relation(fields: [comunaId], references: [id], onDelete: SetNull)
 

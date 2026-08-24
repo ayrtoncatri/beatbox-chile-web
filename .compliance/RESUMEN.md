@@ -1,12 +1,12 @@
 # Snapshot de cumplimiento - Ley 21.719
 
-Fecha de corrida: 2026-08-22T18:00:00Z
-Rama: `feat/cierre-ley-21719-compliance`
+Fecha de corrida: 2026-08-23T15:30:00Z
+Rama: `feat/ley-21719-cookies-nna-arco`
 
 ## Resultado ejecutivo
 
 Postura: **cumplimiento tecnico-documental del pack 21.719 casi integral**.
-Score: **0.913 (91.3%)**.
+Score: **0.913 (91.3%)** — los 4 parciales siguen siendo organizacionales.
 
 Desglose:
 - Controles requeridos: 23
@@ -15,14 +15,13 @@ Desglose:
 - Falla: 0
 - Unknown: 0
 
-## Que se construyo en esta corrida
+## Que se construyo en esta corrida (23-08-2026)
 
-1. Mapa PII + ejecucion ARCO (`lib/privacy/data-map.ts`, `lib/privacy/fulfill-request.ts`)
-2. UI publica `/privacidad` y `/privacidad/derechos` + admin `/admin/privacidad`
-3. Seudonimizacion en exports admin + retencion ampliada (mensajes/sugerencias/AuditLog)
-4. Docs seguridad, backups, acta responsable, checklist DPA, monitoreo + workflow Gitleaks
-5. Checklist de despliegue productivo
-6. Migracion `processingBlockedAt` / `anonymizedAt`
+1. Politica y banner de cookies (opt-in YouTube, default solo necesarias)
+2. Control Art. 16 quater en perfil (menores de 14 + tutor)
+3. Mapa PII + export/supresion de inscripciones, scores y battles
+4. Oposicion con alcance marketing / cookies / no esencial
+5. Headers Referrer-Policy, nosniff, Permissions-Policy
 
 ## Partials que no se cierran solo con codigo
 

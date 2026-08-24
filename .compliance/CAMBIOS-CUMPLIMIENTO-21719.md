@@ -153,13 +153,17 @@ El registro por credenciales se amplio de forma aditiva con dos casillas de priv
 ## 6. Pendientes para cumplimiento integral
 - Configurar `MFA_ENCRYPTION_KEY` y `MFA_SESSION_SECRET` en todos los entornos y enrolar las cuentas admin/judge.
 - Configurar `CRON_SECRET` en Vercel y revisar la primera ejecucion de DataRetentionRun.
-- Implementar seudonimizacion en reporteria/datasets secundarios.
 - Formalizar firma contractual DPA y mecanismos de transferencia por proveedor.
 - Completar datos corporativos faltantes en documentos ([COMPLETAR ...]).
 - Publicar la politica de privacidad definitiva con los datos corporativos completos.
-- Definir responsable que verifica identidad, comunica prorrogas/resoluciones y ejecuta operaciones de rectificacion, supresion, bloqueo u oposicion caso a caso.
-- Definir plazo de retencion y control de acceso para `AuditLog`.
-- Respaldar la base productiva, configurar variables de entorno y aplicar las cuatro migraciones pendientes mediante el procedimiento de despliegue.
+- Definir responsable que verifica identidad, comunica prorrogas/resoluciones y ejecuta FULFILL.
+- Respaldar la base productiva y aplicar migraciones con `prisma migrate deploy` (incluye `20260823153000_add_cookies_and_parental_consent`).
+
+## 6.1 Cierre funcional 2026-08-23
+- Cookies: politica publica, banner opt-in y bloqueo de YouTube publico por defecto.
+- NNA: autorizacion parental si birthDate < 14.
+- ARCO: mapa PII ampliado y oposicion por alcance.
+- Tablero: `docs/trello-ley-21719-cierre-funcional.md`.
 
 ## 7. Como auditar rapido
 1. Revisar estado en [.compliance/state.json](.compliance/state.json).

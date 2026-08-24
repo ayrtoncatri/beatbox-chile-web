@@ -41,6 +41,8 @@ export const PRIVACY_DATA_MAP: PiiField[] = [
   { model: "UserProfile", field: "apellidoPaterno", action: "anonymize", anonymizeTo: null },
   { model: "UserProfile", field: "apellidoMaterno", action: "anonymize", anonymizeTo: null },
   { model: "UserProfile", field: "birthDate", action: "anonymize", anonymizeTo: null },
+  { model: "UserProfile", field: "parentalGuardianName", action: "anonymize", anonymizeTo: null },
+  { model: "UserProfile", field: "parentalConsentAt", action: "structural" },
   { model: "UserProfile", field: "comunaId", action: "anonymize", anonymizeTo: null },
 
   // Compra — se retienen montos/estado por obligacion tributaria; se desvincula PII del usuario
@@ -59,7 +61,27 @@ export const PRIVACY_DATA_MAP: PiiField[] = [
   { model: "Wildcard", field: "id", action: "structural" },
   { model: "Wildcard", field: "youtubeUrl", action: "anonymize", anonymizeTo: null },
   { model: "Wildcard", field: "nombreArtistico", action: "anonymize", anonymizeTo: "ANONIMIZADO" },
+  { model: "Wildcard", field: "notes", action: "anonymize", anonymizeTo: null },
   { model: "Wildcard", field: "status", action: "structural" },
+
+  { model: "Inscripcion", field: "id", action: "structural" },
+  { model: "Inscripcion", field: "nombreArtistico", action: "anonymize", anonymizeTo: "ANONIMIZADO" },
+  { model: "Inscripcion", field: "source", action: "structural" },
+  { model: "Inscripcion", field: "eventoId", action: "structural" },
+  { model: "Inscripcion", field: "categoriaId", action: "structural" },
+
+  { model: "Puntaje", field: "id", action: "structural" },
+  { model: "Puntaje", field: "puntos", action: "structural", note: "Historial competitivo agregado; sin PII directa" },
+  { model: "Puntaje", field: "detalle", action: "anonymize", anonymizeTo: null },
+
+  { model: "Score", field: "id", action: "structural" },
+  { model: "Score", field: "totalScore", action: "structural" },
+  { model: "Score", field: "notes", action: "anonymize", anonymizeTo: null },
+  { model: "Score", field: "status", action: "structural" },
+
+  { model: "Battle", field: "id", action: "structural", note: "Se conservan IDs; el User queda anonimizado" },
+  { model: "Battle", field: "phase", action: "structural" },
+  { model: "Battle", field: "orderInRound", action: "structural" },
 
   // Sugerencia / Mensaje
   { model: "Sugerencia", field: "nombre", action: "anonymize", anonymizeTo: null },
