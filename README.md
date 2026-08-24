@@ -250,6 +250,7 @@ beatbox-chile-web/
 │   ├── transbank.ts          # SDK de Webpay Plus
 │   ├── mercadopago.ts        # SDK de Mercado Pago
 │   ├── email.ts / tokens.ts  # Resend y tokens de recuperación
+│   ├── errors.ts             # getErrorMessage(): normaliza errores `unknown` a texto
 │   └── schemas/              # Esquemas Zod de dominio
 ├── prisma/
 │   ├── schema.prisma         # Fuente de verdad del modelo de datos

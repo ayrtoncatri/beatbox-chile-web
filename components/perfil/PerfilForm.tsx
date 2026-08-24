@@ -7,10 +7,18 @@ import { revokeMarketingConsent, updatePerfil } from "@/app/perfil/actions"; // 
 import { useRouter } from "next/navigation";
 import { PencilSquareIcon, XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { isChildBirthDate } from "@/lib/privacy/age";
+import { Prisma } from "@prisma/client";
 
 // Tipos recibidos desde la DB
 type Region = { id: number; name: string };
 type Comuna = { id: number; name: string; regionId: number };
+
+// Coincide con el `include` de wildcards en app/perfil/page.tsx.
+type WildcardWithEvento = Prisma.WildcardGetPayload<{
+  include: {
+    evento: { select: { nombre: true; wildcardDeadline: true } };
+  };
+}>;
 
 // --- CORRECCIÓN 1: Definición de Tipos Completa ---
 // Esto arregla el error en page.tsx (regionName does not exist...)
@@ -29,7 +37,7 @@ export type UserLike = {
   parentalGuardianName?: string | null;
   parentalConsentAt?: string | null;
   edad?: number | string | null;
-  wildcards?: any[];
+  wildcards?: WildcardWithEvento[];
 };
 
 interface PerfilFormProps {
@@ -302,7 +310,7 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
              <span className="text-2xl">🎥</span> Tus Wildcards Enviadas
           </h3>
           <div className="space-y-4">
-            {user.wildcards.map((wc: any) => (
+            {user.wildcards.map((wc) => (
               <WildcardItem key={wc.id} wildcard={wc} />
             ))}
           </div>
@@ -313,7 +321,7 @@ export default function PerfilForm({ user, regiones, comunas }: PerfilFormProps)
 }
 
 // Componente visual para mostrar el estado de la Wildcard
-function WildcardItem({ wildcard }: { wildcard: any }) {
+function WildcardItem({ wildcard }: { wildcard: WildcardWithEvento }) {
   return (
     <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-white/10 hover:bg-black/40">
         <div className="space-y-1">

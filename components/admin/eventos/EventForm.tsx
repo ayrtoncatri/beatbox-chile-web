@@ -6,28 +6,28 @@ import { createEvent, editEvent, deleteEvent, createTicketType, deleteTicketType
 import { useRouter } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import toast from "react-hot-toast";
+import { getErrorMessage } from "@/lib/errors";
 
-
-const eventoWithDetails = Prisma.validator<Prisma.EventoDefaultArgs>()({
+// Forma del evento con todas las relaciones que este formulario necesita mostrar/editar.
+type EventoFormProps = Prisma.EventoGetPayload<{
   include: {
-    tipo: true,
+    tipo: true;
     venue: {
       include: {
         address: {
           include: {
             comuna: {
               include: {
-                region: true, 
-              },
-            },
-          },
-        },
-      },
-    },
-    ticketTypes: true,
-  },
-});
-type EventoFormProps = Prisma.EventoGetPayload<typeof eventoWithDetails>;
+                region: true;
+              };
+            };
+          };
+        };
+      };
+    };
+    ticketTypes: true;
+  };
+}>;
 type RegionProps = Prisma.RegionGetPayload<null>;
 type ComunaProps = Prisma.ComunaGetPayload<null>;
 type EventTypeProps = Prisma.EventTypeGetPayload<null>;
@@ -45,8 +45,8 @@ type EventFormPropsWrapper = {
 type ActionResult = {
   ok: boolean;
   error?: string;
-  evento?: any;
-  ticketType?: any;
+  evento?: Prisma.EventoGetPayload<null>;
+  ticketType?: Prisma.TicketTypeGetPayload<null>;
 };
 
 function SubmitButton({ isEditing, isPending }: { isEditing: boolean; isPending: boolean }) {
@@ -110,7 +110,6 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
     evento?.tipoId?.toString() ?? null 
   );
 
-  const [tipo, setTipo] = useState(evento?.tipo?.name ?? "");
   const [reglas, setReglas] = useState(evento?.reglas ?? "");
   const [image, setImage] = useState(evento?.image ?? "");
   const [isPublished, setIsPublished] = useState(evento?.isPublished ?? false);
@@ -140,7 +139,6 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
           : "",
       );
 
-      setTipo(evento.tipo?.name ?? "");
       setVenueName(evento.venue?.name ?? "");
       setVenueStreet(evento.venue?.address?.street ?? "");
 
@@ -270,8 +268,8 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
         } else {
           toast.error(result?.error || "Error al añadir", { id: loadingToast });
         }
-      } catch (error: any) {
-        toast.error(error.message || "Error al añadir", { id: loadingToast });
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Error al añadir"), { id: loadingToast });
       }
     });
   }
@@ -295,8 +293,8 @@ export default function EventForm({ evento, mode, regiones, comunas, eventTypes 
         } else {
           toast.error(result?.error || "Error al eliminar", { id: loadingToast });
         }
-      } catch (error: any) {
-        toast.error(error.message || "Error al eliminar", { id: loadingToast });
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Error al eliminar"), { id: loadingToast });
       }
     });
   }

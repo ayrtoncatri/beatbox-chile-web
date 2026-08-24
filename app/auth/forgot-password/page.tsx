@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       } else {
         toast.error("Ocurrió un error inesperado.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Error de conexión al servidor.");
     } finally {
       setIsSubmitting(false);

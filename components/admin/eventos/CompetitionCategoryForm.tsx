@@ -2,9 +2,9 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
-import { useRef , useActionState, useEffect } from 'react'
+import { useActionState, useEffect } from 'react'
 import { Categoria } from '@prisma/client'
-import { upsertCompetitionCategoryAction } from '@/app/admin/eventos/actions'
+import { upsertCompetitionCategoryAction, type EventoSimpleActionState } from '@/app/admin/eventos/actions'
 import toast from 'react-hot-toast'
 
 interface CompetitionCategoryFormProps {
@@ -26,8 +26,8 @@ function SubmitButton() {
 }
 
 export function CompetitionCategoryForm({ eventoId, allCategories }: CompetitionCategoryFormProps) {
-  const initialState = { ok: false, error: undefined, message: undefined }
-  const [state, dispatch] = useActionState(upsertCompetitionCategoryAction, initialState as any)
+  const initialState: EventoSimpleActionState = { ok: false, error: undefined, message: undefined }
+  const [state, dispatch] = useActionState(upsertCompetitionCategoryAction, initialState)
 
   useEffect(() => {
     if (state.ok && state.message) {

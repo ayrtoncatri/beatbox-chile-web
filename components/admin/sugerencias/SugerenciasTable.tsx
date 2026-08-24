@@ -1,17 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { SuggestionStatus } from "@prisma/client";
 import { deleteSugerencia } from "@/app/admin/sugerencias/actions";
+import { getErrorMessage } from "@/lib/errors";
 
-type Row = {
+export type SugerenciaRow = {
   id: string;
   mensaje: string;
   estado: SuggestionStatus;
   createdAt: string | Date;
-  user: { id: string; nombres: string | null; email: string | null } | null;
+  user: { id: string | null; nombres: string | null; email: string | null } | null;
+};
+
+export type SugerenciaPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 };
 
 const statusConfig: Record<SuggestionStatus, { label: string; color: string }> = {
@@ -22,12 +29,11 @@ const statusConfig: Record<SuggestionStatus, { label: string; color: string }> =
 };
 
 export default function SugerenciasTable(props: {
-  rows: Row[];
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+  rows: SugerenciaRow[];
+  pagination: SugerenciaPagination;
 }) {
   const { rows } = props;
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleDelete = async (sugerenciaId: string) => {
@@ -43,8 +49,8 @@ export default function SugerenciasTable(props: {
         if (!result.success) {
           throw new Error(result.message || "Error al eliminar");
         }
-      } catch (error: any) {
-        alert(error.message || "No se pudo eliminar");
+      } catch (error) {
+        alert(getErrorMessage(error, "No se pudo eliminar"));
       } finally {
         setLoadingId(null);
       }

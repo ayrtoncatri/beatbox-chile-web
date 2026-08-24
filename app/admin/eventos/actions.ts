@@ -6,12 +6,21 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/errors";
 
 export type AssignJudgeState = {
   ok: boolean;
   message?: string; // string o undefined
   error?: string;   // string o undefined
 }
+
+// Estado genérico para acciones simples de este módulo que solo informan
+// éxito/error (clasificación de wildcards, cupos por categoría).
+export type EventoSimpleActionState = {
+  ok: boolean;
+  message?: string;
+  error?: string;
+};
 
 const EventFormSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(200),
@@ -59,7 +68,7 @@ const DeleteTicketTypeSchema = z.object({
   eventId: z.string().cuid("ID de evento inválido"), // Para revalidación
 });
 
-export async function createEvent(prevState: any, formData: FormData) {
+export async function createEvent(prevState: unknown, formData: FormData) {
   try {
     const data = {
       nombre: formData.get("nombre")?.toString(),
@@ -122,15 +131,15 @@ export async function createEvent(prevState: any, formData: FormData) {
     revalidatePath(`/admin/eventos/${evento.id}`);
 
     return { ok: true, evento };
-  } catch (e: any) {
-    if (e.name === "ZodError") {
-      return { ok: false, error: e.errors[0]?.message || "Datos inválidos" };
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return { ok: false, error: "Datos inválidos" };
     }
-    return { ok: false, error: e.message || "Error al crear evento" };
+    return { ok: false, error: getErrorMessage(e, "Error al crear evento") };
   }
 }
 
-export async function editEvent(prevState: any, formData: FormData) {
+export async function editEvent(prevState: unknown, formData: FormData) {
   try {
     const data = {
       id: formData.get("id")?.toString(),
@@ -224,15 +233,15 @@ export async function editEvent(prevState: any, formData: FormData) {
     revalidatePath(`/admin/eventos/${parsed.id}`);
 
     return { ok: true, evento };
-  } catch (e: any) {
-    if (e.name === "ZodError") {
-      return { ok: false, error: e.errors[0]?.message || "Datos inválidos" };
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return { ok: false, error: "Datos inválidos" };
     }
-    return { ok: false, error: e.message || "Error al actualizar evento" };
+    return { ok: false, error: getErrorMessage(e, "Error al actualizar evento") };
   }
 }
 
-export async function toggleEventStatus(prevState: any, formData: FormData) {
+export async function toggleEventStatus(prevState: unknown, formData: FormData) {
   try {
     const data = {
       id: formData.get("id")?.toString(),
@@ -253,12 +262,12 @@ export async function toggleEventStatus(prevState: any, formData: FormData) {
     revalidatePath(`/admin/eventos/${parsed.id}`);
 
     return { ok: true, evento };
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Error al cambiar estado del evento" };
+  } catch (e) {
+    return { ok: false, error: getErrorMessage(e, "Error al cambiar estado del evento") };
   }
 }
 
-export async function deleteEvent(prevState: any, formData: FormData) {
+export async function deleteEvent(prevState: unknown, formData: FormData) {
   try {
     const id = formData.get("id")?.toString();
 
@@ -273,12 +282,12 @@ export async function deleteEvent(prevState: any, formData: FormData) {
     revalidatePath("/admin/eventos");
 
     return { ok: true };
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Error al eliminar evento" };
+  } catch (e) {
+    return { ok: false, error: getErrorMessage(e, "Error al eliminar evento") };
   }
 }
 
-export async function createTicketType(prevState: any, formData: FormData) {
+export async function createTicketType(prevState: unknown, formData: FormData) {
   try {
     // 1. Extraer datos
     const data = {
@@ -307,22 +316,22 @@ export async function createTicketType(prevState: any, formData: FormData) {
     revalidatePath(`/admin/eventos/${parsed.eventId}`);
 
     return { ok: true, ticketType: newTicketType };
-  } catch (e: any) {
-    if (e.name === "ZodError") {
-      return { ok: false, error: e.errors[0]?.message || "Datos inválidos" };
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return { ok: false, error: "Datos inválidos" };
     }
     // Captura errores de unicidad (ej. mismo nombre de ticket en el evento)
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
        return { ok: false, error: "Ya existe un tipo de entrada con ese nombre para este evento." };
     }
-    return { ok: false, error: e.message || "Error al crear tipo de entrada" };
+    return { ok: false, error: getErrorMessage(e, "Error al crear tipo de entrada") };
   }
 }
 
 /**
  * Elimina un tipo de entrada.
  */
-export async function deleteTicketType(prevState: any, formData: FormData) {
+export async function deleteTicketType(prevState: unknown, formData: FormData) {
   try {
     // 1. Extraer datos (solo necesitamos el ID del ticket y el eventId para revalidar)
     const data = {
@@ -346,15 +355,15 @@ export async function deleteTicketType(prevState: any, formData: FormData) {
     revalidatePath(`/admin/eventos/${parsed.eventId}`);
 
     return { ok: true };
-  } catch (e: any) {
-    if (e.name === "ZodError") {
-      return { ok: false, error: e.errors[0]?.message || "ID inválido" };
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return { ok: false, error: "ID inválido" };
     }
      // Captura error si no se puede borrar por compras asociadas
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') { // Foreign key constraint failed
        return { ok: false, error: "No se puede eliminar: hay compras asociadas a este tipo de entrada." };
     }
-    return { ok: false, error: e.message || "Error al eliminar tipo de entrada" };
+    return { ok: false, error: getErrorMessage(e, "Error al eliminar tipo de entrada") };
   }
 }
 
@@ -435,9 +444,9 @@ export async function assignJudgeAction(prevState: AssignJudgeState, formData: F
 
     return { ok: true, message: msg };
     
-  } catch (error: any) {
+  } catch (error) {
     // Manejar error si la asignación ya existe (por la llave unique)
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return { ok: false, error: 'Este juez ya está asignado a esta tarea específica.' };
     }
     console.error('Error al asignar juez:', error);
@@ -517,7 +526,7 @@ export async function getWildcardRanking(
   });
 
   // 4. Mapear, calcular el ranking y ordenar
-  let ranking = scoresAggregation
+  const ranking = scoresAggregation
     .map((agg) => {
       const wildcard = participantsData.find((p) => p.userId === agg.participantId);
       
@@ -561,7 +570,7 @@ const classifySchema = z.object({
 /**
  * Server Action para marcar Wildcards como clasificados.
  */
-export async function classifyWildcardsAction(prevState: any, formData: FormData): Promise<{ ok: boolean; message?: string; error?: string }> {
+export async function classifyWildcardsAction(prevState: EventoSimpleActionState, formData: FormData): Promise<EventoSimpleActionState> {
   const rawIds = formData.getAll('wildcardIds');
   const eventoId = formData.get('eventoId')?.toString();
 
@@ -592,7 +601,7 @@ export async function classifyWildcardsAction(prevState: any, formData: FormData
     
     return { ok: true, message: `Se marcaron ${wildcardIds.length} participantes como clasificados.` };
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error al clasificar wildcards:', error);
     return { ok: false, error: 'Error interno al actualizar la clasificación.' };
   }
@@ -611,7 +620,7 @@ const manageCategorySchema = z.object({
 /**
  * Crea o actualiza una CompetitionCategory para un evento (define cupos).
  */
-export async function upsertCompetitionCategoryAction(prevState: any, formData: FormData): Promise<{ ok: boolean; message?: string; error?: string }> {
+export async function upsertCompetitionCategoryAction(prevState: EventoSimpleActionState, formData: FormData): Promise<EventoSimpleActionState> {
   const data = {
     eventoId: formData.get('eventoId'),
     categoriaId: formData.get('categoriaId'),
@@ -643,7 +652,7 @@ export async function upsertCompetitionCategoryAction(prevState: any, formData: 
 
     revalidatePath(`/admin/eventos/${eventoId}`);
     return { ok: true, message: `Categoría ${categoriaId} actualizada con ${wildcardSlots} cupos.` };
-  } catch (e) {
+  } catch {
     return { ok: false, error: 'Error al gestionar la categoría del evento.' };
   }
 }
@@ -675,7 +684,7 @@ export async function getInscritosForEvent(
   // (Asumimos que esta es una función solo para admins,
   // por lo que verificamos la sesión como en las otras acciones)
   const session = await getServerSession(authOptions); // Usamos authOptions de lib/auth
-  const userRoles = (session?.user as any)?.roles || [];
+  const userRoles = session?.user?.roles ?? [];
   if (!session?.user?.id || !userRoles.includes('admin')) {
     throw new Error('No autorizado');
   }

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getComunasByRegionCodigoStatic } from "@/lib/cl-geo-static";
+import type { DPAComuna } from "@/lib/cl-geo";
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ codigo: string }> }) {
   const { codigo } = await ctx.params;
@@ -11,8 +12,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ codigo: st
   try {
     const res = await fetch(HTTPS, { cache: "no-store" });
     if (!res.ok) throw new Error("https_bad_status");
-    const data = await res.json();
-    data.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre), "es"));
+    const data: DPAComuna[] = await res.json();
+    data.sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
     return NextResponse.json({ ok: true, comunas: data, source: "dpa_https" }, { status: 200 });
   } catch {
     // 2) Fallback Local (backup completo)

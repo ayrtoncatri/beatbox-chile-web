@@ -106,18 +106,22 @@ export function SingleRoundForm({
       return;
     }
 
+    // Copiamos la referencia dentro del efecto: si `.current` cambiara entre el
+    // montaje y el cleanup, seguiríamos cancelando la función de debounce correcta.
+    const debouncedSave = debouncedSaveRef.current;
+
     const subscription = form.watch((data) => {
       const result = submitScoreSchema.safeParse(data);
       if (result.success) {
         // Llamamos a la función de debounce a través de la referencia
-        debouncedSaveRef.current(result.data);
+        debouncedSave(result.data);
       }
     });
 
     return () => {
       subscription.unsubscribe();
       // Cancelamos cualquier debounce pendiente si el componente se desmonta o el efecto re-ejecuta
-      debouncedSaveRef.current.cancel();
+      debouncedSave.cancel();
     };
   }, [form, formStatus]); // <-- Dependencias limpias
 

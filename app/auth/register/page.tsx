@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,21 +23,25 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
-  const handleRegister = async (e: any) => {
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (loading) return;
     setLoading(true);
     setError("");
 
-    const nombres = sanitize(e.target.nombres.value.trim());
-    const apellidoPaterno = sanitize(e.target.apellidoPaterno.value.trim());
-    const apellidoMaterno = sanitize(e.target.apellidoMaterno.value.trim()) || "";
-    const email = e.target.email.value.trim();
-    const password = e.target.password.value;
-    const confirmPassword = e.target.confirmPassword.value;
-    const privacyNoticeAccepted = e.target.privacyNoticeAccepted.checked;
-    const marketingConsent = e.target.marketingConsent.checked;
+    // Acceso tipado a los campos por nombre (en vez de `e.target` sin tipar).
+    const form = e.currentTarget;
+    const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+
+    const nombres = sanitize(field("nombres").value.trim());
+    const apellidoPaterno = sanitize(field("apellidoPaterno").value.trim());
+    const apellidoMaterno = sanitize(field("apellidoMaterno").value.trim()) || "";
+    const email = field("email").value.trim();
+    const password = field("password").value;
+    const confirmPassword = field("confirmPassword").value;
+    const privacyNoticeAccepted = field("privacyNoticeAccepted").checked;
+    const marketingConsent = field("marketingConsent").checked;
 
     if (!nombres || !apellidoPaterno || !email || !password || !confirmPassword) {
       setError("Todos los campos son obligatorios.");
@@ -77,7 +81,7 @@ export default function RegisterPage() {
         const data = await res.json();
         setError(data.error || "No se pudo registrar. Intente más tarde.");
       }
-    } catch (err) {
+    } catch {
       setError("Error de red. Por favor, intente de nuevo.");
     }
 

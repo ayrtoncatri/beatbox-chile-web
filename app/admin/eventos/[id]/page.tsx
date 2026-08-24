@@ -10,8 +10,9 @@ import { BracketGenerator } from "@/components/admin/eventos/BracketGenerator";
 import { RoundPhase, ScoreStatus } from "@prisma/client";
 import { PreliminaryRankingTable, type RankingRowWithDetails } from "@/components/admin/eventos/PreliminaryRankingTable";
 
-// Igual que antes
-const serializeData = (data: any) => {
+// Serializa datos que vienen de Prisma (Date, BigInt) a algo que un Client
+// Component pueda recibir por props. Genérico para conservar el tipo de entrada.
+const serializeData = <T,>(data: T): T => {
   if (!data) return data;
   return JSON.parse(
     JSON.stringify(data, (key, value) => {
@@ -126,10 +127,10 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
   const serializedAllPreliminaryScores = serializeData(allPreliminaryScores);
 
   const judgesList = serializedAllJudges || [];
-  const activeCategories = serializedEvento.categories.map((c: any) => c.categoria) || [];
+  const activeCategories = serializedEvento.categories.map((c) => c.categoria) || [];
 
   const judgesWhoScoredMap = new Map<string, { id: string; name: string }>();
-  (serializedAllPreliminaryScores as any[]).forEach(score => {
+  serializedAllPreliminaryScores.forEach((score) => {
     if (score.judge && !judgesWhoScoredMap.has(score.judge.id)) {
       const name = `${score.judge.profile?.nombres || ''} ${score.judge.profile?.apellidoPaterno || ''}`.trim() || score.judge.id.slice(-4);
       judgesWhoScoredMap.set(score.judge.id, { id: score.judge.id, name });
@@ -139,11 +140,11 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
 
   // 2. Unimos los promedios con los puntajes individuales
   const preliminaryRanking: RankingRowWithDetails[] = (preliminaryScoresAvg as PreliminaryScoreAvg[]).map(scoreAvg => {
-    const inscrito = serializedInscritos.find((i: any) => i.userId === scoreAvg.participantId && i.categoriaId === scoreAvg.categoriaId);
-    
+    const inscrito = serializedInscritos.find((i) => i.userId === scoreAvg.participantId && i.categoriaId === scoreAvg.categoriaId);
+
     // Filtramos los scores individuales para este participante y categoría
-    const participantScores = (serializedAllPreliminaryScores as any[]).filter(
-      (s: any) => s.participantId === scoreAvg.participantId && s.categoriaId === scoreAvg.categoriaId
+    const participantScores = serializedAllPreliminaryScores.filter(
+      (s) => s.participantId === scoreAvg.participantId && s.categoriaId === scoreAvg.categoriaId
     );
     
     return {
@@ -152,7 +153,7 @@ export default async function AdminEditEventoPage({ params }: AdminEditEventoPag
       avgScore: scoreAvg._avg.totalScore ? Number(scoreAvg._avg.totalScore.toFixed(2)) : 0,
       categoriaId: scoreAvg.categoriaId,
       // Pasamos los scores detallados
-      scores: participantScores.map((s: any) => ({
+      scores: participantScores.map((s) => ({
         judgeId: s.judgeId,
         score: s.totalScore
       }))

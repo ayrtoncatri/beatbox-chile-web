@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   getRequestMetadata,
@@ -114,9 +115,14 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ ok: true, id: user.id }, { status: 201 });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error en API de registro:", err);
-    if (err.code === 'P2002' && err.meta?.target?.includes('email')) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2002' &&
+      Array.isArray(err.meta?.target) &&
+      err.meta.target.includes('email')
+    ) {
       return NextResponse.json({ error: "El correo electrónico ya está en uso" }, { status: 409 });
     }
     return NextResponse.json({ error: "No se pudo registrar al usuario" }, { status: 500 });

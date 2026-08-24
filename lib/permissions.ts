@@ -42,8 +42,8 @@ export async function ensureMfaPage(mode: "setup" | "challenge", callbackUrl: st
 
 export async function ensureAdminPage() {
   const session = await getServerSession(authOptions);
-  const roles = (session as any)?.user?.roles;
-  
+  const roles = session?.user?.roles;
+
   if (!session?.user) {
     // Si no hay sesión, al login
     redirect("/auth/login");
@@ -61,7 +61,7 @@ export async function ensureAdminPage() {
 export async function ensureAdminApi() {
   const session = await getServerSession(authOptions);
 
-  const roles = (session as any)?.user?.roles;
+  const roles = session?.user?.roles;
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -79,7 +79,7 @@ export async function ensureAdminApi() {
 
 export async function checkAdmin() {
   const session = await getServerSession(authOptions);
-  const roles = (session as any)?.user?.roles;
+  const roles = session?.user?.roles;
 
   if (!session?.user) {
     throw new Error("No has iniciado sesión");

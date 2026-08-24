@@ -349,7 +349,7 @@ npm run build      # Genera Prisma + build Next.js
 
 1. **Prisma usa adapter de `pg`**: El archivo `lib/prisma.ts` crea un `Pool` de `pg` y un `PrismaPg` adapter. Esto es importante para conexiones con Neon/Vercel Postgres.
 
-2. **Build sin lint**: El `next.config.ts` tiene `typescript: { ignoreBuildErrors: true }` y el script de build usa `--no-lint`. Esto sugiere que el proyecto prioriza el despliegue sobre la corrección de errores de tipado/lint en este momento.
+2. **Build sin lint**: El `next.config.ts` tiene `typescript: { ignoreBuildErrors: true }` y el script de build usa `--no-lint`. Esto sugiere que el proyecto prioriza el despliegue sobre la corrección de errores de tipado/lint en este momento. Aun así, desde la pasada de legibilidad de 2026-08-24 (rama `chore/buenas-practicas-legibilidad`) `npm run lint` corre casi limpio (8 errores, 0 warnings — todos documentados en `ARCHITECTURE.md` §11.7, §11.12 y §11.20) y `npx tsc --noEmit` no tiene errores nuevos respecto a los preexistentes — vale la pena seguir corriendo ambos antes de cada PR aunque el build no los exija.
 
 3. **Imágenes externas**: Configurado para soportar `lh3.googleusercontent.com` (Google avatars), `ui-avatars.com` y `res.cloudinary.com`.
 

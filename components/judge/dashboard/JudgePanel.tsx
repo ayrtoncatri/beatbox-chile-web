@@ -159,7 +159,7 @@ export function JudgePanel({
             return (
                 <div key={wildcard.id} className="pb-16 border-b border-white/10 last:border-none">
                 <JudgeScoreForm
-                    wildcard={wildcardProp as any}
+                    wildcard={wildcardProp}
                     assignment={selectedAssignment}
                     criterios={relevantCriterios}
                     existingScore={existingScore || null}
@@ -203,7 +203,7 @@ export function JudgePanel({
           return (
             <section key={participant.id} className="pt-2">
               <JudgeScoreForm
-                wildcard={wildcardProp as any}
+                wildcard={wildcardProp}
                 assignment={selectedAssignment}
                 criterios={relevantCriterios}
                 existingScore={existingScore || null}

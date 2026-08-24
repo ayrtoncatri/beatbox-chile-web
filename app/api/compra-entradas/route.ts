@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 type TipoEntrada = "General" | "VIP";
-const PRECIOS: Record<TipoEntrada, number> = { General: 8000, VIP: 15000 };
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +24,7 @@ export async function POST(req: Request) {
 
     // Sesión de usuario
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id as string | undefined;
+    const userId = session?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }

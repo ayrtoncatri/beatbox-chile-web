@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCompraById, deleteCompra } from "@/app/admin/compras/actions";
 
+// TODO: el shape real de `getCompraById` (Prisma, anidado: user.profile,
+// items[].ticketType, etc.) no coincide con los campos planos que este
+// componente lee más abajo (userNombre, tipoEntrada, cantidad, ...). Se deja
+// como `any` para no ocultar ni "arreglar" ese desajuste de paso — ver reporte.
 export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
   compraId: string;
   isOpen: boolean;
@@ -13,16 +17,9 @@ export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
   const [compra, setCompra] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
-  // Cargar datos de la compra cuando se abre el drawer
-  useEffect(() => {
-    if (isOpen && compraId) {
-      loadCompra();
-    }
-  }, [isOpen, compraId]);
 
   // Función para cargar los datos de la compra
-  async function loadCompra() {
+  const loadCompra = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getCompraById(compraId);
@@ -32,7 +29,14 @@ export default function CompraDetailDrawer({ compraId, isOpen, onClose }: {
     } finally {
       setLoading(false);
     }
-  }
+  }, [compraId]);
+
+  // Cargar datos de la compra cuando se abre el drawer
+  useEffect(() => {
+    if (isOpen && compraId) {
+      loadCompra();
+    }
+  }, [isOpen, compraId, loadCompra]);
   
   // Función para eliminar la compra
   async function handleDelete() {

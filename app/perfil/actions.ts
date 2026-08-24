@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/auth";
 import { getHeaderMetadata } from "@/lib/privacy";
 import { parseBirthDateInput } from "@/lib/privacy/age";
 import { parentalConsentError, persistParentalConsent } from "@/lib/privacy/parental";
+import { getErrorMessage } from "@/lib/errors";
 
 const UpdatePerfilSchema = z.object({
   nombres: z.string().max(100).optional(),
@@ -18,7 +19,7 @@ const UpdatePerfilSchema = z.object({
   image: z.string().max(500).optional(),
 });
 
-export async function updatePerfil(prevState: any, formData: FormData) {
+export async function updatePerfil(prevState: unknown, formData: FormData) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -89,8 +90,8 @@ export async function updatePerfil(prevState: any, formData: FormData) {
     });
 
     return { ok: true };
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Error al actualizar perfil" };
+  } catch (e) {
+    return { ok: false, error: getErrorMessage(e, "Error al actualizar perfil") };
   }
 }
 

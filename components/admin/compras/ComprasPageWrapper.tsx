@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import ComprasFilters from "@/components/admin/compras/ComprasFilters";
-import ComprasTable from "@/components/admin/compras/ComprasTable";
+import ComprasFilters, { type CompraEventOpt, type CompraFilterDefaults } from "@/components/admin/compras/ComprasFilters";
+import ComprasTable, { type CompraRow, type CompraPagination } from "@/components/admin/compras/ComprasTable";
 import PopupModal from "@/components/ui/PopupModal";
 import { getCompraById } from "@/app/admin/compras/actions";
+
+type ComprasStats = {
+  ingresosBrutos: number;
+  entradasVendidas: number;
+  porTipo: Record<string, { cantidad: number; total: number }>;
+};
 
 const allowedSorts = ["fecha_desc", "fecha_asc", "total_desc", "total_asc"] as const;
 type SortType = typeof allowedSorts[number];
@@ -80,19 +86,19 @@ function CompraDetailPopup({ compra }: { compra: CompraDetail }) {
 }
 
 export default function ComprasPageWrapper({
-  searchParams,
   comprasData,
   events,
   stats,
   pagination,
   filterDefaults,
 }: {
-  searchParams: Record<string, string | undefined>;
-  comprasData: any[];
-  events: any[];
-  stats: any;
-  pagination: any;
-  filterDefaults: any;
+  // Recibido desde la página pero no usado por este wrapper todavía.
+  searchParams?: Record<string, string | undefined>;
+  comprasData: CompraRow[];
+  events: CompraEventOpt[];
+  stats: ComprasStats;
+  pagination: CompraPagination;
+  filterDefaults: CompraFilterDefaults & { sort: string };
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCompra, setSelectedCompra] = useState<CompraDetail | null>(null);

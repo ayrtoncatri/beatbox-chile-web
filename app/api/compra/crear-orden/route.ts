@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     // 4. Calcular el Total (Basado en precios de la BBDD) y validar
     let total = 0;
-    const itemsParaCrear: any[] = [];
+    const itemsParaCrear: { ticketTypeId: string; quantity: number; unitPrice: number; subtotal: number }[] = [];
 
     for (const item of items) {
       const precioUnitario = preciosReales.get(item.ticketTypeId);
@@ -129,11 +129,11 @@ export async function POST(req: Request) {
       console.log(`[crear-orden Runtime] NODE_ENV: ${process.env.NODE_ENV}`);
 
       // Accedemos a las propiedades internas del SDK para ver qué está usando REALMENTE
-      // @ts-ignore // Ignoramos error TS porque accedemos a props internas para debug
+      // @ts-expect-error Ignoramos error TS porque accedemos a props internas para debug
       console.log(`[crear-orden Runtime] SDK Commerce Code: ${tx.commerceCode}`);
-      // @ts-ignore
+      // @ts-expect-error prop interna del SDK, no está en sus tipos públicos
       console.log(`[crear-orden Runtime] SDK API Key: ${tx.apiKey}`);
-      // @ts-ignore
+      // @ts-expect-error prop interna del SDK, no está en sus tipos públicos
       console.log(`[crear-orden Runtime] SDK Environment: ${tx.environment}`); // ¿Es 'Integration' o 'Production'?
 
       console.log(`[crear-orden Runtime] Llamando a tx.create con: buyOrder=${nuevaCompra.id}, sessionId=${userId}, amount=${nuevaCompra.total}, returnUrl=${webpayReturnUrl}`);

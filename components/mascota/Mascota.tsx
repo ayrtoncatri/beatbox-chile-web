@@ -114,7 +114,11 @@ const Mascota: React.FC = () => {
     const playNotificationSound = () => {
         try {
             // Crear un sonido de notificación usando Web Audio API
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            // Safari antiguo solo expone el constructor con el prefijo "webkit".
+            const AudioContextCtor =
+                window.AudioContext ||
+                (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            const audioContext = new AudioContextCtor!();
             
             // Verificar si el contexto está suspendido y reanudarlo
             if (audioContext.state === 'suspended') {
@@ -126,7 +130,7 @@ const Mascota: React.FC = () => {
             } else {
                 createNotificationSound(audioContext);
             }
-        } catch (error) {
+        } catch {
             console.log('No se pudo reproducir el sonido de notificación');
         }
     };

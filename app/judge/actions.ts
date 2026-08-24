@@ -14,7 +14,7 @@ const bulkSubmitSchema = z.array(submitScoreSchema)
 // Esta es la función que llamará nuestro formulario individual (Mantener igual)
 export async function submitScore(
   payload: SubmitScorePayload
-): Promise<{ success: boolean; error?: any; data?: any }> {
+): Promise<{ success: boolean; error?: unknown; data?: unknown }> {
   
   // 1. VALIDACIÓN (ZOD): Validamos el payload primero
   const validation = submitScoreSchema.safeParse(payload)
@@ -144,7 +144,7 @@ export async function submitScore(
 // === NUEVA FUNCIÓN: BULK SUBMIT ===
 export async function submitBulkScores(
   payloads: SubmitScorePayload[]
-): Promise<{ success: boolean; count?: number; error?: any }> {
+): Promise<{ success: boolean; count?: number; error?: unknown }> {
   try {
     // 1. Validación Zod del Array
     const validation = bulkSubmitSchema.safeParse(payloads)

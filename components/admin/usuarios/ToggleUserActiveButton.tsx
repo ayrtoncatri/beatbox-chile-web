@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { PowerIcon } from "@heroicons/react/24/outline";
-import { toggleUserActive } from "@/app/admin/usuarios/actions";
+import { toggleUserActive, type UserActionState } from "@/app/admin/usuarios/actions";
 
 function ToggleButton({ 
   isActive, 
@@ -42,8 +42,8 @@ export default function ToggleUserActiveButton({
   isActive: boolean;
   disabledReason?: string;
 }) {
-  const initialState = { ok: false, error: null };
-  const [state, formAction] = useActionState(toggleUserActive, initialState);
+  const initialState: UserActionState = { ok: false };
+  const [, formAction] = useActionState(toggleUserActive, initialState);
 
   const label = isActive ? "Desactivar" : "Activar";
 

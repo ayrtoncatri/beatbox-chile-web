@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ensureAdminPage } from "@/lib/permissions";
+import { Prisma } from "@prisma/client";
 
 /**
  * Obtiene todas las compras con filtros opcionales (modelo normalizado)
@@ -30,7 +31,7 @@ export async function getCompras(filters: {
     sort = "fecha_desc",
   } = filters;
 
-  let orderBy: any = {};
+  let orderBy: Prisma.CompraOrderByWithRelationInput = {};
   switch (sort) {
     case "fecha_asc":
       orderBy = { createdAt: "asc" };
@@ -47,7 +48,7 @@ export async function getCompras(filters: {
   }
 
   // Filtros normalizados
-  const where: any = {};
+  const where: Prisma.CompraWhereInput = {};
   if (search) {
     where.OR = [
       { user: { profile: { nombres: { contains: search, mode: "insensitive" } } } },
@@ -57,8 +58,12 @@ export async function getCompras(filters: {
     ];
   }
   if (eventId) where.eventoId = eventId;
-  if (from) where.createdAt = { ...where.createdAt, gte: new Date(from) };
-  if (to) where.createdAt = { ...where.createdAt, lte: new Date(to) };
+  if (from || to) {
+    where.createdAt = {
+      ...(from ? { gte: new Date(from) } : {}),
+      ...(to ? { lte: new Date(to) } : {}),
+    };
+  }
 
   // Filtro por tipo de ticket (en items)
   if (tipo) {
@@ -211,7 +216,7 @@ export async function exportComprasToCSV(filters: {
   const { search, eventId, tipo, from, to } = filters;
 
   // Filtros normalizados
-  const where: any = {};
+  const where: Prisma.CompraWhereInput = {};
   if (search) {
     where.OR = [
       { user: { profile: { nombres: { contains: search, mode: "insensitive" } } } },
@@ -221,8 +226,12 @@ export async function exportComprasToCSV(filters: {
     ];
   }
   if (eventId) where.eventoId = eventId;
-  if (from) where.createdAt = { ...where.createdAt, gte: new Date(from) };
-  if (to) where.createdAt = { ...where.createdAt, lte: new Date(to) };
+  if (from || to) {
+    where.createdAt = {
+      ...(from ? { gte: new Date(from) } : {}),
+      ...(to ? { lte: new Date(to) } : {}),
+    };
+  }
   if (tipo) {
     where.items = {
       some: {

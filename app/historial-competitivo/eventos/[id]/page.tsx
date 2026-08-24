@@ -2,11 +2,10 @@ import { getEventDetails, getPublicWildcardsForEvent } from "@/app/actions/publi
 import { notFound } from "next/navigation";
 import Link from 'next/link';
 import { 
-  CalendarIcon, 
-  MapPinIcon, 
-  UsersIcon, 
-  HandThumbUpIcon, 
-  TrophyIcon, 
+  CalendarIcon,
+  MapPinIcon,
+  UsersIcon,
+  TrophyIcon,
   HeartIcon, // Usamos HeartIcon como FaHandshake
   InformationCircleIcon,
   VideoCameraIcon, // Usamos VideoCameraIcon como FaVideo

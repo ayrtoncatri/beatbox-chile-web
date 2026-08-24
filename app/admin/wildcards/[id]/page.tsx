@@ -91,7 +91,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                   nombreArtistico: w.nombreArtistico,
                   notes: w.notes,
                   youtubeUrl: w.youtubeUrl,
-                  status: w.status as any,
+                  status: w.status,
                 }}
               />
             </div>
@@ -165,7 +165,7 @@ export default async function WildcardDetailPage({ params }: { params: Promise<{
                 <div className="text-blue-100"><span className="text-blue-300/70">Fecha revisión:</span> {w.reviewedAt ? new Date(w.reviewedAt).toLocaleString() : "—"}</div>
               </div>
               <div className="pt-2 w-full">
-                <ReviewButtons id={w.id} status={w.status as any} isClassified={w.isClassified} />
+                <ReviewButtons id={w.id} status={w.status} isClassified={w.isClassified} />
               </div>
             </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 
 type Publicacion = {
@@ -23,7 +24,7 @@ export default function PublicacionesRow({ title, tipo }: Props) {
   const [loading, setLoading] = useState(false);
   const [hasNext, setHasNext] = useState(true);
 
-  const fetchData = async (newPage: number) => {
+  const fetchData = useCallback(async (newPage: number) => {
     setLoading(true);
 
     try {
@@ -41,11 +42,11 @@ export default function PublicacionesRow({ title, tipo }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tipo]);
 
   useEffect(() => {
     fetchData(page);
-  }, [page, tipo]);
+  }, [page, tipo, fetchData]);
 
   const goNext = () => {
     if (hasNext) setPage((prev) => prev + 1);
@@ -127,10 +128,12 @@ export default function PublicacionesRow({ title, tipo }: Props) {
                   >
                     <div className="relative h-24 w-24 shrink-0 overflow-hidden border border-cyan-300/30 bg-slate-950">
                       {image ? (
-                        <img
+                        <Image
                           src={image}
                           alt={item.titulo}
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          fill
+                          className="object-cover transition duration-500 group-hover:scale-105"
+                          unoptimized
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-black text-xs text-white/50">

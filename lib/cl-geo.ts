@@ -1,5 +1,5 @@
-export type DPARegion = { codigo: string; nombre: string; [k: string]: any };
-export type DPAComuna  = { codigo: string; nombre: string; [k: string]: any };
+export type DPARegion = { codigo: string; nombre: string; [k: string]: unknown };
+export type DPAComuna  = { codigo: string; nombre: string; [k: string]: unknown };
 
 export async function fetchRegiones(): Promise<DPARegion[]> {
   const res = await fetch("/api/cl/regiones", { cache: "no-store" });

@@ -2,14 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { Handle, Position } from 'reactflow';
+import type { PublicBracketBattle } from '@/app/actions/public-data';
 
-export function BracketMatch({ data }: { 
-    data: 
-    { battle: any; 
-      isFirstColumn: boolean; 
-      isFinalMatch: boolean;
-      isSemifinal: boolean; 
-     } }) {
+export function BracketMatch({ data }: {
+    data:
+    { battle: PublicBracketBattle;
+      isFirstColumn: boolean;
+      isFinalMatch: boolean;
+      isSemifinal: boolean;
+     } }) {
   const { battle, isFirstColumn, isFinalMatch, isSemifinal } = data;
   const { participantA, participantB, winnerId, winnerVotes, loserVotes } =
     battle;
