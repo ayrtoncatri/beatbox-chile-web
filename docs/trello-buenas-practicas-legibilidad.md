@@ -4,6 +4,8 @@ Fecha: 2026-08-24
 Rama: `chore/buenas-practicas-legibilidad`
 Objetivo: tickets para el tablero, uno por tarjeta. Pasada de legibilidad/tipado en TypeScript y React sobre todo el proyecto, sin cambiar funcionalidad existente.
 
+**Revisión 2026-09-01:** repaso del estado de la rama (working tree limpio, `npm run lint` y `npx tsc --noEmit` re-ejecutados). Se corrigió el conteo de errores preexistentes de `tsc` (13 → 19, error de conteo previo, no una regresión) y se agregaron dos hallazgos nuevos a "Pendiente": Tarjeta E (bug activo, no solo deuda técnica) y Tarjeta F. Nada de esto se tocó en el código — son hallazgos, no cambios.
+
 ---
 
 ## Lista: Hecho en esta rama (código)
@@ -156,6 +158,20 @@ Copiar cada una como tarjeta aparte. Son decisiones de producto/arquitectura, no
 - Decidir: ¿el drawer debería recibir los datos ya aplanados (como hace la tabla), o debería leer la forma anidada real? Cualquiera de las dos es un cambio de comportamiento, no de tipado
 - Ver `ARCHITECTURE.md` §11.12
 
+### Tarjeta E — 🔴 Bug activo: eliminar compra falla en `/api/admin/compras/[id]`
+- `GET`/`DELETE` usan `prisma.compraEntrada`, modelo que no existe (el schema tiene `Compra`, no `CompraEntrada`)
+- A diferencia de la Tarjeta A, esta ruta **sí está conectada a la UI**: `ComprasTable.tsx` la llama al presionar "eliminar compra" → hoy ese botón devuelve un 500
+- Detectado el 2026-09-01 vía `npx tsc --noEmit` (`error TS2339: Property 'compraEntrada' does not exist`)
+- Decidir al corregir: ¿el `DELETE` debe borrar en cascada los `CompraItem` asociados, o falla si hay items?
+- Prioridad sugerida: más alta que la Tarjeta A, es un bug de usuario final, no deuda técnica silenciosa
+- Ver `ARCHITECTURE.md` §11.21
+
+### Tarjeta F — `ZodError.errors` inexistente en `app/admin/publicaciones/actions.ts`
+- Líneas 95 y 144 usan `e.errors[0]?.message`, pero esta versión de Zod solo tiene `.issues` (no `.errors`) — mismo bug ya detectado y preservado a propósito en otros archivos durante la Tarjeta 1
+- Efecto: el usuario nunca ve el mensaje específico del campo inválido, siempre el fallback genérico "Error al crear/editar publicación"
+- Arreglo mecánico simple (`.errors` → `.issues`) pero cambia el mensaje que ve el usuario, así que no se tocó sin confirmación explícita
+- Ver `ARCHITECTURE.md` §11.22
+
 ### Tarjeta D — Indentación con NBSP (U+00A0) en vez de espacios
 - Detectada en partes de `SugerenciasTable.tsx`, `app/api/wildcard/route.ts`, `SugerenciaDetailDrawer.tsx`, `BracketMatch.tsx` (probablemente hay más en el repo, no se hizo un barrido completo)
 - No afecta la ejecución (JS no le da significado al espacio en blanco fuera de strings), pero puede confundir a otros editores/herramientas
@@ -165,7 +181,7 @@ Copiar cada una como tarjeta aparte. Son decisiones de producto/arquitectura, no
 
 ## Lista: Fuera de alcance a propósito
 - No se tocó ninguna funcionalidad existente: mismo comportamiento antes y después (verificado con `npx tsc --noEmit` sin diferencias de errores nuevos y `npm run lint` con conteo documentado)
-- No se "arreglaron" los 13 errores preexistentes de `npx tsc --noEmit` que no tienen que ver con `any` (columnas de schema, `Headers` mockeado, tipos de `framer-motion`) — son bugs o decisiones de diseño, no legibilidad
+- No se "arreglaron" los 19 errores preexistentes de `npx tsc --noEmit` que no tienen que ver con `any` (columnas de schema, `Headers` mockeado, tipos de `framer-motion`, `ZodError.errors`, `prisma.compraEntrada`) — son bugs o decisiones de diseño, no legibilidad. *(Nota 2026-09-01: el conteo original decía 13; era un error de conteo, no un aumento real — ver revisión al final de este documento.)*
 - No se migró `Prisma.validator()` en archivos que no estaban ya en la lista de cambios por otro motivo
 - No se hizo un barrido completo de indentación NBSP en todo el repo
 
