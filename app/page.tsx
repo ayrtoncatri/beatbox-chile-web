@@ -4,7 +4,6 @@ import NoticiasList from "@/components/home/NoticiasList";
 import Historia from "@/components/home/Historia";
 import PublicacionesRow from "@/components/publicaciones/PublicacionesRow";
 import type { Metadata } from "next";
-import MissionVisionValues from "@/components/home/MissionVisionValues";
 import UpcomingEvents from "@/components/home/UpcomingEvents";
 
 export const metadata: Metadata = {
@@ -49,7 +48,6 @@ export default function HomePage() {
             <PublicacionesRow title="Noticias" tipo="noticia" />
           </div>
 
-          <MissionVisionValues />
           <NoticiasList />
           <Historia />
         </div>

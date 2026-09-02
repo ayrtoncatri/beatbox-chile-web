@@ -73,13 +73,13 @@ export default function Footer() {
                     <div className="relative overflow-hidden rounded-[15px] bg-[#0b0d15]/95 px-6 py-7">
                       <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-fuchsia-500/15 blur-2xl" />
                       <p className="font-heading text-xl font-bold uppercase tracking-wider text-white">
-                        Síguenos
+                      Página administrada por @<span className="text-fuchsia-300">anbp.chile</span>
                       </p>
                       <Link
-                        href="https://www.instagram.com/beatbox.chile?igsh=MXZqYXRmYmNic2ZidQ=="
+                        href="https://www.instagram.com/anbp.chile/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Seguir a Beatbox Chile en Instagram"
+                        aria-label="Seguir a ANBP en Instagram"
                         className="mt-5 inline-flex min-h-14 items-center gap-3 rounded-xl border border-fuchsia-300/35 bg-black/30 px-5 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_20px_rgba(232,121,249,0.18)] transition hover:border-cyan-300/70 hover:text-cyan-100 hover:shadow-[0_0_26px_rgba(34,211,238,0.3)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-300"
                       >
                         <FaInstagram
@@ -92,6 +92,8 @@ export default function Footer() {
                   </div>
                 </div>
               </div>
+
+              
 
               <div
                 aria-hidden="true"

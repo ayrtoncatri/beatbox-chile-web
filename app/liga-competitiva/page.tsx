@@ -5,6 +5,8 @@ import Colaboradores from "@/components/liga-competitiva/Colaboradores";
 import LigasHero from "@/components/ligas/LigasHero";
 import type { Metadata } from "next";
 
+const SHOW_RANKING = false; //true para mostrar el ranking, false para no mostrarlo
+
 export const metadata: Metadata = {
   title: "Liga Competitiva | Beatbox Chile",
   description: "La plataforma oficial de torneos de Beatbox en Chile. Ranking nacional, formación y gestión de competencias internacionales.",
@@ -19,9 +21,8 @@ export default function LigaCompetitivaPage() {
 
       <div id="circuito" className="relative z-10 space-y-20 py-20 sm:space-y-24 sm:py-28">
         <InfoCircuito />
-        <Clasificados />
+        {SHOW_RANKING && <Clasificados />}
         <ReglasLiga />
-        <Colaboradores />
       </div>
     </main>
   );
