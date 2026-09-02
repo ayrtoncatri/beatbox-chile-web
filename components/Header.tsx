@@ -21,13 +21,11 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Historial competitivo", href: "/historial-competitivo" },
   { label: "Estadísticas", href: "/estadisticas" },
-  { label: "Quiénes Somos", href: "/quienes-somos" },
   {
     label: "Ligas",
     category: true,
     subItems: [
-      { label: "Liga competitiva", href: "/liga-competitiva" },
-      { label: "Liga Terapéutica", href: "/liga-terapeutica" },
+      { label: "Liga competitiva", href: "/liga-competitiva" }
     ],
   },
   { label: "Eventos", href: "/eventos" },
@@ -134,7 +132,7 @@ export default function Header() {
             </span>
           </Link>
 
-          <ul className="hidden lg:flex flex-1 items-center justify-center gap-0.5 xl:gap-1">
+          <ul className="hidden lg:flex flex-1 items-center justify-evenly gap-2 px-2 xl:gap-4 xl:px-6">
             {navItems.map((item) => {
               const active = isItemActive(item.href, item.subItems);
               return (

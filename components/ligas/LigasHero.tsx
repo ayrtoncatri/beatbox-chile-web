@@ -7,7 +7,7 @@ import {
   TrophyIcon,
 } from "@heroicons/react/24/solid";
 
-type Liga = "competitiva" | "terapeutica";
+type Liga = "competitiva";
 
 interface LigasHeroProps {
   active: Liga;
@@ -23,17 +23,7 @@ const leagues = [
     cta: "Entrar a la arena",
     image: "https://res.cloudinary.com/dfd1byvwn/image/upload/v1763746159/beatbox-chile-campeonato_xr2nsd.webp",
     icon: TrophyIcon,
-  },
-  {
-    id: "terapeutica" as const,
-    label: "Liga terapéutica",
-    eyebrow: "Beatbox inclusivo",
-    tagline: "Encuentra tu voz. Crece con el ritmo.",
-    href: "/liga-terapeutica",
-    cta: "Conocer el programa",
-    image: "https://res.cloudinary.com/dfd1byvwn/image/upload/v1763744752/new-banner-bbx_ymgg2x.webp",
-    icon: HeartIcon,
-  },
+  }
 ];
 
 export default function LigasHero({ active }: LigasHeroProps) {

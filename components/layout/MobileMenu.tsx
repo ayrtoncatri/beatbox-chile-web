@@ -18,13 +18,11 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Historial competitivo", href: "/historial-competitivo" },
   { label: "Estadísticas", href: "/estadisticas" },
-  { label: "Quiénes Somos", href: "/quienes-somos" },
   {
     label: "Ligas",
     category: true,
     subItems: [
-      { label: "Liga competitiva", href: "/liga-competitiva" },
-      { label: "Liga Terapéutica", href: "/liga-terapeutica" },
+      { label: "Liga competitiva", href: "/liga-competitiva" }
     ],
   },
   { label: "Eventos", href: "/eventos" },
